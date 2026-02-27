@@ -1,0 +1,25 @@
+{
+  "name": "wally",
+  "version": "0.1.0",
+  "description": "AI-powered chat assistant inside wp-admin",
+  "scripts": {
+    "build": "wp-scripts build src/index.js --output-path=admin/js/build",
+    "start": "wp-scripts start src/index.js --output-path=admin/js/build",
+    "watch": "npm run start & npm run watch:css",
+    "build:css": "./node_modules/.bin/tailwindcss -i ./src/styles.css -o ./admin/css/sidebar.css --minify",
+    "watch:css": "./node_modules/.bin/tailwindcss -i ./src/styles.css -o ./admin/css/sidebar.css --watch",
+    "lint": "wp-scripts lint-js src/",
+    "test": "wp-scripts test-unit-js",
+    "plugin-zip": "wp-scripts plugin-zip"
+  },
+  "dependencies": {
+    "marked": "^17.0.3",
+    "react-icons": "^5.5.0"
+  },
+  "devDependencies": {
+    "@wordpress/api-fetch": "*",
+    "@wordpress/element": "*",
+    "@wordpress/scripts": "^30.27.0",
+    "tailwindcss": "^3.4.0"
+  }
+}

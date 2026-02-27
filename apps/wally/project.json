@@ -1,0 +1,30 @@
+{
+  "name": "wally",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/wally/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npm run build",
+          "npm run build:css"
+        ],
+        "cwd": "apps/wally",
+        "parallel": false
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npm run start",
+          "npm run watch:css"
+        ],
+        "cwd": "apps/wally",
+        "parallel": true
+      }
+    }
+  }
+}

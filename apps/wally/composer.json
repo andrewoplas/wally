@@ -1,0 +1,24 @@
+{
+  "name": "your-vendor/wally",
+  "type": "wordpress-plugin",
+  "description": "AI-powered chat assistant inside wp-admin. Manage your WordPress site with natural language.",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=8.0",
+    "ext-openssl": "*",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "classmap": [
+      "includes/"
+    ]
+  },
+  "config": {
+    "optimize-autoloader": true
+  },
+  "scripts": {
+    "lint:wpcs": "phpcs --standard=WordPress includes/",
+    "lint:php": "php -l includes/*.php"
+  }
+}
