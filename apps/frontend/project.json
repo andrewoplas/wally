@@ -1,0 +1,13 @@
+{
+  "name": "@wally/frontend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/frontend",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "options": {
+        "port": 3001
+      }
+    }
+  }
+}
