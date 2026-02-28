@@ -7,10 +7,10 @@
  * Everything else lives as utility classes in JSX.
  */
 @layer components {
-  #wally-chat-root {
+  #wpaia-chat-root {
     /* User message bubble — asymmetric border-radius */
-    .wally-user-bubble {
-        @apply bg-wally-primary text-white text-[15px];
+    .wpaia-user-bubble {
+        @apply bg-wpaia-primary text-white text-[15px];
         line-height: 1.4;
         border-radius: 20px 20px 6px 20px;
         padding: 12px 18px;
@@ -18,134 +18,134 @@
     }
 
     /* Streaming cursor — thin vertical bar */
-    .wally-cursor::after {
+    .wpaia-cursor::after {
         content: '';
-        @apply inline-block bg-wally-primary;
+        @apply inline-block bg-wpaia-primary;
         width: 2px;
         height: 20px;
         vertical-align: text-bottom;
         margin-left: 1px;
         border-radius: 1px;
-        animation: wally-cursor-blink 1s step-end infinite;
+        animation: wpaia-cursor-blink 1s step-end infinite;
     }
 
     /* Empty state icon gradient */
-    .wally-empty-icon-gradient {
+    .wpaia-empty-icon-gradient {
         background: linear-gradient(to bottom, #8B5CF6, #A78BFA);
     }
 
     /* 3-dot thinking animation */
-    .wally-dot {
-        @apply inline-block w-1.5 h-1.5 rounded-full bg-wally-primary;
-        animation: wally-dot-bounce 1.2s infinite ease-in-out;
+    .wpaia-dot {
+        @apply inline-block w-1.5 h-1.5 rounded-full bg-wpaia-primary;
+        animation: wpaia-dot-bounce 1.2s infinite ease-in-out;
     }
-    .wally-dot:nth-child(2) { animation-delay: 0.2s; }
-    .wally-dot:nth-child(3) { animation-delay: 0.4s; }
+    .wpaia-dot:nth-child(2) { animation-delay: 0.2s; }
+    .wpaia-dot:nth-child(3) { animation-delay: 0.4s; }
 
     /* Shimmer loading bars */
-    .wally-shimmer {
+    .wpaia-shimmer {
         background: linear-gradient(90deg, #E4E4E7 25%, #F4F4F5 50%, #E4E4E7 75%);
         background-size: 200% 100%;
-        animation: wally-shimmer 1.5s ease-in-out infinite;
+        animation: wpaia-shimmer 1.5s ease-in-out infinite;
     }
 
     /* Tool progress spinner */
-    .wally-spinner {
-        @apply inline-block w-4 h-4 rounded-full border-2 border-wally-border;
-        border-top-color: theme('colors.wally-primary');
-        animation: wally-spin 0.7s linear infinite;
+    .wpaia-spinner {
+        @apply inline-block w-4 h-4 rounded-full border-2 border-wpaia-border;
+        border-top-color: theme('colors.wpaia-primary');
+        animation: wpaia-spin 0.7s linear infinite;
     }
-    .wally-spinner-sm {
-        @apply inline-block w-3 h-3 rounded-full border-2 border-wally-border;
-        border-top-color: theme('colors.wally-primary');
-        animation: wally-spin 0.7s linear infinite;
+    .wpaia-spinner-sm {
+        @apply inline-block w-3 h-3 rounded-full border-2 border-wpaia-border;
+        border-top-color: theme('colors.wpaia-primary');
+        animation: wpaia-spin 0.7s linear infinite;
     }
 
     /* Markdown prose inside assistant messages */
-    .wally-markdown {
-        @apply text-[15px] leading-normal text-wally-text;
+    .wpaia-markdown {
+        @apply text-[15px] leading-normal text-wpaia-text;
     }
-    .wally-markdown p { margin: 0 0 0.75em; }
-    .wally-markdown p:last-child { margin-bottom: 0; }
-    .wally-markdown h1, .wally-markdown h2, .wally-markdown h3,
-    .wally-markdown h4, .wally-markdown h5, .wally-markdown h6 {
-        @apply font-semibold text-wally-text;
+    .wpaia-markdown p { margin: 0 0 0.75em; }
+    .wpaia-markdown p:last-child { margin-bottom: 0; }
+    .wpaia-markdown h1, .wpaia-markdown h2, .wpaia-markdown h3,
+    .wpaia-markdown h4, .wpaia-markdown h5, .wpaia-markdown h6 {
+        @apply font-semibold text-wpaia-text;
         margin: 1em 0 0.5em;
     }
-    .wally-markdown h1 { font-size: 1.25em; }
-    .wally-markdown h2 { font-size: 1.125em; }
-    .wally-markdown h3 { font-size: 1em; }
-    .wally-markdown ul, .wally-markdown ol {
+    .wpaia-markdown h1 { font-size: 1.25em; }
+    .wpaia-markdown h2 { font-size: 1.125em; }
+    .wpaia-markdown h3 { font-size: 1em; }
+    .wpaia-markdown ul, .wpaia-markdown ol {
         margin: 0.5em 0;
         padding-left: 1.5em;
     }
-    .wally-markdown ul { list-style: disc; }
-    .wally-markdown ol { list-style: decimal; }
-    .wally-markdown li { margin-bottom: 0.25em; }
-    .wally-markdown code {
-        @apply bg-wally-bg text-wally-primary rounded px-1 py-0.5 text-xs font-mono;
+    .wpaia-markdown ul { list-style: disc; }
+    .wpaia-markdown ol { list-style: decimal; }
+    .wpaia-markdown li { margin-bottom: 0.25em; }
+    .wpaia-markdown code {
+        @apply bg-wpaia-bg text-wpaia-primary rounded px-1 py-0.5 text-xs font-mono;
     }
-    .wally-markdown pre {
+    .wpaia-markdown pre {
         @apply bg-[#1e1e2e] text-[#cdd6f4] rounded-lg p-3 my-2 overflow-x-auto text-xs leading-relaxed;
     }
-    .wally-markdown pre code {
+    .wpaia-markdown pre code {
         @apply bg-transparent text-inherit p-0 rounded-none text-xs;
     }
-    .wally-markdown blockquote {
-        @apply border-l-4 border-wally-primary pl-3 my-2 text-wally-muted italic;
+    .wpaia-markdown blockquote {
+        @apply border-l-4 border-wpaia-primary pl-3 my-2 text-wpaia-muted italic;
     }
-    .wally-markdown a {
-        @apply text-wally-primary underline;
+    .wpaia-markdown a {
+        @apply text-wpaia-primary underline;
     }
-    .wally-markdown table {
+    .wpaia-markdown table {
         @apply w-full text-xs border-collapse my-2;
     }
-    .wally-markdown th, .wally-markdown td {
-        @apply border border-wally-border px-2 py-1.5 text-left;
+    .wpaia-markdown th, .wpaia-markdown td {
+        @apply border border-wpaia-border px-2 py-1.5 text-left;
     }
-    .wally-markdown th {
-        @apply bg-wally-bg font-semibold;
+    .wpaia-markdown th {
+        @apply bg-wpaia-bg font-semibold;
     }
-    .wally-markdown hr {
-        @apply border-t border-wally-border my-3;
+    .wpaia-markdown hr {
+        @apply border-t border-wpaia-border my-3;
     }
 
     /* Code block copy button (injected via JS) */
-    .wally-code-wrapper {
+    .wpaia-code-wrapper {
         @apply relative;
     }
-    .wally-copy-btn {
+    .wpaia-copy-btn {
         @apply absolute top-2 right-2 px-2 py-1 text-[10px] font-medium rounded bg-white/10 text-white/70 border-0 cursor-pointer;
         transition: background 0.15s, color 0.15s;
     }
-    .wally-copy-btn:hover { @apply bg-white/20 text-white; }
-    .wally-copy-btn-success { @apply bg-wally-success-text/80 text-white; }
+    .wpaia-copy-btn:hover { @apply bg-white/20 text-white; }
+    .wpaia-copy-btn-success { @apply bg-wpaia-success-text/80 text-white; }
   }
 }
 
 @layer utilities {
-  #wally-chat-root {
-    .wally-scrollbar::-webkit-scrollbar       { width: 4px; }
-    .wally-scrollbar::-webkit-scrollbar-track  { background: transparent; }
-    .wally-scrollbar::-webkit-scrollbar-thumb  { @apply bg-wally-border rounded-full; }
+  #wpaia-chat-root {
+    .wpaia-scrollbar::-webkit-scrollbar       { width: 4px; }
+    .wpaia-scrollbar::-webkit-scrollbar-track  { background: transparent; }
+    .wpaia-scrollbar::-webkit-scrollbar-thumb  { @apply bg-wpaia-border rounded-full; }
   }
 }
 
-@keyframes wally-dot-bounce {
+@keyframes wpaia-dot-bounce {
     0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
     40%            { transform: scale(1);   opacity: 1; }
 }
 
-@keyframes wally-spin {
+@keyframes wpaia-spin {
     to { transform: rotate(360deg); }
 }
 
-@keyframes wally-shimmer {
+@keyframes wpaia-shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
 
-@keyframes wally-cursor-blink {
+@keyframes wpaia-cursor-blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
 }

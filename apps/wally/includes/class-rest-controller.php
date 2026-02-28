@@ -247,7 +247,7 @@ class RestController {
 		);
 
 		// 4. Prepare backend connection info.
-		$backend_url   = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100' ), '/' );
+		$backend_url   = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
 		$api_key_enc   = get_option( 'wally_api_key', '' );
 		$api_key       = $api_key_enc ? Settings::decrypt( $api_key_enc ) : '';
 		$model         = get_option( 'wally_model', 'claude-haiku-4-5' );
@@ -276,7 +276,7 @@ class RestController {
 		}
 
 		$result = $this->stream_backend_sse(
-			$backend_url . '/api/v1/chat',
+			$backend_url . '/chat',
 			$chat_payload,
 			$api_key
 		);
@@ -340,7 +340,7 @@ class RestController {
 
 			// Send tool results back to backend and stream its response.
 			$result = $this->stream_backend_sse(
-				$backend_url . '/api/v1/tool-result',
+				$backend_url . '/tool-result',
 				[
 					'model'                => $model,
 					'conversation_history' => $history_with_current,
@@ -437,7 +437,7 @@ class RestController {
 			'content'         => $message,
 		]);
 
-		$backend_url   = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100' ), '/' );
+		$backend_url   = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
 		$api_key_enc   = get_option( 'wally_api_key', '' );
 		$api_key       = $api_key_enc ? Settings::decrypt( $api_key_enc ) : '';
 		$model         = get_option( 'wally_model', 'claude-haiku-4-5' );
@@ -454,7 +454,7 @@ class RestController {
 			$chat_payload['custom_system_prompt'] = $custom_prompt;
 		}
 
-		$backend_response = $this->backend_request_buffered( $backend_url . '/api/v1/chat', $chat_payload, $api_key );
+		$backend_response = $this->backend_request_buffered( $backend_url . '/chat', $chat_payload, $api_key );
 
 		if ( is_wp_error( $backend_response ) ) {
 			return rest_ensure_response([
@@ -555,7 +555,7 @@ class RestController {
 				];
 			}
 
-			$response = $this->backend_request_buffered( $backend_url . '/api/v1/tool-result', [
+			$response = $this->backend_request_buffered( $backend_url . '/tool-result', [
 				'model'                => $model,
 				'conversation_history' => $conversation_history,
 				'site_profile'         => $site_profile,
@@ -886,13 +886,13 @@ class RestController {
 			'content' => mb_substr( $m->content, 0, 600 ),
 		], $messages );
 
-		$backend_url = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100' ), '/' );
+		$backend_url = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
 		$api_key_enc = get_option( 'wally_api_key', '' );
 		$api_key     = $api_key_enc ? Settings::decrypt( $api_key_enc ) : '';
 		$model       = get_option( 'wally_model', 'claude-haiku-4-5' );
 
 		$response = $this->backend_request_buffered(
-			$backend_url . '/api/v1/chat',
+			$backend_url . '/chat',
 			[
 				'model'                => $model,
 				'message'              => 'Write a concise title (4-6 words) for this conversation that captures what the user was trying to accomplish. Reply with ONLY the title — no quotes, no trailing punctuation, no explanation.',

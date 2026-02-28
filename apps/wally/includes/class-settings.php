@@ -4,8 +4,8 @@ namespace Wally;
 class Settings {
     public static function register_menu() {
         add_menu_page(
-            'AI Assistant',
-            'AI Assistant',
+            'Wally — AI Assistant',
+            'Wally — AI Assistant',
             'manage_options',
             'wally',
             [ self::class, 'render_page' ],
@@ -56,7 +56,7 @@ class Settings {
             $notification_sounds = ! empty( $_POST['wally_notification_sounds'] );
             update_option( 'wally_notification_sounds', $notification_sounds );
 
-            $backend_url = esc_url_raw( trim( $_POST['wally_backend_url'] ?? 'http://localhost:3100' ), [ 'http', 'https' ] );
+            $backend_url = esc_url_raw( trim( $_POST['wally_backend_url'] ?? 'http://localhost:3100/api/v1' ), [ 'http', 'https' ] );
             if ( $backend_url ) {
                 update_option( 'wally_backend_url', $backend_url );
             }
@@ -93,7 +93,7 @@ class Settings {
         $token_budget   = get_option( 'wally_monthly_token_budget', 0 );
         $data_retention = get_option( 'wally_data_retention', 90 );
         $custom_prompt = get_option( 'wally_custom_prompt', '' );
-        $backend_url   = get_option( 'wally_backend_url', 'http://localhost:3100' );
+        $backend_url   = get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' );
         $api_key_set   = (bool) get_option( 'wally_api_key', '' );
         $model         = get_option( 'wally_model', 'claude-haiku-4-5' );
         $site_profile  = SiteScanner::get_profile();
@@ -230,7 +230,7 @@ class Settings {
                                 <label class="wpaia-label">Backend URL</label>
                                 <input type="url" name="wally_backend_url" class="wpaia-input"
                                        value="<?php echo esc_attr( $backend_url ); ?>"
-                                       placeholder="http://localhost:3100" />
+                                       placeholder="http://localhost:3100/api/v1" />
                                 <span class="wpaia-hint">The URL of the Wally backend server.</span>
                             </div>
 

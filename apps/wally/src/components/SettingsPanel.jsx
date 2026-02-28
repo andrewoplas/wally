@@ -100,7 +100,7 @@ const SettingsPanel = () => {
             </div>
 
             <div className="flex-shrink-0 px-4 py-3 border-t border-wpaia-border text-[11px] text-wpaia-hint text-center">
-                WP AI Assistant v1.0.0
+                Wally — AI Assistant v1.0.0
                 {saving && ' · Saving…'}
             </div>
         </div>
