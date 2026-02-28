@@ -1,0 +1,192 @@
+## WordPress Development & Utility Plugins
+
+### Code Snippets
+- **Plugin slug**: `code-snippets/code-snippets.php` (ID #33)
+- **Purpose**: Run PHP, CSS, JS, and HTML snippets without editing theme files. GUI-based snippet manager in wp-admin.
+- **Custom DB table**: `{prefix}snippets` — stores all snippet data.
+  - Columns: `id`, `name`, `description`, `code`, `tags`, `scope`, `priority`, `active`, `modified`, `revision`, `cloud_id`.
+- **Snippet types**: `php`, `html`, `css`, `js`. Each type determines how the snippet is executed/enqueued.
+- **Scope** (where snippet runs):
+  - `global` — everywhere (admin + frontend)
+  - `admin` — admin dashboard only
+  - `front-end` — frontend only
+  - `single-use` — run once then deactivate
+  - For CSS/JS snippets: `site-css`, `admin-css`, `site-head-js`, `site-footer-js`, `admin-js`, `content` (shortcode-only).
+- **Priority**: Integer value controlling execution order (default 10). Lower numbers execute first, like WordPress hook priority.
+- **Settings**: wp_options key `code_snippets_settings` (serialized array).
+  - Sub-keys: `general` (complete_uninstall, enable_tags, enable_description), `editor` (theme, indent_unit, tab_size, indent_with_tabs, wrap_lines), `safety` (enable_safe_mode).
+- **Key functions** (in global scope):
+  - `get_snippets($args)` — retrieve snippets from DB with optional filtering
+  - `get_snippet($id)` — retrieve single snippet by ID
+  - `save_snippet($snippet)` — insert or update a snippet
+  - `activate_snippet($id)` — activate a snippet (set `active = 1`)
+  - `deactivate_snippet($id)` — deactivate a snippet
+  - `delete_snippet($id)` — permanently remove a snippet
+  - `run_snippet($snippet)` — execute a snippet's code immediately
+  - `export_snippets($ids)` — export snippets as JSON or XML
+  - `import_snippets($file)` — import snippets from JSON/XML file
+- **Shortcode**: `[code_snippet id="123"]` — embed a content/shortcode-type snippet in posts/pages. Nested shortcodes supported.
+- **Hooks**:
+  - `code_snippets/before_save_snippet` — fires before snippet is saved
+  - `code_snippets/after_save_snippet` — fires after snippet is saved
+  - `code_snippets/before_activate_snippet` — fires before activation
+  - `code_snippets/after_activate_snippet` — fires after activation
+  - `code_snippets/admin/manage` — fires on manage snippets admin page (receives snippet type parameter)
+- **Safe mode**: If a PHP snippet causes a fatal error, safe mode auto-deactivates all snippets. Access via `?snippets-safe-mode=1` query parameter.
+- **Import/Export**: Supports JSON format for snippet data. Cloud sync available in Pro version.
+- **File paths**:
+  - Plugin directory: `wp-content/plugins/code-snippets/`
+  - Main class: `wp-content/plugins/code-snippets/php/class-plugin.php`
+
+### Search Regex
+- **Plugin slug**: `search-regex/search-regex.php` (ID #81)
+- **Purpose**: Advanced search and replace across WordPress database content. Supports regular expressions, batch processing, and multiple source types.
+- **Settings**: Minimal persistent settings. Options stored as `searchregex_options` in wp_options.
+  - Sub-keys: `support`, `defaultPreset`, `allowedPerPage`.
+- **Presets**: Saved search configurations stored in `searchregex_presets` option (serialized array). Each preset contains source, search pattern, replace pattern, and flags.
+- **Source types** (searchable database areas):
+  - `posts` — post_title, post_content, post_excerpt across all post types
+  - `post-meta` — wp_postmeta table (meta_key + meta_value)
+  - `comments` — wp_comments table (comment_content, comment_author, comment_author_email, comment_author_url)
+  - `comment-meta` — wp_commentmeta table
+  - `users` — wp_users table (user_login, user_nicename, user_email, user_url, display_name)
+  - `user-meta` — wp_usermeta table
+  - `options` — wp_options table (option_name + option_value)
+- **REST API endpoints** (namespace `search-regex/v1`):
+  - `POST /search` — perform a search and return matches
+  - `POST /replace` — perform a replacement
+  - `POST /replace-all` — batch replace all matches
+  - `GET /source` — list available sources
+  - `GET /preset` — list saved presets
+  - `POST /preset` — save a new preset
+- **Search flags**:
+  - `regex` — enable regular expression mode
+  - `case` — case-sensitive matching
+  - `multi` — multiline regex mode
+  - `unicode` — unicode regex support
+- **Batch processing**: Large replacements processed in batches to avoid timeouts. Configurable batch size via `searchregex_batch_size` filter.
+- **Hooks**:
+  - `searchregex_sources` — filter to register custom source types
+  - `searchregex_source_{type}` — filter to modify a specific source's behavior
+  - `searchregex_batch_size` — filter to adjust batch processing size (default 100)
+  - `searchregex_replace` — action fired after a replacement is made
+- **Key classes**:
+  - `Search_Regex\Search` — handles search operations
+  - `Search_Regex\Replace` — handles replacement operations
+  - `Search_Regex\Source\Source` — base class for source types
+- **Serialized data handling**: Can search within serialized data in meta/options and safely update serialized values without breaking them.
+- **File paths**: `wp-content/plugins/search-regex/`
+
+### WP Rollback
+- **Plugin slug**: `wp-rollback/wp-rollback.php` (ID #99)
+- **Purpose**: Rollback plugins and themes to any previous version available on WordPress.org SVN repository.
+- **No persistent settings**: Does not store options in the database. Operates on-demand only.
+- **Mechanism**: Uses the WordPress.org Plugins/Themes API to fetch available versions from SVN, then downloads and replaces the current version using WordPress's built-in `Plugin_Upgrader` or `Theme_Upgrader` classes.
+- **Key class**: `WP_Rollback`
+  - `WP_Rollback::__construct()` — initializes rollback, hooks into admin
+  - `WP_Rollback::rollback()` — performs the actual rollback operation
+  - `WP_Rollback::get_plugin_versions($slug)` — fetches available versions from WordPress.org API
+  - `WP_Rollback::get_theme_versions($slug)` — fetches available theme versions
+- **API endpoints used**:
+  - `https://api.wordpress.org/plugins/info/1.0/{slug}.json` — plugin version data
+  - `https://api.wordpress.org/themes/info/1.1/?action=theme_information&request[slug]={slug}` — theme version data
+  - Download URL pattern: `https://downloads.wordpress.org/plugin/{slug}.{version}.zip`
+- **Admin integration**: Adds a "Rollback" link on the Plugins page next to each WordPress.org-hosted plugin. Also adds rollback UI on the Themes page.
+- **Limitations**:
+  - Only works with plugins/themes hosted on WordPress.org (not premium/private)
+  - Cannot rollback to versions not available in the SVN repository
+  - Rollback replaces files but does not revert database changes made by the plugin
+- **File paths**: `wp-content/plugins/wp-rollback/`
+
+### WP-PageNavi
+- **Plugin slug**: `wp-pagenavi/wp-pagenavi.php` (ID #69)
+- **Purpose**: Advanced pagination replacing WordPress default previous/next links with numbered page navigation.
+- **Settings**: wp_options key `pagenavi_options` (serialized array).
+  - `pages_text` — text for "Page X of Y" display (default: `Page %CURRENT_PAGE% of %TOTAL_PAGES%`)
+  - `current_text` — current page text format (default: `%PAGE_NUMBER%`)
+  - `page_text` — page link text format (default: `%PAGE_NUMBER%`)
+  - `first_text` — "First" page link text (default: `First`)
+  - `last_text` — "Last" page link text (default: `Last`)
+  - `prev_text` — "Previous" link text (default: `&laquo;`)
+  - `next_text` — "Next" link text (default: `&raquo;`)
+  - `dotleft_text` — left ellipsis text (default: `...`)
+  - `dotright_text` — right ellipsis text (default: `...`)
+  - `num_pages` — number of page links to show (default: 5)
+  - `num_larger_page_numbers` — number of larger page interval links (default: 3)
+  - `larger_page_numbers_multiple` — larger page interval multiplier (default: 10)
+  - `always_show` — always show pagination even for single page (0/1)
+  - `use_pagenavi_css` — load built-in CSS (0/1, default 1)
+  - `style` — pagination style: `normal` or `select` (dropdown)
+- **Template tag**: `wp_pagenavi($args)` — replaces `previous_posts_link()` / `next_posts_link()` / `the_posts_pagination()`.
+  - Args: `before` (HTML before nav), `after` (HTML after nav), `options` (override settings), `type` (multipart_page or default), `query` (custom WP_Query instance).
+  - Usage in templates: `<?php wp_pagenavi(); ?>` or `<?php wp_pagenavi(array('query' => $custom_query)); ?>`
+- **CSS classes** (for custom styling):
+  - `.wp-pagenavi` — wrapper container
+  - `.current` — current active page
+  - `.page` — individual page links
+  - `.first` — first page link
+  - `.last` — last page link
+  - `.previouspostslink` — previous page link
+  - `.nextpostslink` — next page link
+  - `.extend` — ellipsis elements
+  - `.pages` — "Page X of Y" text
+  - `.smaller`, `.larger` — page links at different intervals
+- **Built-in CSS**: `wp-content/plugins/wp-pagenavi/pagenavi-css.css` — loaded when `use_pagenavi_css` is enabled.
+- **Hooks**:
+  - `wp_pagenavi_class_pages` — filter to modify the CSS class for page text
+  - `wp_pagenavi_class_first` — filter to modify first link CSS class
+  - `wp_pagenavi_class_previouspostslink` — filter to modify previous link CSS class
+  - `wp_pagenavi_class_nextpostslink` — filter to modify next link CSS class
+  - `wp_pagenavi_class_last` — filter to modify last link CSS class
+  - `wp_pagenavi` — filter applied to the final HTML output
+- **File paths**: `wp-content/plugins/wp-pagenavi/`
+
+### Font Awesome
+- **Plugin slug**: `font-awesome/font-awesome.php` (ID #95)
+- **Purpose**: Official Font Awesome integration for WordPress. Provides icons via SVG, webfont, or Kit-based loading with conflict detection.
+- **Settings**: wp_options key `font-awesome` (serialized array).
+  - `technology` — rendering method: `svg` (SVG + JS) or `webfont` (CSS webfont)
+  - `version` — Font Awesome version to load (e.g., `6.5.1` or `latest`)
+  - `usePro` — whether to use Pro icons (boolean)
+  - `compat` — enable Font Awesome 4 compatibility/shimming (boolean, for v4 class names)
+  - `pseudoElements` — enable CSS pseudo-element support for SVG mode (boolean)
+  - `kitToken` — API token for Kit-based loading (string)
+  - `apiToken` — API token for account access
+  - `removeUnregisteredClients` — auto-remove conflicting FA versions (boolean)
+  - `blocklist` — array of MD5 hashes for blocked conflicting resources
+- **Loading methods**:
+  - **CDN** — loads from `cdnjs.cloudflare.com` or `use.fontawesome.com`
+  - **Kit** — loads from `kit.fontawesome.com/{kitToken}.js` (recommended for Pro users)
+  - **Webfont** — traditional CSS `<link>` with `@font-face` rules
+  - **SVG** — JavaScript replaces `<i>` tags with inline SVGs
+- **Shortcode**: `[icon name="coffee"]` or `[icon name="fa-solid fa-coffee"]` — renders an icon inline.
+  - Attributes: `name` (icon name), `class` (additional CSS classes), `prefix` (icon style: fas, far, fab, fal, fad).
+- **PHP API** (namespace `FortAwesome`):
+  - `FortAwesome\fa()` — returns the main plugin instance
+  - `FortAwesome\FontAwesome_Loader::instance()` — singleton loader
+  - `FortAwesome\FontAwesome::PLUGIN_VERSION` — current plugin version constant
+  - `FortAwesome\FontAwesome::OPTIONS_KEY` — the wp_options key (`font-awesome`)
+  - `fa()->using_kit()` — check if kit-based loading is active
+  - `fa()->using_pro()` — check if Pro icons are enabled
+  - `fa()->technology()` — get current rendering technology
+- **Hooks**:
+  - `font_awesome_preferences` — action for plugins/themes to register their FA requirements
+  - `font_awesome_enqueued` — action fired after FA assets are enqueued
+  - `font_awesome_requirements` — filter to modify registered requirements
+- **Conflict detection**: Scans the page for multiple Font Awesome versions and identifies conflicting CSS/JS resources. Can auto-remove unregistered conflicting resources via `removeUnregisteredClients` setting. Manual blocklist via MD5 hashes of conflicting file contents/URLs.
+  - `resolve_fontawesome_conflicts()` — PHP function to filter out conflicting stylesheets via `style_loader_src` filter
+- **Enqueue handles**:
+  - `font-awesome-official` — main CSS handle (webfont mode)
+  - `font-awesome-official-js` — main JS handle (SVG mode)
+  - `font-awesome-official-v4shim` — v4 compatibility shim
+- **REST API**: `font-awesome/v1/config` — GET/POST plugin configuration.
+- **File paths**:
+  - Plugin directory: `wp-content/plugins/font-awesome/`
+  - Admin React app: `wp-content/plugins/font-awesome/admin/build/`
+
+### Common Patterns
+- **Code Snippets** is often used as an alternative to editing `functions.php`. Snippets persist across theme changes, unlike theme functions.
+- **Search Regex** handles serialized data safely — critical for Elementor, ACF, and other plugins that store serialized arrays in postmeta and options. Always preview matches before executing replacements.
+- **WP Rollback** is a one-time operation tool. After rolling back, the plugin/theme remains at the older version until manually updated. Does not revert database schema changes from newer versions.
+- **WP-PageNavi** requires theme support — the theme template must call `wp_pagenavi()` instead of default WordPress pagination functions. Some themes include built-in support.
+- **Font Awesome** conflict detection is important in WordPress because themes, plugins, and page builders (especially Elementor) often bundle their own Font Awesome version, causing duplicate icon loading and visual glitches.

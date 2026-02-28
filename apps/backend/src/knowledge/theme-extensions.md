@@ -1,0 +1,123 @@
+## WordPress Theme Extension Plugins
+
+### Astra Pro Addon
+- **Plugin slug**: `astra-addon/astra-addon.php`. Detection: `defined('STARTER_TEMPLATES_VER')` is for Starter Templates; for Astra Pro use `defined('ASTRA_EXT_VER')` or `class_exists('Starter_Templates_Starter')` is wrong -- use `class_exists('Astra_Addon_Update')` or `defined('STARTER_TEMPLATES_VER')` is unrelated. Correct detection: `defined('ASTRA_EXT_VER')` or `class_exists('Astra_Ext_Extension')`.
+- **Settings storage**: All settings stored in a single wp_options key `astra-settings` (serialized array). This is shared between the free Astra theme and Astra Pro -- Pro modules add additional keys to the same array.
+- **Module system**: Each Pro feature is a toggleable module. Modules are enabled/disabled in wp_options key `astra-addon-modules` (serialized array keyed by module slug, value 'enabled'/'disabled'). Modules can also be managed via `Starter_Templates_Starter` -- actually via `Astra_Ext_Extension::get_enabled_addons()`.
+- **Available modules and their settings keys** (within `astra-settings` option):
+  - **Colors & Typography** (slug: `colors-and-background`): `h1-color`, `h2-color`, ..., `h6-color`, `body-font-family`, `body-font-weight`, `body-line-height`, `headings-font-family`, `headings-font-weight`, `headings-line-height`, `font-size-body`, `font-size-h1` through `font-size-h6`, `theme-color`, `link-color`, `link-h-color`, `text-color`, `background-color`.
+  - **Header Builder / Footer Builder** (slug: `header-sections`): `header-desktop-items` (serialized layout array), `header-mobile-items`, `footer-desktop-items`. Item keys: `above-header-*`, `below-header-*`, `primary-header-*`, `header-account-*`, `header-button*-*`, `header-search-*`, `header-widget-*`, `header-html-*`, `header-divider-*`, `header-language-switcher-*`.
+  - **Blog Pro** (slug: `blog-pro`): `blog-single-post-structure`, `blog-single-width`, `blog-single-max-width`, `blog-archive-title-layout`, `blog-post-content`, `blog-meta`, `blog-meta-separator`, `blog-date-box`, `blog-date-box-style`, `blog-excerpt-count`, `blog-pagination`, `blog-pagination-style`, `blog-filter-layout`, `blog-auto-refresh`.
+  - **WooCommerce** (slug: `woocommerce`): `shop-product-structure`, `shop-product-hover-style`, `shop-grids`, `shop-pagination`, `single-product-gallery-layout`, `shop-quick-view-enable`, `shop-off-canvas-trigger-type`, `shop-sale-style`, `shop-product-shadow`, `shop-infinite-scroll-event`, `checkout-layout-type`, `checkout-modern-*`, `cart-multistep-checkout`.
+  - **Custom Layouts** (slug: `advanced-hooks`): Creates post type `astra-advanced-hook`. Each layout has meta: `ast-advanced-hook-location` (display rules), `ast-advanced-hook-exclusion`, `ast-advanced-hook-action` (hook name), `ast-advanced-hook-priority`, `ast-advanced-hook-layout` (code/template), `ast-advanced-hook-header`, `ast-advanced-hook-footer`, `ast-advanced-hook-404`, `ast-advanced-hook-with-starter-starter-content-type`.
+  - **Nav Menu** (slug: `nav-menu`): `header-account-action-type`, `header-account-login-style`, mega menu support via nav menu item meta `_menu_item_megamenu_*`.
+  - **Sticky Header** (slug: `sticky-header`): `sticky-header-on-devices`, `sticky-header-style`, `sticky-header-shrink`, `header-main-stick`, `header-above-stick`, `header-below-stick`, `sticky-header-logo-width`, `sticky-above-header-bg-obj-responsive`, `sticky-header-content-section-text-color`.
+  - **Site Layouts** (slug: `site-layouts`): `site-layout`, `site-layout-box-width`, `site-layout-box-bg-obj`, `site-layout-padded-pad`, `site-layout-fluid-lr-padding`.
+  - **Spacing** (slug: `spacing`): `container-outside-spacing`, `single-post-outside-spacing`, `site-content-layout`, per-post-type spacing settings.
+  - **Scroll to Top** (slug: `scroll-to-top`): `scroll-to-top-enable`, `scroll-to-top-icon-size`, `scroll-to-top-icon-radius`, `scroll-to-top-icon-color`, `scroll-to-top-icon-h-color`, `scroll-to-top-icon-bg-color`, `scroll-to-top-on-devices`, `scroll-to-top-icon-position`.
+- **Custom Layouts post type**: `astra-advanced-hook` — lets users inject code/content at any Astra theme hook location. Display rules stored in postmeta for conditional rendering (specific pages, posts, categories, user roles, etc.).
+- **Customizer integration**: Pro modules add sections/controls to the WordPress Customizer under Astra's panels. All settings save to the same `astra-settings` option. Customizer sections: `section-colors-background`, `section-typography`, `section-header-builder-layout`, `section-blog`, `section-woo-general`, `section-advanced-hooks`.
+- **Hooks/Filters**:
+  - `astra_addon_enabled_modules` — filter array of enabled modules
+  - `astra_get_option` — filter any Astra setting value (works for both free and pro settings)
+  - `astra_meta_box_options` — filter per-page/post meta box options
+  - `astra_advanced_hooks_post_types` — filter post types where custom layouts can appear
+  - `astra_color_palettes` — filter global color palette
+  - `astra_addon_dynamic_css` — filter Pro dynamic CSS output
+  - `astra_blog_post_per_page` — filter blog posts per page
+  - `astra_woo_shop_product_structure` — filter WooCommerce product structure
+  - `astra_sticky_header_style` — filter sticky header style output
+- **Key functions**:
+  - `astra_get_option($key, $default)` — get any Astra/Pro setting from `astra-settings`
+  - `astra_update_option($key, $value)` — update a specific setting key
+  - `Astra_Ext_Extension::get_enabled_addons()` — get array of enabled Pro modules
+  - `astra_addon_builder_helper()->is_component_loaded($component, $device)` — check if header/footer component is loaded
+- **CSS output**: Dynamic CSS generated on page load and cached via transient `astra-addon-dynamic-css`. Custom Layouts use their own CSS embedded in the layout content.
+- **File structure**: `astra-addon/addons/{module-slug}/` — each module has its own directory with `class-astra-ext-{module}.php` as the entry point.
+
+### GeneratePress Premium (GP Premium)
+- **Plugin slug**: `gp-premium/gp-premium.php` (legacy) or `generatepress-pro/generatepress-pro.php` (v2.0+). Detection: `defined('GP_PREMIUM_VERSION')` or `defined('GENERATEPRESS_PRO_VERSION')`.
+- **Settings storage**: All theme settings stored in wp_options key `generate_settings` (serialized array). Shared between free GeneratePress theme and GP Premium. Some module-specific options use separate keys.
+- **Module system**: Each feature is a toggleable module. Legacy (GP Premium): modules enabled/disabled via `generate_package_*` options (e.g., `generate_package_colors` = 'activated'/'deactivated'). Modern (GeneratePress Pro): modules managed in `generatepress_pro_modules` option.
+- **Available modules and their settings keys** (within `generate_settings` option):
+  - **Typography** (slug: `font-manager` or `typography`): `font_body`, `body_font_size`, `body_line_height`, `font_heading_1` through `font_heading_6`, `heading_1_font_size` through `heading_6_font_size`, `heading_1_weight`, `font_buttons`, `font_site_title`, `font_site_tagline`, `font_navigation`. Typography data also stored in `generate_settings[typography]` as structured array for the v2 typography system.
+  - **Colors** (slug: `colors`): `global_colors` (array of color definitions with slug, name, color), `header_background_color`, `header_text_color`, `header_link_color`, `navigation_background_color`, `navigation_text_color`, `content_background_color`, `content_text_color`, `content_link_color`, `sidebar_background_color`, `sidebar_text_color`, `footer_background_color`, `footer_text_color`, `footer_link_color`, `form_background_color`, `form_text_color`, `form_border_color`, `button_background_color`, `button_text_color`.
+  - **Elements** (slug: `elements`): Creates post type `gp_elements`. Element types: `hook` (inject content at GP hook locations), `layout` (override page layout), `header` (custom header), `block` (reusable block). Meta keys: `_generate_element_type`, `_generate_element_hook`, `_generate_element_hook_priority`, `_generate_element_display_conditions` (serialized array of rules), `_generate_element_exclude_conditions`, `_generate_element_user_conditions`, `_generate_element_custom_css`.
+  - **Blog** (slug: `blog`): `post_content`, `excerpt_length`, `read_more_text`, `masonry`, `columns`, `featured_image`, `featured_image_size`, `blog_post_padding`, `single_post_navigation`, `single_featured_image`, `single_content_area`.
+  - **WooCommerce** (slug: `woocommerce`): `wc_*` prefixed keys within `generate_settings`. `wc_columns`, `wc_product_columns`, `wc_single_product_sidebar`, `wc_cart_panel`, `wc_checkout_layout`, `wc_shop_page_title`, `wc_quantity_buttons`, `wc_product_archive_image`.
+  - **Menu Plus** (slug: `menu-plus`): `nav_search`, `nav_search_modal`, `slideout_menu`, `slideout_menu_side`, `mobile_header`, `mobile_header_breakpoint`, `sticky_menu`, `sticky_menu_logo`, `sticky_menu_effect`, `nav_layout_setting`, `container_alignment`.
+  - **Backgrounds** (slug: `backgrounds`): `body_background_image`, `header_background_image`, `nav_background_image`, `content_background_image`, `sidebar_background_image`. Each also has `*_repeat`, `*_size`, `*_position`, `*_attachment` sub-keys.
+  - **Spacing** (slug: `spacing`): `header_top`, `header_bottom`, `content_top`, `content_bottom`, `content_left`, `content_right`, `separator`, `sidebar_top`, `mobile_header_top`, `footer_widget_area_top`, `footer_widget_area_bottom`.
+  - **Sections** (slug: `sections`): Legacy module for creating custom sections as post type `gp_sections` (deprecated in favor of Elements).
+- **Elements post type**: `gp_elements` — flexible system for injecting content at any GeneratePress hook, overriding layouts, or adding custom headers. Display conditions determine where elements appear (specific posts, pages, categories, archive pages, etc.).
+- **Customizer integration**: Pro modules add sections/controls under GeneratePress panels in the Customizer. Key customizer sections: `generate_colors_section`, `generate_typography_section`, `generate_spacing_section`, `generate_blog_section`, `generate_layout_section`. All settings save to `generate_settings` option.
+- **Hooks/Filters**:
+  - `generate_settings_defaults` — filter default settings array
+  - `generate_option_defaults` — filter option defaults
+  - `generate_typography_default_fonts` — filter default font list
+  - `generate_colors_defaults` — filter default color values
+  - `generate_elements_custom_args` — filter Elements post type args
+  - `generate_elements_display_conditions` — filter display conditions for Elements
+  - `generate_blog_columns` — filter blog column count
+  - `generate_excerpt_length` — filter excerpt length
+  - `generate_navigation_search_output` — filter nav search HTML
+  - `generate_spacing_settings` — filter spacing settings output
+  - `generate_woocommerce_defaults` — filter WooCommerce defaults
+- **Theme hook locations** (used by Elements): `generate_before_header`, `generate_after_header`, `generate_before_content`, `generate_after_content`, `generate_before_footer`, `generate_after_footer`, `generate_before_entry_title`, `generate_after_entry_title`, `generate_before_entry_content`, `generate_after_entry_content`, `generate_before_main_content`, `generate_after_main_content`, `generate_inside_post`, `generate_before_do_template_part`, `generate_after_do_template_part`.
+- **Key functions**:
+  - `generate_get_option($key)` — get a GeneratePress setting (free + premium)
+  - `generate_get_defaults()` — get all default settings
+  - `generate_get_color_defaults()` — get color defaults
+  - `generate_get_default_fonts()` — get typography defaults
+  - `GeneratePress_Pro_Elements::get_elements($type)` — get active elements of a specific type
+- **CSS output**: Dynamic CSS generated and cached. CSS transient: `generate_dynamic_css_output`. After changing settings programmatically, delete transient: `delete_transient('generate_dynamic_css_output')`. External CSS file option: `generate_settings[external_css_output]`.
+- **Global colors**: Defined in `generate_settings[global_colors]` as an array of objects with `slug`, `name`, `color`. Accessible as CSS variables: `var(--contrast)`, `var(--contrast-2)`, `var(--contrast-3)`, `var(--base)`, `var(--base-2)`, `var(--base-3)`, `var(--accent)`, `var(--accent-hover)`.
+- **File structure**: GP Premium: `gp-premium/library/{module-slug}/` — each module has `generate-{module}.php`. GeneratePress Pro: `generatepress-pro/src/modules/{module-slug}/` with class-based structure.
+- **Note on GeneratePress Premium (slug: `gp-premium`)**: GeneratePress Premium is the older name for the same product, now rebranded to GeneratePress Pro. Both slugs (`gp-premium` and `generatepress-pro`) refer to the same extension. Detection: `defined('GP_PREMIUM_VERSION')` (legacy) or `defined('GENERATE_PREMIUM_VERSION')` (alternative legacy constant). The modern constant is `defined('GENERATEPRESS_PRO_VERSION')`.
+
+### Kadence Pro
+- **Plugin slug**: `kadence-pro/kadence-pro.php`. Detection: `defined('KTP_VERSION')` or `class_exists('Kadence_Pro')`.
+- **Theme requirement**: Requires the Kadence theme (`wp-content/themes/kadence/`). Detection for theme: `defined('KADENCE_VERSION')` or `wp_get_theme()->get('TextDomain') === 'starter-starter'` -- actually `wp_get_theme()->get('TextDomain') === 'kadence'`.
+- **Settings storage**: Theme settings stored in wp_options key `kadence_theme_options` (serialized array). This is shared between free Kadence theme and Kadence Pro. Pro adds additional settings keys. Some Pro settings also use the WordPress Customizer and save to `theme_mods_kadence`.
+- **Module system**: Pro features organized as addons/modules. Enabled/disabled in `kadence_pro_activated_addons` option (serialized array). Each module can be independently toggled.
+- **Available modules and their settings keys** (within `kadence_theme_options` or `theme_mods_kadence`):
+  - **Header Addons** (slug: `header-addons`): Additional header builder components: `header_sticky`, `header_sticky_shrink`, `header_sticky_custom_logo`, `header_sticky_logo_width`, `header_sticky_background`, `header_reveal_scroll_up`, `transparent_header_device`, `transparent_header_archive`, `transparent_header_background`, `header_search_modal`, `header_mobile_switch_width`, `header_divider_*`, `header_toggle_widget_*`.
+  - **Hooked Elements** (slug: `hooked-elements`): Creates post type `kadence_element`. Element types: `code` (PHP/HTML injection), `fixed` (fixed position element), `replace_header`, `replace_footer`, `replace_404`, `replace_content`. Meta keys: `_kad_element_type`, `_kad_element_hook`, `_kad_element_hook_priority`, `_kad_element_show_conditionals` (display rules), `_kad_element_hide_conditionals` (exclusion rules), `_kad_element_user_conditionals` (user role rules), `_kad_element_device_conditionals`, `_kad_element_expires`, `_kad_element_fixed_*`.
+  - **Conditional Headers** (slug: `conditional-headers`): Creates header variations assigned to specific pages/conditions. Settings in `kadence_theme_options` under `conditional_header_*` keys. Uses the same header builder system but with conditional display rules.
+  - **WooCommerce Extras** (slug: `woocommerce-addons`): `product_archive_*`, `product_tab_*`, `custom_product_tab`, `product_gallery_zoom`, `product_gallery_slider`, `product_archive_toggle`, `cart_side_panel`, `product_size_chart`, `product_brands`, `variation_swatches`, `shop_filter_sidebar`, `product_countdown_timer`.
+  - **Scripts Manager** (slug: `scripts`): Global header/footer scripts stored in `kadence_theme_options` under `custom_header_scripts`, `custom_footer_scripts`, `custom_body_scripts`. Per-page scripts via postmeta `_kad_post_scripts_header`, `_kad_post_scripts_footer`.
+  - **Local Gravatars** (slug: `local-gravatars`): Caches Gravatar images locally for performance. Settings: `local_gravatars_enabled`, `local_gravatars_cache_time`.
+  - **Dark Mode** (slug: `dark-mode`): `dark_mode_enable`, `dark_mode_switch_type`, `dark_mode_switch_position`, `dark_mode_palette` (color overrides for dark mode), `dark_mode_logo`.
+  - **Reading Time** (slug: `reading-time`): `reading_time_enable`, `reading_time_words_per_minute`, `reading_time_label`, `reading_time_post_types`.
+  - **Modal/Popup** (slug: `modal`): `modal_element_*` settings for popup/modal display.
+- **Hooked Elements post type**: `kadence_element` — flexible system for injecting content at Kadence theme hook locations, replacing headers/footers, or adding fixed-position elements. Supports scheduling (start/end date), device targeting, and user role conditions.
+- **Customizer integration**: Pro modules extend the Kadence Customizer panel. Key customizer sections: `kadence_customizer_header`, `kadence_customizer_general`, `kadence_customizer_colors`, `kadence_customizer_typography`. Settings use both `kadence_theme_options` and `theme_mods_kadence`.
+- **Kadence theme hook locations** (used by Hooked Elements): `kadence_before_header`, `kadence_after_header`, `kadence_before_content`, `kadence_after_content`, `kadence_before_footer`, `kadence_after_footer`, `kadence_before_main_content`, `kadence_after_main_content`, `kadence_hero_header`, `kadence_entry_header`, `kadence_entry_footer`, `kadence_single_before_inner_content`, `kadence_single_after_inner_content`, `kadence_archive_before_entry`, `kadence_archive_after_entry`, `kadence_comments_before`, `kadence_comments_after`, `kadence_404_before_inner_content`, `kadence_404_after_inner_content`, `kadence_before_sidebar`, `kadence_after_sidebar`.
+- **Hooks/Filters**:
+  - `kadence_pro_enabled_addons` — filter array of enabled Pro modules
+  - `kadence_element_display` — filter whether a hooked element should display (bool)
+  - `kadence_element_content` — filter hooked element content output
+  - `kadence_pro_header_sticky_options` — filter sticky header settings
+  - `kadence_pro_scripts_output` — filter custom scripts output
+  - `kadence_dark_mode_colors` — filter dark mode color palette
+  - `kadence_conditional_headers` — filter conditional header configurations
+  - `kadence_element_post_type_args` — filter kadence_element post type args
+  - `kadence_reading_time_words_per_minute` — filter WPM for reading time calculation
+- **Key functions**:
+  - `kadence()->option($key)` — get a Kadence theme option (free + Pro)
+  - `Kadence_Pro::get_enabled_addons()` — get array of enabled Pro modules
+  - `kadence_pro_element_conditionals($element_id)` — get display conditions for a hooked element
+  - `Kadence_Pro_Hooked_Elements::get_active_elements($hook)` — get active elements for a specific hook location
+- **CSS output**: Dynamic CSS generated on page load. Kadence uses a sophisticated CSS variable system. Pro adds additional CSS for sticky headers, dark mode, etc. CSS cached in transients: `kadence_dynamic_css`.
+- **Color system**: Kadence uses a global palette system with 9 palette colors accessible as CSS variables: `var(--global-palette1)` through `var(--global-palette9)`. Pro's dark mode overrides these variables for dark mode.
+- **File structure**: `kadence-pro/dist/` — compiled assets. `kadence-pro/includes/` — PHP classes. `kadence-pro/includes/elements/` — hooked elements logic. `kadence-pro/includes/addons/` — per-module classes (e.g., `class-header-addons.php`, `class-hooked-elements.php`).
+
+### Common Patterns
+- All three theme extension plugins follow the same architecture: a free theme with a separate premium/pro plugin that adds advanced features via a module system.
+- Settings are stored in a single wp_options key shared between the free theme and pro plugin. This means `get_option('astra-settings')`, `get_option('generate_settings')`, and `get_option('kadence_theme_options')` contain both free and pro settings.
+- Each plugin has a "hooked elements" or "custom layouts" system (Astra: `astra-advanced-hook`, GeneratePress: `gp_elements`, Kadence: `kadence_element`) that lets users inject content at theme hook locations with conditional display rules.
+- Module enable/disable state is stored in a separate option from the main settings. Always check if a module is enabled before assuming its features are available.
+- All three plugins heavily use the WordPress Customizer for settings management. Changes made programmatically to the options should also clear relevant CSS caches/transients.
+- When modifying settings programmatically, use the theme's getter function (e.g., `astra_get_option`, `generate_get_option`, `kadence()->option()`) to read values, and update the full serialized option to write values.
+- Custom layouts/elements post types support conditional display rules (show on specific pages, posts, archives, user roles, etc.) stored as serialized arrays in postmeta.
+- After updating theme settings via code, clear the dynamic CSS cache: delete relevant transients (`astra-addon-dynamic-css`, `generate_dynamic_css_output`, `kadence_dynamic_css`) to force CSS regeneration.

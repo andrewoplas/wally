@@ -1,0 +1,434 @@
+## Niche & Utility WordPress Plugins
+
+### NPS Survey
+- **Plugin slug**: `nps-survey/nps-survey.php` (ID #21)
+- **Purpose**: Collects Net Promoter Score feedback from site visitors and users. Displays a survey popup asking "How likely are you to recommend us?" on a 0-10 scale, with an optional follow-up text question. Includes an analytics dashboard for tracking NPS scores over time.
+- **Settings**: wp_options key `nps_survey_settings` (serialized array).
+  - `enabled` — toggle survey on/off (boolean)
+  - `question` — main survey question text (default: "How likely are you to recommend us to a friend or colleague?")
+  - `followup_question` — follow-up open-ended question text
+  - `display_frequency` — how often to show survey: `once`, `session`, `always`
+  - `display_delay` — delay in seconds before popup appears (default: 5)
+  - `display_pages` — array of page IDs or `all` for where survey displays
+  - `cookie_expiry` — days before showing survey again to same user (default: 90)
+  - `require_login` — only show to logged-in users (boolean)
+  - `branding` — show plugin branding on survey (boolean)
+  - `color` — primary color for survey UI (hex string)
+  - `position` — survey position: `bottom-right`, `bottom-left`, `center`
+- **Custom DB table**: `{prefix}nps_survey_responses` — stores all survey responses.
+  - Columns: `id`, `score` (0-10 integer), `feedback` (text), `page_url`, `user_id` (nullable), `user_email` (nullable), `ip_address`, `user_agent`, `created_at`.
+- **NPS scoring categories**:
+  - Detractors: score 0-6
+  - Passives: score 7-8
+  - Promoters: score 9-10
+  - NPS = % Promoters - % Detractors (range: -100 to +100)
+- **Key functions**:
+  - `nps_survey_get_responses($args)` — retrieve responses with optional date range and filtering
+  - `nps_survey_get_score($date_from, $date_to)` — calculate NPS score for a date range
+  - `nps_survey_save_response($data)` — save a new survey response
+  - `nps_survey_delete_response($id)` — delete a response
+  - `nps_survey_export_csv()` — export responses as CSV
+- **REST API endpoints** (namespace `nps-survey/v1`):
+  - `POST /submit` — submit a survey response (public endpoint)
+  - `GET /responses` — retrieve responses (admin only)
+  - `GET /stats` — retrieve NPS score and analytics (admin only)
+  - `DELETE /responses/{id}` — delete a response
+- **Hooks**:
+  - `nps_survey_before_display` — filter to control whether survey displays (return false to suppress)
+  - `nps_survey_after_submit` — action fired after a response is saved (receives response data)
+  - `nps_survey_score_calculated` — action fired after NPS score is calculated
+  - `nps_survey_settings_saved` — action fired after settings are updated
+- **Admin pages**: Settings page under Settings menu (`admin.php?page=nps-survey`). Dashboard widget showing current NPS score. Responses list at `admin.php?page=nps-survey-responses`.
+- **Detection**: Check `is_plugin_active('nps-survey/nps-survey.php')` or `get_option('nps_survey_settings')`.
+- **File paths**: `wp-content/plugins/nps-survey/`
+
+### WC Admin Email
+- **Plugin slug**: `wc-admin-email/wc-admin-email.php` (ID #22)
+- **Purpose**: Customize WooCommerce admin notification emails. Allows modifying recipient addresses, subjects, and content of WooCommerce admin emails without editing templates directly. Extends the WooCommerce email settings panel.
+- **Settings**: Stored within WooCommerce's existing email options framework in wp_options.
+  - `woocommerce_new_order_settings` — extended with custom recipient, subject, heading fields
+  - `woocommerce_cancelled_order_settings` — extended similarly
+  - `woocommerce_failed_order_settings` — extended similarly
+  - `wc_admin_email_settings` — plugin-specific settings (serialized array):
+    - `custom_recipients` — per-email-type recipient overrides (associative array)
+    - `conditional_recipients` — recipients based on order conditions (product category, order total, etc.)
+    - `disable_emails` — array of admin email types to suppress
+    - `custom_subjects` — per-email-type subject line overrides with merge tags
+    - `reply_to` — custom reply-to address for admin emails
+- **Merge tags** available in custom subjects/content:
+  - `{order_number}` — WooCommerce order number
+  - `{order_total}` — formatted order total
+  - `{customer_name}` — billing first + last name
+  - `{customer_email}` — billing email address
+  - `{site_title}` — WordPress site title
+  - `{order_date}` — order date formatted per WooCommerce settings
+- **Key functions**:
+  - `wc_admin_email_get_recipients($email_type)` — get configured recipients for an email type
+  - `wc_admin_email_is_disabled($email_type)` — check if an admin email type is disabled
+- **Hooks**:
+  - `wc_admin_email_recipients` — filter to modify recipients dynamically (receives email type and order object)
+  - `wc_admin_email_subject` — filter to modify email subject (receives subject, email type, order)
+  - `wc_admin_email_should_send` — filter returning boolean to conditionally suppress an email
+  - `wc_admin_email_custom_merge_tags` — filter to add custom merge tags
+- **WooCommerce integration**: Adds settings fields to WooCommerce > Settings > Emails tab. Each admin email type (New Order, Cancelled Order, Failed Order) gets additional configuration fields.
+- **Detection**: Check `is_plugin_active('wc-admin-email/wc-admin-email.php')` or `get_option('wc_admin_email_settings')`. Requires WooCommerce to be active.
+- **File paths**: `wp-content/plugins/wc-admin-email/`
+
+### CI HUB Connector
+- **Plugin slug**: `ci-hub-connector/ci-hub-connector.php` (ID #39)
+- **Purpose**: Connects WordPress to external Digital Asset Management (DAM) systems such as Adobe Experience Manager, Bynder, Celum, Canto, and others. Provides a bridge between DAM platforms and the WordPress Media Library for centralized asset management.
+- **Settings**: wp_options key `cihub_settings` (serialized array).
+  - `api_url` — CI HUB API endpoint URL
+  - `api_key` — authentication API key for CI HUB service
+  - `client_id` — OAuth client ID for DAM connection
+  - `client_secret` — OAuth client secret
+  - `connected_sources` — array of connected DAM source configurations
+  - `sync_on_upload` — auto-sync new uploads to DAM (boolean)
+  - `sync_metadata` — sync metadata fields between WordPress and DAM (boolean)
+  - `default_source` — default DAM source ID for new assets
+  - `cache_duration` — how long to cache DAM asset data locally (seconds, default 3600)
+- **Custom DB table**: `{prefix}cihub_assets` — maps WordPress attachments to DAM assets.
+  - Columns: `id`, `attachment_id` (wp_posts), `dam_asset_id`, `dam_source`, `dam_url`, `metadata` (JSON), `sync_status`, `last_synced`, `created_at`, `updated_at`.
+- **Postmeta keys** (on attachment posts):
+  - `_cihub_asset_id` — DAM asset identifier
+  - `_cihub_source` — DAM source name/ID
+  - `_cihub_sync_date` — last sync timestamp
+  - `_cihub_metadata` — serialized DAM metadata
+- **Key features**:
+  - Media Library integration: Browse DAM assets directly from the WordPress media modal
+  - Asset import: Pull assets from DAM into WordPress Media Library
+  - Metadata sync: Two-way sync of title, description, alt text, tags between WordPress and DAM
+  - Bulk operations: Import multiple assets at once
+  - Asset versioning: Update WordPress media when DAM asset version changes
+- **REST API endpoints** (namespace `cihub/v1`):
+  - `GET /assets` — browse DAM assets (proxy to DAM API)
+  - `POST /import` — import a DAM asset into WordPress
+  - `POST /sync/{attachment_id}` — sync a specific attachment with its DAM source
+  - `GET /sources` — list connected DAM sources
+  - `POST /connect` — establish a new DAM connection
+- **Hooks**:
+  - `cihub_before_import` — action fired before importing an asset from DAM
+  - `cihub_after_import` — action fired after import (receives attachment ID and DAM data)
+  - `cihub_sync_metadata` — filter to modify metadata before syncing
+  - `cihub_asset_sources` — filter to modify available DAM sources
+- **Detection**: Check `is_plugin_active('ci-hub-connector/ci-hub-connector.php')` or `get_option('cihub_settings')`.
+- **File paths**: `wp-content/plugins/ci-hub-connector/`
+
+### KB Vector
+- **Plugin slug**: `kb-vector/kb-vector.php` (ID #44)
+- **Purpose**: Kadence ecosystem utility plugin for vector/SVG handling and performance optimizations. Part of the Kadence Blocks suite, providing backend SVG rendering and icon management utilities used by Kadence Blocks and Kadence Theme.
+- **Settings**: wp_options key `kb_vector_settings` (serialized array).
+  - `svg_support` — enable SVG support in media library (boolean)
+  - `sanitize_svgs` — sanitize SVGs on upload (boolean, default true)
+  - `icon_cache` — cache rendered icon SVGs (boolean, default true)
+  - `lazy_load_icons` — lazy load icon sets (boolean)
+  - `preload_icons` — array of icon set slugs to preload
+- **Key features**:
+  - SVG rendering engine for Kadence icon blocks
+  - Icon library management (Font Awesome, Kadence custom icons, custom SVG icons)
+  - SVG sanitization on upload using DOMPurify-style PHP sanitizer
+  - Performance optimization: caches rendered SVG markup in transients
+  - Provides REST endpoints for icon set browsing
+- **Transient keys**:
+  - `kb_vector_icon_{set}_{name}` — cached individual icon SVG markup
+  - `kb_vector_icon_sets` — cached list of available icon sets
+- **REST API endpoints** (namespace `kb-vector/v1`):
+  - `GET /icons` — list all available icon sets
+  - `GET /icons/{set}` — get all icons from a specific set
+  - `GET /icon/{set}/{name}` — get a single icon SVG markup
+  - `POST /upload` — upload a custom SVG icon
+- **Hooks**:
+  - `kb_vector_icon_sets` — filter to register custom icon sets
+  - `kb_vector_sanitize_svg` — filter to modify SVG sanitization rules
+  - `kb_vector_render_icon` — filter to modify rendered icon output
+  - `kb_vector_allowed_tags` — filter to modify allowed SVG tags during sanitization
+- **Integration**: Works alongside `kadence-blocks` plugin. Kadence Blocks depends on KB Vector for icon rendering. Also used by Kadence Theme for header/footer icon elements.
+- **Detection**: Check `is_plugin_active('kb-vector/kb-vector.php')` or `function_exists('kb_vector_render_icon')`.
+- **File paths**: `wp-content/plugins/kb-vector/`
+
+### KB Custom SVG
+- **Plugin slug**: `kb-custom-svg/kb-custom-svg.php` (ID #63)
+- **Purpose**: Enables SVG file uploads to the WordPress Media Library with built-in sanitization for security. Part of the Kadence ecosystem, allowing safe SVG usage in posts, pages, and Kadence Blocks.
+- **Settings**: wp_options key `kb_custom_svg_settings` (serialized array).
+  - `enabled` — master toggle for SVG uploads (boolean, default true)
+  - `sanitize` — sanitize SVGs on upload to remove malicious code (boolean, default true)
+  - `allowed_roles` — array of user roles allowed to upload SVGs (default: `['administrator']`)
+  - `minify` — minify SVG markup on upload (boolean, default false)
+  - `remove_dimensions` — strip width/height attributes for responsive SVGs (boolean)
+  - `allowed_tags` — whitelist of allowed SVG elements (array)
+  - `allowed_attributes` — whitelist of allowed SVG attributes (array)
+- **MIME type registration**: Adds `image/svg+xml` to WordPress allowed upload MIME types via `upload_mimes` filter. File extension: `.svg` and `.svgz`.
+- **Sanitization process**:
+  - Removes `<script>` tags and event handler attributes (`onclick`, `onload`, etc.)
+  - Strips `<foreignObject>` elements
+  - Removes external resource references (`xlink:href` to external URLs)
+  - Strips XML processing instructions and DOCTYPE declarations
+  - Validates against allowed SVG element/attribute whitelist
+  - Optionally minifies output by removing comments and excess whitespace
+- **Key functions**:
+  - `kb_custom_svg_sanitize($svg_content)` — sanitize an SVG string, returns cleaned SVG
+  - `kb_custom_svg_is_safe($file_path)` — check if an SVG file passes security validation (boolean)
+  - `kb_custom_svg_get_dimensions($file_path)` — extract width/height from SVG viewBox or attributes
+- **Hooks**:
+  - `kb_custom_svg_allowed_tags` — filter to modify the SVG element whitelist
+  - `kb_custom_svg_allowed_attributes` — filter to modify the SVG attribute whitelist
+  - `kb_custom_svg_sanitized` — action fired after an SVG is sanitized (receives attachment ID)
+  - `kb_custom_svg_upload_roles` — filter to modify which roles can upload SVGs
+- **WordPress integration**:
+  - Filters `upload_mimes` to add `svg` and `svgz` MIME types
+  - Filters `wp_check_filetype_and_ext` to allow SVG file type detection
+  - Filters `wp_handle_upload_prefilter` to sanitize SVGs before they enter the media library
+  - Adds SVG thumbnail preview in Media Library grid/list views via `wp_get_attachment_image_src` filter
+- **Detection**: Check `is_plugin_active('kb-custom-svg/kb-custom-svg.php')` or `get_option('kb_custom_svg_settings')`.
+- **File paths**: `wp-content/plugins/kb-custom-svg/`
+
+### ZipWP
+- **Plugin slug**: `zipwp/zipwp.php` (ID #67)
+- **Purpose**: AI-powered website builder that generates complete WordPress sites using artificial intelligence. Provides a guided wizard for creating full websites with AI-generated content, layouts, and design based on user-provided business descriptions.
+- **Settings**: wp_options key `zipwp_settings` (serialized array).
+  - `api_key` — ZipWP service API key
+  - `api_url` — ZipWP API endpoint (default: `https://api.zipwp.com/v1`)
+  - `site_type` — business type/category selected during setup
+  - `site_description` — AI prompt description of the business
+  - `design_style` — selected design style preset
+  - `color_palette` — selected or AI-generated color palette (array)
+  - `typography` — selected typography pairing (array with heading/body fonts)
+  - `generated_pages` — array of pages generated by AI
+  - `template_kit` — selected Starter Templates kit ID
+  - `onboarding_complete` — whether initial setup wizard is done (boolean)
+- **Transient keys**:
+  - `zipwp_templates_cache` — cached template library data
+  - `zipwp_ai_content_{hash}` — cached AI-generated content for specific prompts
+- **Key features**:
+  - Onboarding wizard: Multi-step setup collecting business info, design preferences
+  - AI content generation: Creates page content (About, Services, Contact, etc.) from business description
+  - Template library: Curated Starter Templates compatible with Elementor, Gutenberg, and Beaver Builder
+  - Site blueprint: Exports/imports complete site configurations (pages, settings, customizer values)
+  - Image suggestions: AI-powered stock image recommendations
+- **REST API endpoints** (namespace `zipwp/v1`):
+  - `POST /generate` — generate site content from description
+  - `GET /templates` — fetch available template kits
+  - `POST /import` — import a template kit
+  - `POST /ai-content` — generate AI content for a specific page/section
+  - `GET /status` — check generation job status
+  - `POST /blueprint/export` — export site blueprint
+  - `POST /blueprint/import` — import site blueprint
+- **Hooks**:
+  - `zipwp_before_import` — action fired before template import
+  - `zipwp_after_import` — action fired after template import completes
+  - `zipwp_ai_content_generated` — action fired after AI content is generated
+  - `zipwp_modify_ai_prompt` — filter to modify the AI prompt before sending
+  - `zipwp_template_data` — filter to modify template data before import
+- **Dependencies**: Works with Starter Templates plugin (`starter-templates` or `astra-starter-sites`). Compatible with Astra theme, Elementor, and Spectra (Gutenberg).
+- **Detection**: Check `is_plugin_active('zipwp/zipwp.php')` or `get_option('zipwp_settings')`.
+- **File paths**: `wp-content/plugins/zipwp/`
+
+### ZipWP Images
+- **Plugin slug**: `zipwp-images/zipwp-images.php` (ID #72)
+- **Purpose**: Companion plugin for ZipWP that handles AI image generation and management. Generates and imports AI-created images for use in WordPress content, integrated with the ZipWP site-building workflow.
+- **Settings**: wp_options key `zipwp_images_settings` (serialized array).
+  - `api_key` — ZipWP Images API key (may share with ZipWP main plugin)
+  - `api_url` — image generation API endpoint
+  - `default_size` — default generated image dimensions (e.g., `1024x1024`)
+  - `default_style` — default image style: `photorealistic`, `illustration`, `abstract`, etc.
+  - `auto_alt_text` — generate alt text for AI images automatically (boolean)
+  - `storage_limit` — maximum number of AI images to store locally
+  - `quality` — image output quality (1-100, default 90)
+- **Postmeta keys** (on attachment posts):
+  - `_zipwp_ai_generated` — flag indicating image was AI-generated (boolean)
+  - `_zipwp_ai_prompt` — the prompt used to generate the image
+  - `_zipwp_ai_style` — the style used for generation
+  - `_zipwp_ai_model` — AI model used for generation
+- **Key features**:
+  - AI image generation from text prompts
+  - Style presets (photorealistic, illustration, watercolor, etc.)
+  - Batch generation for multiple images
+  - Direct import into WordPress Media Library with proper metadata
+  - Media Library integration: "Generate AI Image" button in media modal
+  - Image variations: Generate alternatives based on existing images
+- **REST API endpoints** (namespace `zipwp-images/v1`):
+  - `POST /generate` — generate an AI image from a prompt
+  - `POST /variations` — generate variations of an existing image
+  - `GET /styles` — list available image styles
+  - `POST /import` — import a generated image into the Media Library
+  - `GET /history` — list previously generated images
+- **Hooks**:
+  - `zipwp_images_before_generate` — action fired before image generation
+  - `zipwp_images_after_generate` — action fired after generation (receives image data)
+  - `zipwp_images_modify_prompt` — filter to modify the generation prompt
+  - `zipwp_images_attachment_meta` — filter to modify metadata attached to imported images
+- **Detection**: Check `is_plugin_active('zipwp-images/zipwp-images.php')` or `get_option('zipwp_images_settings')`.
+- **File paths**: `wp-content/plugins/zipwp-images/`
+
+### OTGS Installer
+- **Plugin slug**: `otgs-installer-plugin/otgs-installer-plugin.php` (ID #58)
+- **Purpose**: Manages updates and installations for WPML (WordPress Multilingual) and related OnTheGoSystems plugins. Acts as a license manager and update delivery system for commercial WPML products. Validates license keys and provides automatic update notifications.
+- **Settings**: wp_options keys:
+  - `wp_installer_settings` — main installer settings (serialized array):
+    - `repositories` — registered plugin repositories (WPML, Toolset, etc.)
+    - `repository_packages` — cached package lists per repository
+    - `last_check` — timestamp of last update check
+  - `otgs_installer_site_key_{repository}` — license/site key per repository (e.g., `otgs_installer_site_key_wpml`)
+  - `otgs_installer_site_url` — registered site URL for license validation
+  - `otgs_installer_subscription` — subscription type and expiry data (serialized)
+- **Transient keys**:
+  - `otgs_installer_packages_{repository}` — cached available packages from repository
+  - `otgs_installer_update_check` — cached update check results
+  - `otgs_installer_subscription_data` — cached subscription/license status
+- **Key features**:
+  - License key registration and validation against WPML servers
+  - Automatic update delivery for WPML, WPML extensions, and Toolset plugins
+  - Repository management: handles multiple plugin sources (WPML, Toolset)
+  - Plugin download and installation from commercial repositories
+  - Subscription status display in wp-admin
+- **Key classes**:
+  - `WP_Installer` — main installer class (singleton)
+  - `WP_Installer::instance()` — get singleton instance
+  - `WP_Installer::get_repository_site_key($repository)` — get registered site key
+  - `WP_Installer::save_site_key($repository, $key)` — register a new site key
+  - `WP_Installer::get_plugins_list($repository)` — get available plugins from repository
+  - `WP_Installer::get_subscription_info($repository)` — get license/subscription details
+- **API endpoints used**:
+  - `https://wpml.org/` — WPML repository for updates and license checks
+  - `https://api.wpml.org/` — WPML API for license validation
+  - Uses WordPress `update_plugins` transient to inject commercial plugin updates
+- **Hooks**:
+  - `otgs_installer_registered` — action fired when a site key is registered
+  - `otgs_installer_subscription_refreshed` — action fired when subscription data is refreshed
+  - `wp_installer_before_update` — action fired before a plugin update from OTGS repository
+  - Filters `pre_set_site_transient_update_plugins` to inject WPML updates into WordPress update system
+  - Filters `plugins_api` to provide plugin info for OTGS-hosted plugins
+- **Admin integration**: Adds a registration/updates page under Plugins menu or within WPML settings. Displays license status and available updates for all OTGS products.
+- **Detection**: Check `is_plugin_active('otgs-installer-plugin/otgs-installer-plugin.php')` or `class_exists('WP_Installer')`.
+- **File paths**: `wp-content/plugins/otgs-installer-plugin/`
+
+### Hello Elementor
+- **Plugin slug**: `elementor-hello-elementor/elementor-hello-elementor.php` (ID #52)
+- **Purpose**: Minimal, lightweight WordPress theme designed specifically as a blank canvas for the Elementor page builder. Provides the bare minimum theme setup (header, footer, sidebar, archive, single templates) so Elementor can control the entire page layout. Officially maintained by the Elementor team.
+- **Note**: This is a **theme**, not a plugin. The slug references the theme directory. Actual theme path: `wp-content/themes/hello-elementor/`.
+- **Settings**: Minimal — uses WordPress Customizer with limited options.
+  - Customizer sections:
+    - `hello_elementor_content_width` — site content width setting
+    - `hello_elementor_page_title` — show/hide page titles globally (boolean)
+    - `hello_elementor_header_footer` — enable/disable theme header/footer (to let Elementor Pro Theme Builder handle them)
+  - wp_options keys:
+    - `theme_mods_hello-elementor` — theme modifications (serialized array)
+    - `hello_elementor_settings` — additional theme settings if present
+- **Theme support declarations** (in `functions.php`):
+  - `title-tag` — document title managed by WordPress
+  - `post-thumbnails` — featured image support
+  - `custom-logo` — logo upload via Customizer
+  - `automatic-feed-links` — RSS feed links
+  - `html5` — HTML5 markup for search forms, comments, galleries
+  - `custom-background` — custom background support
+  - `woocommerce` — WooCommerce theme support (if WooCommerce is active)
+  - `elementor` — declares Elementor theme support
+- **Template files**:
+  - `header.php` — minimal `<head>`, `wp_head()`, opening `<body>` tags
+  - `footer.php` — closing tags, `wp_footer()`
+  - `index.php` — fallback template
+  - `single.php` — single post/page template
+  - `archive.php` — archive listing template
+  - `search.php` — search results template
+  - `404.php` — not found template
+  - `page.php` — static page template (often overridden by Elementor canvas)
+  - `template-parts/` — reusable partials
+- **Page templates**:
+  - `elementor_header_footer` — full width with theme header/footer
+  - `elementor_canvas` — completely blank canvas (no header, footer, sidebar)
+- **CSS**: Extremely minimal base CSS. The theme intentionally avoids opinionated styles so Elementor's design settings have full control. Main stylesheet: `style.css` (mostly theme metadata). Additional: `assets/css/hello-elementor.css`.
+- **Hooks**:
+  - `hello_elementor_enqueue_scripts` — action for enqueuing additional scripts/styles
+  - `hello_elementor_header_before` / `hello_elementor_header_after` — actions around header output
+  - `hello_elementor_footer_before` / `hello_elementor_footer_after` — actions around footer output
+  - `hello_elementor_content_width` — filter to modify the content width
+  - `hello_elementor_page_title` — filter to control page title display (return false to hide)
+  - `hello_elementor_register_menus` — filter controlling nav menu registration
+- **Elementor integration**: When Elementor Pro Theme Builder is active, the theme's header.php and footer.php yield to Elementor's custom header/footer templates. The theme checks `elementor_theme_do_location('header')` and `elementor_theme_do_location('footer')`.
+- **Detection**: Check `get_template() === 'hello-elementor'` or `wp_get_theme()->get('TextDomain') === 'hello-elementor'`.
+- **File paths**: `wp-content/themes/hello-elementor/`
+
+### Object Cache
+- **Plugin slug**: `objectcache/objectcache.php` (ID #62)
+- **Purpose**: Persistent object caching plugin that replaces WordPress's default in-memory object cache with a persistent backend (Redis or Memcached). Dramatically improves performance by caching database query results, API responses, and computed values across page loads.
+- **Drop-in file**: `wp-content/object-cache.php` — the actual caching drop-in that WordPress loads automatically. The plugin installs/manages this file.
+- **Settings**: wp_options key `objectcache_settings` (serialized array). Also reads from `wp-config.php` constants.
+  - wp_options settings:
+    - `backend` — cache backend: `redis`, `memcached`, `apcu`
+    - `host` — server hostname (default: `127.0.0.1`)
+    - `port` — server port (default: `6379` for Redis, `11211` for Memcached)
+    - `password` — authentication password (Redis AUTH)
+    - `database` — Redis database index (default: `0`)
+    - `timeout` — connection timeout in seconds (default: `1`)
+    - `read_timeout` — read timeout in seconds (default: `1`)
+    - `retry_interval` — retry interval in milliseconds
+    - `max_retries` — max connection retry attempts
+    - `prefix` — cache key prefix (default: WordPress table prefix)
+    - `serializer` — serialization method: `php`, `igbinary`, `msgpack`
+    - `compression` — enable compression: `none`, `lz4`, `zstd`, `lzf`
+    - `split_alloptions` — split alloptions into individual keys to reduce cache churn (boolean)
+    - `prefetch` — enable cache prefetching (boolean)
+    - `debug` — enable debug logging (boolean)
+    - `disabled` — disable object cache without removing drop-in (boolean)
+  - `wp-config.php` constants (override wp_options):
+    - `WP_REDIS_HOST` — Redis server host
+    - `WP_REDIS_PORT` — Redis server port
+    - `WP_REDIS_PASSWORD` — Redis authentication password
+    - `WP_REDIS_DATABASE` — Redis database index
+    - `WP_REDIS_TIMEOUT` — connection timeout
+    - `WP_REDIS_PREFIX` — cache key prefix
+    - `WP_REDIS_DISABLED` — disable Redis object cache
+    - `WP_CACHE_KEY_SALT` — additional prefix for multisite isolation
+    - `WP_REDIS_MAXTTL` — maximum TTL for cache entries (seconds)
+    - `WP_REDIS_IGBINARY` — use igbinary serializer (boolean)
+- **wp_cache_* functions** (WordPress Object Cache API, provided by the drop-in):
+  - `wp_cache_get($key, $group)` — retrieve a cached value
+  - `wp_cache_set($key, $data, $group, $expire)` — store a value in cache
+  - `wp_cache_add($key, $data, $group, $expire)` — add only if key doesn't exist
+  - `wp_cache_delete($key, $group)` — remove a cached value
+  - `wp_cache_replace($key, $data, $group, $expire)` — replace only if key exists
+  - `wp_cache_flush()` — flush the entire cache
+  - `wp_cache_incr($key, $offset, $group)` — increment a numeric value
+  - `wp_cache_decr($key, $offset, $group)` — decrement a numeric value
+  - `wp_cache_get_multiple($keys, $group)` — batch get (WordPress 6.0+)
+  - `wp_cache_set_multiple($data, $group, $expire)` — batch set
+  - `wp_cache_delete_multiple($keys, $group)` — batch delete
+  - `wp_cache_flush_group($group)` — flush all keys in a group (if supported)
+- **Cache groups**: WordPress uses groups to namespace cached data.
+  - Core groups: `options`, `posts`, `post_meta`, `terms`, `users`, `user_meta`, `transient`, `site-transient`
+  - Non-persistent groups (excluded from persistent cache by default): `counts`, `plugins`, `themes`
+  - `wp_cache_add_non_persistent_groups($groups)` — register groups that should not persist
+  - `wp_cache_add_global_groups($groups)` — register groups shared across multisite network
+- **Diagnostics**: Admin dashboard widget and settings page showing:
+  - Connection status (connected/disconnected)
+  - Hit/miss ratio and statistics
+  - Memory usage
+  - Cached key count
+  - Backend server info (Redis version, memory, connected clients)
+- **WP-CLI commands** (if WP-CLI is available):
+  - `wp cache flush` — flush the object cache
+  - `wp redis status` — show Redis connection and memory info
+  - `wp redis enable` — install the object-cache.php drop-in
+  - `wp redis disable` — remove the object-cache.php drop-in
+- **Hooks**:
+  - `objectcache_dropin_installed` — action fired when drop-in is installed
+  - `objectcache_dropin_removed` — action fired when drop-in is removed
+  - `objectcache_flush` — action fired when cache is flushed
+  - `objectcache_connection_error` — action fired on backend connection failure
+  - `objectcache_non_persistent_groups` — filter to modify non-persistent groups
+  - `objectcache_key_prefix` — filter to modify the cache key prefix
+- **Admin pages**: Settings page under Settings menu (`admin.php?page=objectcache`). Dashboard widget showing cache hit ratio and status.
+- **Detection**: Check `is_plugin_active('objectcache/objectcache.php')` or `file_exists(WP_CONTENT_DIR . '/object-cache.php')` or `wp_using_ext_object_cache()`.
+- **File paths**:
+  - Plugin directory: `wp-content/plugins/objectcache/`
+  - Drop-in: `wp-content/object-cache.php`
+
+### Common Patterns
+- **NPS Survey** responses are stored in a custom table, not postmeta. Export functionality useful for integrating with external analytics. Cookie-based display throttling prevents over-surveying visitors.
+- **WC Admin Email** extends WooCommerce's existing email infrastructure rather than replacing it. Always requires WooCommerce to be active. Changes are stored within WooCommerce's existing options structure where possible.
+- **CI HUB Connector** requires an active CI HUB account and DAM subscription. The plugin acts as a bridge — actual assets are stored in the DAM system, with WordPress holding references. Network connectivity to the DAM API is required for browsing assets.
+- **KB Vector** and **KB Custom SVG** are part of the Kadence ecosystem. KB Vector provides icon rendering used by Kadence Blocks, while KB Custom SVG handles user-uploaded SVGs. Both include SVG sanitization but serve different purposes — KB Vector is for icon libraries, KB Custom SVG is for media uploads.
+- **ZipWP** and **ZipWP Images** work as a pair. ZipWP handles site generation and template import, while ZipWP Images provides AI image generation. Both require an active ZipWP API key and external API connectivity. Generated content is imported as standard WordPress posts/pages.
+- **OTGS Installer** is typically bundled with WPML rather than installed standalone. It hooks into WordPress's plugin update system to deliver updates for commercial WPML products. A valid WPML subscription key is required for updates.
+- **Hello Elementor** is a theme, not a plugin, despite being listed here. It is designed to be invisible — providing minimal markup so Elementor controls the entire visual output. When using Elementor Pro Theme Builder, the theme's header/footer are bypassed entirely.
+- **Object Cache** requires a running cache backend (Redis or Memcached) on the server. The drop-in file `object-cache.php` must be present in `wp-content/` for caching to work. If the backend is unavailable, WordPress falls back to its default in-memory cache gracefully. Configuration via `wp-config.php` constants takes precedence over wp_options settings.

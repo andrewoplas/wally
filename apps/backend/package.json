@@ -55,6 +55,16 @@
         ],
         "executor": "nx:noop"
       },
+      "test": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{projectRoot}/test-output/jest/coverage"
+        ],
+        "options": {
+          "jestConfig": "apps/backend/jest.config.cts",
+          "passWithNoTests": true
+        }
+      },
       "serve": {
         "continuous": true,
         "executor": "@nx/js:node",
@@ -78,11 +88,18 @@
     }
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/swagger": "^11.2.6",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "openai": "^6.25.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
+    "swagger-ui-express": "^5.0.1",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
