@@ -18,6 +18,7 @@ interface ButtonProps {
   className?: string;
   children: React.ReactNode;
   onClick?: () => void;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -43,6 +44,7 @@ export function Button({
   className,
   children,
   onClick,
+  type = 'button',
 }: ButtonProps) {
   const classes = cn(
     'inline-flex items-center gap-2 rounded-pill font-heading transition-colors',
@@ -61,7 +63,7 @@ export function Button({
   }
 
   return (
-    <button className={classes} onClick={onClick}>
+    <button type={type} className={classes} onClick={onClick}>
       {icon}
       {children}
     </button>

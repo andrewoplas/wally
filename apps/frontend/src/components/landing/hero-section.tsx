@@ -67,7 +67,13 @@ function useTypingAnimation(text: string, startDelay: number, speed = 40) {
   return { displayed, done };
 }
 
-function ChatSidebarPreview() {
+function ChatSidebarPreview({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: Record<string, string | number>;
+}) {
   // Animation timeline (ms → s for framer-motion delays):
   // 1.8s  – sidebar slides in
   // 2.6s  – user starts typing
@@ -87,8 +93,11 @@ function ChatSidebarPreview() {
 
   return (
     <motion.div
-      className="absolute right-0 top-[15px] hidden w-[340px] flex-shrink-0 flex-col overflow-hidden rounded-[20px] border border-[#E4E4E7] bg-white shadow-[0_8px_40px_rgba(139,92,246,0.25),0_20px_80px_rgba(0,0,0,0.12)] md:flex"
-      style={{ bottom: 15, marginRight: 20 }}
+      className={cn(
+        'flex-shrink-0 flex-col overflow-hidden rounded-[20px] border border-[#E4E4E7] bg-white shadow-[0_8px_40px_rgba(139,92,246,0.25),0_20px_80px_rgba(0,0,0,0.12)]',
+        className
+      )}
+      style={style}
       initial={{ opacity: 0, x: 40, scale: 0.96 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{
@@ -388,129 +397,140 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 1 }}
         >
-          {/* Screenshot glow */}
-          <div
-            className="pointer-events-none absolute bottom-[10%] left-[15%] h-[300px] w-[1000px] blur-[50px]"
-            style={{
-              background:
-                'radial-gradient(ellipse, rgba(124, 58, 237, 0.15) 0%, transparent 100%)',
-            }}
-          />
+          {/* Mobile: chat sidebar card only */}
+          <div className="mx-auto h-[520px] max-w-[380px] md:hidden">
+            <ChatSidebarPreview className="flex h-full w-full" />
+          </div>
 
-          <div className="relative mx-auto max-w-[1200px]">
-            <motion.div
-              className="overflow-hidden rounded-3xl border border-white/25 bg-[#1E1E2E] shadow-[0_4px_60px_rgba(124,58,237,0.3),0_16px_100px_rgba(91,33,182,0.15)]"
-              animate={{ y: [0, -8, 0] }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
+          {/* Desktop: full WP admin mockup */}
+          <div className="hidden md:block">
+            {/* Screenshot glow */}
+            <div
+              className="pointer-events-none absolute bottom-[10%] left-[15%] h-[300px] w-[1000px] blur-[50px]"
+              style={{
+                background:
+                  'radial-gradient(ellipse, rgba(124, 58, 237, 0.15) 0%, transparent 100%)',
               }}
-            >
-              {/* WP Admin Bar */}
-              <div className="flex h-8 items-center justify-between bg-[#23282D]/80 px-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-[#FF5F56]" />
-                  <div className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
-                  <div className="h-3 w-3 rounded-full bg-[#27C93F]" />
-                </div>
-                <span className="text-[9px] text-white/50">WordPress Admin</span>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-[70px] rounded bg-white/10" />
-                  <div className="h-5 w-5 rounded-full bg-white/10" />
-                </div>
-              </div>
+            />
 
-              <div
-                className="relative flex"
-                style={{ height: 'clamp(300px, 45vw, 608px)' }}
+            <div className="relative mx-auto max-w-[1200px]">
+              <motion.div
+                className="overflow-hidden rounded-3xl border border-white/25 bg-[#1E1E2E] shadow-[0_4px_60px_rgba(124,58,237,0.3),0_16px_100px_rgba(91,33,182,0.15)]"
+                animate={{ y: [0, -8, 0] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
               >
-                {/* WP Sidebar */}
-                <div className="hidden w-[180px] flex-shrink-0 flex-col gap-0.5 bg-[#23282D]/80 p-2 sm:flex">
-                  {wpMenuItems.map((item, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        'flex items-center gap-2 rounded px-3 py-2',
-                        item.active ? 'bg-white/[0.10]' : ''
-                      )}
-                    >
-                      <item.icon className="h-3.5 w-3.5 text-white/50" />
-                      <span className="text-[11px] text-white/60">
-                        {item.label}
-                      </span>
-                    </div>
-                  ))}
+                {/* WP Admin Bar */}
+                <div className="flex h-8 items-center justify-between bg-[#23282D]/80 px-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[#FF5F56]" />
+                    <div className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
+                    <div className="h-3 w-3 rounded-full bg-[#27C93F]" />
+                  </div>
+                  <span className="text-[9px] text-white/50">WordPress Admin</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-[70px] rounded bg-white/10" />
+                    <div className="h-5 w-5 rounded-full bg-white/10" />
+                  </div>
                 </div>
 
-                {/* WP Main Content Area */}
-                <div className="flex flex-1 flex-col bg-[#F1F1F1]/70">
-                  {/* WP admin subheader */}
-                  <div className="flex items-center justify-between border-b border-black/10 bg-white/70 px-6 py-3">
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2.5 w-[100px] rounded bg-[#DCDCDC]" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-12 rounded bg-[#E5E5E5]" />
-                      <div className="flex h-5 items-center rounded bg-[#8B5CF6]/80 px-2">
-                        <span className="text-[8px] font-semibold text-white">
-                          Update
+                <div
+                  className="relative flex"
+                  style={{ height: 'clamp(300px, 45vw, 608px)' }}
+                >
+                  {/* WP Sidebar */}
+                  <div className="hidden w-[180px] flex-shrink-0 flex-col gap-0.5 bg-[#23282D]/80 p-2 sm:flex">
+                    {wpMenuItems.map((item, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          'flex items-center gap-2 rounded px-3 py-2',
+                          item.active ? 'bg-white/[0.10]' : ''
+                        )}
+                      >
+                        <item.icon className="h-3.5 w-3.5 text-white/50" />
+                        <span className="text-[11px] text-white/60">
+                          {item.label}
                         </span>
                       </div>
-                    </div>
+                    ))}
                   </div>
 
-                  {/* Editor area */}
-                  <div className="flex flex-1 flex-col overflow-hidden p-6">
-                    <div className="flex h-full flex-col overflow-hidden rounded border border-[#DDDDDD] bg-white">
-                      {/* Editor toolbar */}
-                      <div className="flex items-center gap-2 border-b border-[#EEEEEE] px-6 py-2">
-                        {['T', 'B', 'I', '/'].map((btn) => (
-                          <div
-                            key={btn}
-                            className="flex h-5 w-5 items-center justify-center rounded text-[9px] font-medium text-[#71717A]"
-                          >
-                            {btn}
+                  {/* WP Main Content Area */}
+                  <div className="flex flex-1 flex-col bg-[#F1F1F1]/70">
+                    {/* WP admin subheader */}
+                    <div className="flex items-center justify-between border-b border-black/10 bg-white/70 px-6 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-2.5 w-[100px] rounded bg-[#DCDCDC]" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-12 rounded bg-[#E5E5E5]" />
+                        <div className="flex h-5 items-center rounded bg-[#8B5CF6]/80 px-2">
+                          <span className="text-[8px] font-semibold text-white">
+                            Update
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Editor area */}
+                    <div className="flex flex-1 flex-col overflow-hidden p-6">
+                      <div className="flex h-full flex-col overflow-hidden rounded border border-[#DDDDDD] bg-white">
+                        {/* Editor toolbar */}
+                        <div className="flex items-center gap-2 border-b border-[#EEEEEE] px-6 py-2">
+                          {['T', 'B', 'I', '/'].map((btn) => (
+                            <div
+                              key={btn}
+                              className="flex h-5 w-5 items-center justify-center rounded text-[9px] font-medium text-[#71717A]"
+                            >
+                              {btn}
+                            </div>
+                          ))}
+                          <div className="mx-1 h-4 w-px bg-[#EEEEEE]" />
+                          <div className="h-2 w-10 rounded bg-[#EEEEEE]" />
+                          <div className="h-2 w-8 rounded bg-[#EEEEEE]" />
+                        </div>
+
+                        {/* Page content skeleton */}
+                        <div className="flex-1 overflow-hidden p-6">
+                          <div className="mb-4 h-[18px] w-36 rounded bg-[#E5E5E5]" />
+                          <div className="mb-4 h-px w-full bg-[#EEEEEE]" />
+                          <div className="mb-4 flex flex-col gap-2">
+                            <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
+                            <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
+                            <div className="h-2.5 w-[360px] max-w-full rounded bg-[#ECECEC]" />
                           </div>
-                        ))}
-                        <div className="mx-1 h-4 w-px bg-[#EEEEEE]" />
-                        <div className="h-2 w-10 rounded bg-[#EEEEEE]" />
-                        <div className="h-2 w-8 rounded bg-[#EEEEEE]" />
-                      </div>
-
-                      {/* Page content skeleton */}
-                      <div className="flex-1 overflow-hidden p-6">
-                        <div className="mb-4 h-[18px] w-36 rounded bg-[#E5E5E5]" />
-                        <div className="mb-4 h-px w-full bg-[#EEEEEE]" />
-                        <div className="mb-4 flex flex-col gap-2">
-                          <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
-                          <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
-                          <div className="h-2.5 w-[360px] max-w-full rounded bg-[#ECECEC]" />
-                        </div>
-                        <div className="mb-4 flex flex-col gap-2">
-                          <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
-                          <div className="h-2.5 w-[280px] max-w-full rounded bg-[#ECECEC]" />
-                        </div>
-                        <div className="mb-4 flex flex-col gap-2">
-                          <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
-                          <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
-                          <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
-                          <div className="h-2.5 w-[200px] max-w-full rounded bg-[#ECECEC]" />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
-                          <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
-                          <div className="h-2.5 w-[320px] max-w-full rounded bg-[#ECECEC]" />
+                          <div className="mb-4 flex flex-col gap-2">
+                            <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
+                            <div className="h-2.5 w-[280px] max-w-full rounded bg-[#ECECEC]" />
+                          </div>
+                          <div className="mb-4 flex flex-col gap-2">
+                            <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
+                            <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
+                            <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
+                            <div className="h-2.5 w-[200px] max-w-full rounded bg-[#ECECEC]" />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
+                            <div className="h-2.5 w-full rounded bg-[#ECECEC]" />
+                            <div className="h-2.5 w-[320px] max-w-full rounded bg-[#ECECEC]" />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Chat Sidebar — animated popup */}
-                <ChatSidebarPreview />
-              </div>
-            </motion.div>
+                  {/* Chat Sidebar — animated popup */}
+                  <ChatSidebarPreview
+                    className="absolute right-0 top-[15px] flex w-[340px]"
+                    style={{ bottom: 15, marginRight: 20 }}
+                  />
+                </div>
+              </motion.div>
+            </div>
           </div>
         </motion.div>
       </div>

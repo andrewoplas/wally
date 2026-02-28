@@ -11,6 +11,15 @@ module.exports = {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
+          50: 'hsl(var(--primary-50))',
+          100: 'hsl(var(--primary-100))',
+          200: 'hsl(var(--primary-200))',
+          300: 'hsl(var(--primary-300))',
+          400: 'hsl(var(--primary-400))',
+          500: 'hsl(var(--primary-500))',
+          600: 'hsl(var(--primary-600))',
+          700: 'hsl(var(--primary-700))',
+          800: 'hsl(var(--primary-800))',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -37,17 +46,28 @@ module.exports = {
           DEFAULT: 'hsl(var(--popover))',
           foreground: 'hsl(var(--popover-foreground))',
         },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+        disabled: {
+          DEFAULT: 'hsl(var(--disabled))',
+          foreground: 'hsl(var(--disabled-foreground))',
+        },
+        surface: {
+          divider: 'hsl(var(--surface-divider))',
+          subtle: 'hsl(var(--surface-subtle))',
         },
         success: {
           DEFAULT: 'hsl(var(--color-success))',
           foreground: 'hsl(var(--color-success-foreground))',
+          subtle: 'hsl(var(--color-success-subtle))',
+          border: 'hsl(var(--color-success-border))',
+          indicator: 'hsl(var(--color-success-indicator))',
+          text: 'hsl(var(--color-success-text))',
         },
         warning: {
           DEFAULT: 'hsl(var(--color-warning))',
           foreground: 'hsl(var(--color-warning-foreground))',
+          subtle: 'hsl(var(--color-warning-subtle))',
+          indicator: 'hsl(var(--color-warning-indicator))',
+          text: 'hsl(var(--color-warning-text))',
         },
         error: {
           DEFAULT: 'hsl(var(--color-error))',
@@ -56,6 +76,11 @@ module.exports = {
         info: {
           DEFAULT: 'hsl(var(--color-info))',
           foreground: 'hsl(var(--color-info-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+          text: 'hsl(var(--color-destructive-text))',
         },
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar))',
@@ -115,6 +140,7 @@ module.exports = {
         pill: '999px',
       },
       animation: {
+        'pulse-dot': 'pulse-dot 2s ease-in-out infinite',
         float: 'float 4s ease-in-out infinite',
         'float-slow': 'float 6s ease-in-out infinite',
         'float-delayed': 'float 5s ease-in-out 1.5s infinite',
@@ -126,6 +152,10 @@ module.exports = {
         'draw-line': 'draw-line 0.6s ease-out forwards',
       },
       keyframes: {
+        'pulse-dot': {
+          '0%, 100%': { boxShadow: '0 0 0 0 hsl(var(--color-success-indicator) / 0.4)' },
+          '50%': { boxShadow: '0 0 0 4px hsl(var(--color-success-indicator) / 0)' },
+        },
         float: {
           '0%, 100%': {
             transform:

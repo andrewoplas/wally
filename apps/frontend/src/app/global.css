@@ -17,8 +17,8 @@
     --foreground: 249 11% 18%;
 
     /* Border, Input, Ring */
-    --border: 240 4% 78%;
-    --input: 240 4% 78%;
+    --border: 240 4% 86%;
+    --input: 240 4% 86%;
     --ring: 225 11% 89%;
 
     /* Muted */
@@ -50,6 +50,35 @@
     --color-error-foreground: 11 100% 17%;
     --color-info: 220 57% 86%;
     --color-info-foreground: 216 100% 10%;
+
+    /* Primary shades */
+    --primary-50: 270 100% 98%;
+    --primary-100: 269 100% 95%;
+    --primary-200: 263 93% 92%;
+    --primary-300: 263 93% 85%;
+    --primary-400: 263 85% 75%;
+    --primary-500: 262 83% 58%;
+    --primary-600: 263 72% 57%;
+    --primary-700: 263 76% 50%;
+    --primary-800: 263 79% 35%;
+
+    /* Disabled states */
+    --disabled: 240 5% 84%;
+    --disabled-foreground: 240 5% 78%;
+
+    /* Surface */
+    --surface-divider: 0 0% 94%;
+    --surface-subtle: 0 0% 98%;
+
+    /* Status indicators */
+    --color-success-subtle: 138 76% 97%;
+    --color-success-border: 141 71% 73%;
+    --color-success-indicator: 142 71% 45%;
+    --color-success-text: 142 72% 29%;
+    --color-warning-subtle: 44 100% 96%;
+    --color-warning-indicator: 38 92% 50%;
+    --color-warning-text: 26 90% 37%;
+    --color-destructive-text: 0 84% 60%;
 
     /* Sidebar */
     --sidebar: 0 0% 100%;
@@ -107,8 +136,8 @@
     --foreground: 240 5% 91%;
 
     /* Border, Input, Ring */
-    --border: 247 20% 20%;
-    --input: 247 20% 20%;
+    --border: 249 6% 48%;
+    --input: 249 6% 48%;
     --ring: 0 0% 40%;
 
     /* Muted */
