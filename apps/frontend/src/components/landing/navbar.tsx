@@ -22,12 +22,24 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<{
+    initials: string;
+    email: string;
+  } | null>(null);
 
   useEffect(() => {
     createClient()
       .auth.getUser()
-      .then(({ data }) => setIsLoggedIn(!!data.user));
+      .then(({ data }) => {
+        if (!data.user) return;
+        const first = (data.user.user_metadata?.['first_name'] as string) ?? '';
+        const last = (data.user.user_metadata?.['last_name'] as string) ?? '';
+        const initials =
+          first || last
+            ? `${first[0] ?? ''}${last[0] ?? ''}`.toUpperCase()
+            : (data.user.email?.[0] ?? '?').toUpperCase();
+        setUser({ initials, email: data.user.email ?? '' });
+      });
   }, []);
 
   useEffect(() => {
@@ -100,14 +112,16 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
 
           {/* Desktop CTAs */}
           <div className="hidden items-center gap-3 md:flex">
-            {isLoggedIn ? (
-              <Button
+            {user ? (
+              <a
                 href="/app/account"
-                size="sm"
-                variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
+                title={user.email}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary transition-opacity hover:opacity-90"
               >
-                My Account
-              </Button>
+                <span className="font-sans text-sm font-semibold text-primary-foreground">
+                  {user.initials}
+                </span>
+              </a>
             ) : (
               <>
                 <Button
@@ -169,15 +183,16 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
                 </a>
               ))}
               <div className="flex gap-3 pt-2">
-                {isLoggedIn ? (
-                  <Button
+                {user ? (
+                  <a
                     href="/app/account"
-                    size="sm"
-                    variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
-                    className="flex-1 justify-center"
+                    title={user.email}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary transition-opacity hover:opacity-90"
                   >
-                    My Account
-                  </Button>
+                    <span className="font-sans text-sm font-semibold text-primary-foreground">
+                      {user.initials}
+                    </span>
+                  </a>
                 ) : (
                   <>
                     <Button
