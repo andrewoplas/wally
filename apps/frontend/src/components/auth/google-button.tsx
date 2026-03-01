@@ -1,8 +1,29 @@
+'use client';
+
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+
 export function GoogleButton() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleGoogleSignIn() {
+    setIsLoading(true);
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    // No need to reset isLoading — browser will navigate away
+  }
+
   return (
     <button
       type="button"
-      className="flex h-12 w-full items-center justify-center gap-2.5 rounded-pill border border-border bg-background text-sm font-medium text-foreground font-heading transition-colors hover:bg-muted"
+      onClick={handleGoogleSignIn}
+      disabled={isLoading}
+      className="flex h-12 w-full items-center justify-center gap-2.5 rounded-pill border border-border bg-background text-sm font-medium text-foreground font-heading transition-colors hover:bg-muted disabled:opacity-60 disabled:cursor-not-allowed"
     >
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
@@ -22,7 +43,7 @@ export function GoogleButton() {
           fill="#EA4335"
         />
       </svg>
-      Continue with Google
+      {isLoading ? 'Redirecting…' : 'Continue with Google'}
     </button>
   );
 }

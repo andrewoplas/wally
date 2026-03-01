@@ -8,15 +8,18 @@ import { Container } from './shared/container';
 const linkColumns = [
   {
     title: 'Product',
-    links: ['Features', 'Pricing', 'Changelog', 'Download'],
-  },
-  {
-    title: 'Resources',
-    links: ['Documentation', 'Support', 'API Reference', 'Status'],
+    links: [
+      { label: 'Features', href: '/#features' },
+      { label: 'Pricing', href: '/#pricing' },
+      { label: 'Blog', href: '/blog' },
+    ],
   },
   {
     title: 'Legal',
-    links: ['Privacy Policy', 'Terms of Service', 'Cookie Policy'],
+    links: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+    ],
   },
 ];
 
@@ -60,15 +63,15 @@ export function Footer() {
                   </span>
                   {col.links.map((link, i) => (
                     <motion.a
-                      key={link}
-                      href="#"
+                      key={link.label}
+                      href={link.href}
                       className="text-sm text-lp-text-muted transition-all hover:translate-x-[3px] hover:text-white"
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: 0.2 + i * 0.03 }}
                     >
-                      {link}
+                      {link.label}
                     </motion.a>
                   ))}
                 </div>

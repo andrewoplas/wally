@@ -247,10 +247,10 @@ class RestController {
 		);
 
 		// 4. Prepare backend connection info.
-		$backend_url   = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
-		$api_key_enc   = get_option( 'wally_api_key', '' );
-		$api_key       = $api_key_enc ? Settings::decrypt( $api_key_enc ) : '';
-		$model         = get_option( 'wally_model', 'claude-haiku-4-5' );
+		$backend_url      = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
+		$license_key_enc  = get_option( 'wally_license_key', '' );
+		$license_key      = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
+		$model            = get_option( 'wally_model', 'claude-haiku-4-5' );
 		$site_profile  = SiteScanner::get_profile();
 		$custom_prompt = get_option( 'wally_custom_prompt', '' );
 
@@ -278,7 +278,7 @@ class RestController {
 		$result = $this->stream_backend_sse(
 			$backend_url . '/chat',
 			$chat_payload,
-			$api_key
+			$license_key
 		);
 
 		if ( is_wp_error( $result ) ) {
@@ -348,7 +348,7 @@ class RestController {
 					'tool_results'         => $tool_results,
 					'pending_tool_calls'   => $tool_calls,
 				],
-				$api_key
+				$license_key
 			);
 
 			if ( is_wp_error( $result ) ) {
@@ -437,12 +437,12 @@ class RestController {
 			'content'         => $message,
 		]);
 
-		$backend_url   = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
-		$api_key_enc   = get_option( 'wally_api_key', '' );
-		$api_key       = $api_key_enc ? Settings::decrypt( $api_key_enc ) : '';
-		$model         = get_option( 'wally_model', 'claude-haiku-4-5' );
-		$site_profile  = SiteScanner::get_profile();
-		$custom_prompt = get_option( 'wally_custom_prompt', '' );
+		$backend_url      = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
+		$license_key_enc  = get_option( 'wally_license_key', '' );
+		$license_key      = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
+		$model            = get_option( 'wally_model', 'claude-haiku-4-5' );
+		$site_profile     = SiteScanner::get_profile();
+		$custom_prompt    = get_option( 'wally_custom_prompt', '' );
 
 		$chat_payload = [
 			'model'                => $model,
@@ -454,7 +454,7 @@ class RestController {
 			$chat_payload['custom_system_prompt'] = $custom_prompt;
 		}
 
-		$backend_response = $this->backend_request_buffered( $backend_url . '/chat', $chat_payload, $api_key );
+		$backend_response = $this->backend_request_buffered( $backend_url . '/chat', $chat_payload, $license_key );
 
 		if ( is_wp_error( $backend_response ) ) {
 			return rest_ensure_response([
@@ -481,7 +481,7 @@ class RestController {
 
 		if ( ! empty( $tool_calls ) ) {
 			$result = $this->process_tool_calls_json(
-				$tool_calls, $user_id, $conversation_id, $backend_url, $api_key, $model,
+				$tool_calls, $user_id, $conversation_id, $backend_url, $license_key, $model,
 				array_merge( $conversation_history, [ [ 'role' => 'user', 'content' => $message ] ] ),
 				$site_profile, $reply_text
 			);
@@ -518,7 +518,7 @@ class RestController {
 	 */
 	private function process_tool_calls_json(
 		array $tool_calls, int $user_id, int $conversation_id,
-		string $backend_url, string $api_key, string $model,
+		string $backend_url, string $license_key, string $model,
 		array $conversation_history, array $site_profile, string $accumulated_text
 	): array {
 		$executor          = ToolExecutor::instance();
@@ -561,7 +561,7 @@ class RestController {
 				'site_profile'         => $site_profile,
 				'tool_results'         => $tool_results,
 				'pending_tool_calls'   => $tool_calls,
-			], $api_key );
+			], \$license_key );
 
 			if ( is_wp_error( $response ) ) {
 				$accumulated_text .= "\n\nI executed the tools but couldn't get a follow-up response.";
@@ -670,12 +670,12 @@ class RestController {
 	 * Uses cURL with CURLOPT_WRITEFUNCTION to process chunks as they arrive.
 	 * Token events are forwarded immediately; tool_call events are collected.
 	 *
-	 * @param string $url     Backend endpoint URL.
-	 * @param array  $payload Request body.
-	 * @param string $api_key API key for auth.
+	 * @param string $url         Backend endpoint URL.
+	 * @param array  $payload     Request body.
+	 * @param string $license_key License key for auth.
 	 * @return array|\WP_Error { text: string, tool_calls: array } or WP_Error.
 	 */
-	private function stream_backend_sse( string $url, array $payload, string $api_key ) {
+	private function stream_backend_sse( string $url, array $payload, string $license_key ) {
 		$url_check = $this->validate_backend_url( $url );
 		if ( is_wp_error( $url_check ) ) {
 			return $url_check;
@@ -703,7 +703,7 @@ class RestController {
 			CURLOPT_HTTPHEADER     => [
 				'Content-Type: application/json',
 				'X-Site-ID: ' . $site_id,
-				'X-API-Key: ' . $api_key,
+				'X-License-Key: ' . $license_key,
 			],
 			CURLOPT_TIMEOUT        => self::BACKEND_TIMEOUT,
 			CURLOPT_RETURNTRANSFER => false,
@@ -783,7 +783,7 @@ class RestController {
 	/**
 	 * Buffered HTTP POST to backend (for non-streaming JSON path).
 	 */
-	private function backend_request_buffered( string $url, array $payload, string $api_key ) {
+	private function backend_request_buffered( string $url, array $payload, string $license_key ) {
 		$url_check = $this->validate_backend_url( $url );
 		if ( is_wp_error( $url_check ) ) {
 			return $url_check;
@@ -794,9 +794,9 @@ class RestController {
 		$response = wp_remote_post( $url, [
 			'timeout' => self::BACKEND_TIMEOUT,
 			'headers' => [
-				'Content-Type' => 'application/json',
-				'X-Site-ID'    => md5( $site_url ),
-				'X-API-Key'    => $api_key,
+				'Content-Type'  => 'application/json',
+				'X-Site-ID'     => md5( $site_url ),
+				'X-License-Key' => $license_key,
 			],
 			'body' => wp_json_encode( $payload ),
 		]);
@@ -886,10 +886,10 @@ class RestController {
 			'content' => mb_substr( $m->content, 0, 600 ),
 		], $messages );
 
-		$backend_url = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
-		$api_key_enc = get_option( 'wally_api_key', '' );
-		$api_key     = $api_key_enc ? Settings::decrypt( $api_key_enc ) : '';
-		$model       = get_option( 'wally_model', 'claude-haiku-4-5' );
+		$backend_url     = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
+		$license_key_enc = get_option( 'wally_license_key', '' );
+		$license_key     = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
+		$model           = get_option( 'wally_model', 'claude-haiku-4-5' );
 
 		$response = $this->backend_request_buffered(
 			$backend_url . '/chat',
@@ -900,7 +900,7 @@ class RestController {
 				'site_profile'         => [],
 				'custom_system_prompt' => 'You generate short, accurate conversation titles. Respond with only the title text.',
 			],
-			$api_key
+			$license_key
 		);
 
 		// On backend failure, keep the existing truncated-message title.

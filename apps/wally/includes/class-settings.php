@@ -17,10 +17,19 @@ class Settings {
     public static function render_page() {
         $is_admin = current_user_can( 'manage_options' );
 
+        $activation_notice = null;
+
         if ( $is_admin && isset( $_POST['wally_save'] ) && check_admin_referer( 'wally_settings' ) ) {
             $license_key = sanitize_text_field( $_POST['wally_license_key'] ?? '' );
+            $license_key_changed = false;
             if ( $license_key && $license_key !== '••••••••' ) {
                 update_option( 'wally_license_key', self::encrypt( $license_key ) );
+                $license_key_changed = true;
+            }
+
+            if ( $license_key_changed ) {
+                $backend_url = esc_url_raw( trim( $_POST['wally_backend_url'] ?? get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ) ), [ 'http', 'https' ] );
+                $activation_notice = self::activate_site( $license_key, $backend_url );
             }
 
             $all_wp_roles  = array_keys( wp_roles()->roles );
@@ -56,14 +65,9 @@ class Settings {
             $notification_sounds = ! empty( $_POST['wally_notification_sounds'] );
             update_option( 'wally_notification_sounds', $notification_sounds );
 
-            $backend_url = esc_url_raw( trim( $_POST['wally_backend_url'] ?? 'http://localhost:3100/api/v1' ), [ 'http', 'https' ] );
-            if ( $backend_url ) {
-                update_option( 'wally_backend_url', $backend_url );
-            }
-
-            $api_key = sanitize_text_field( $_POST['wally_api_key'] ?? '' );
-            if ( $api_key && $api_key !== '••••••••' ) {
-                update_option( 'wally_api_key', self::encrypt( $api_key ) );
+            $backend_url_input = esc_url_raw( trim( $_POST['wally_backend_url'] ?? 'http://localhost:3100/api/v1' ), [ 'http', 'https' ] );
+            if ( $backend_url_input ) {
+                update_option( 'wally_backend_url', $backend_url_input );
             }
 
             $model = sanitize_text_field( $_POST['wally_model'] ?? 'claude-haiku-4-5' );
@@ -94,7 +98,6 @@ class Settings {
         $data_retention = get_option( 'wally_data_retention', 90 );
         $custom_prompt = get_option( 'wally_custom_prompt', '' );
         $backend_url   = get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' );
-        $api_key_set   = (bool) get_option( 'wally_api_key', '' );
         $model         = get_option( 'wally_model', 'claude-haiku-4-5' );
         $site_profile  = SiteScanner::get_profile();
 
@@ -141,6 +144,12 @@ class Settings {
 
         self::render_styles();
         ?>
+
+        <?php if ( $activation_notice ) : ?>
+        <div class="notice <?php echo $activation_notice['type'] === 'success' ? 'notice-success' : 'notice-error'; ?> is-dismissible">
+            <p><?php echo esc_html( $activation_notice['message'] ); ?></p>
+        </div>
+        <?php endif; ?>
 
         <form method="post" id="wpaia-settings-form">
         <?php wp_nonce_field( 'wally_settings' ); ?>
@@ -232,14 +241,6 @@ class Settings {
                                        value="<?php echo esc_attr( $backend_url ); ?>"
                                        placeholder="http://localhost:3100/api/v1" />
                                 <span class="wpaia-hint">The URL of the Wally backend server.</span>
-                            </div>
-
-                            <div class="wpaia-field">
-                                <label class="wpaia-label">API Key</label>
-                                <input type="password" name="wally_api_key" class="wpaia-input"
-                                       value="<?php echo esc_attr( $api_key_set ? '••••••••' : '' ); ?>"
-                                       placeholder="Enter your API key" autocomplete="off" />
-                                <span class="wpaia-hint">Authentication key for the backend server. Stored encrypted.</span>
                             </div>
 
                             <div class="wpaia-field">
@@ -842,5 +843,67 @@ class Settings {
         $decrypted = openssl_decrypt( $encrypted, $cipher, $key, 0, $iv );
 
         return $decrypted ?: '';
+    }
+
+    /**
+     * Call the backend /license/activate endpoint after saving a new license key.
+     *
+     * @param string $license_key Plaintext license key.
+     * @param string $backend_url Base backend URL (e.g. http://localhost:3100/api/v1).
+     * @return array{ type: string, message: string }
+     */
+    private static function activate_site( string $license_key, string $backend_url ): array {
+        $site_id = md5( get_site_url() );
+        $domain  = parse_url( get_site_url(), PHP_URL_HOST );
+
+        $response = wp_remote_post(
+            rtrim( $backend_url, '/' ) . '/license/activate',
+            [
+                'body'    => wp_json_encode( [
+                    'license_key' => $license_key,
+                    'site_id'     => $site_id,
+                    'domain'      => $domain,
+                ] ),
+                'headers' => [ 'Content-Type' => 'application/json' ],
+                'timeout' => 10,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return [
+                'type'    => 'error',
+                'message' => 'Could not reach the Wally server: ' . $response->get_error_message(),
+            ];
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( ! $body['valid'] ?? false ) {
+            $error_map = [
+                'max_sites_reached'  => sprintf(
+                    'Max sites reached (%d/%d). Deactivate another site from your dashboard first.',
+                    $body['site_count'] ?? '?',
+                    $body['max_sites'] ?? '?'
+                ),
+                'license_expired'    => 'Your license has expired. Please renew it from your dashboard.',
+                'license_cancelled'  => 'Your license has been cancelled.',
+                'invalid_key'        => 'Invalid license key. Please check and try again.',
+            ];
+            $err_code = $body['error'] ?? '';
+            return [
+                'type'    => 'error',
+                'message' => $error_map[ $err_code ] ?? 'Activation failed. Please try again.',
+            ];
+        }
+
+        $tier      = ucfirst( $body['tier'] ?? 'free' );
+        $count     = $body['site_count'] ?? 1;
+        $max       = $body['max_sites'] ?? '?';
+
+        return [
+            'type'    => 'success',
+            'message' => "Wally activated! Plan: {$tier}. Active sites: {$count}/{$max}.",
+        ];
     }
 }

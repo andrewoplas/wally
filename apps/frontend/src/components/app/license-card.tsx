@@ -4,16 +4,39 @@ import { useState } from 'react';
 import { Copy, Check, Download } from 'lucide-react';
 import { StatusChip } from './status-chip';
 
-const LICENSE_KEY = 'wally_live_sk_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6';
+interface LicenseCardProps {
+  licenseKey: string;
+  tier: string;
+  expiresAt: string | null;
+  activatedCount: number;
+  maxSites: number;
+  status: string;
+}
 
-export function LicenseCard() {
+function formatDate(iso: string | null): string {
+  if (!iso) return 'Never';
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
+}
+
+export function LicenseCard({
+  licenseKey,
+  tier,
+  expiresAt,
+  activatedCount,
+  maxSites,
+  status,
+}: LicenseCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(LICENSE_KEY);
+    navigator.clipboard.writeText(licenseKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  const chipVariant = status === 'active' ? 'active' : 'expiring';
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -24,10 +47,10 @@ export function LicenseCard() {
           <div className="flex items-center gap-2.5">
             <span className="font-heading text-[18px] font-bold text-foreground">Wally</span>
             <span className="rounded-full bg-primary px-[10px] py-[3px] font-sans text-[11px] font-bold text-primary-foreground">
-              PRO
+              {tier.toUpperCase()}
             </span>
           </div>
-          <StatusChip variant="active" />
+          <StatusChip variant={chipVariant} />
         </div>
 
         {/* License key row */}
@@ -37,7 +60,7 @@ export function LicenseCard() {
           </span>
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <div className="flex h-11 min-w-0 flex-1 items-center rounded-lg border border-border bg-surface-subtle px-[14px]">
-              <span className="truncate font-sans text-[13px] text-foreground">{LICENSE_KEY}</span>
+              <span className="truncate font-sans text-[13px] text-foreground">{licenseKey}</span>
             </div>
             <button
               onClick={handleCopy}
@@ -59,11 +82,15 @@ export function LicenseCard() {
         <div className="flex gap-8">
           <div className="flex flex-col gap-[3px]">
             <span className="font-sans text-xs text-disabled">Expires</span>
-            <span className="font-sans text-[13px] font-medium text-foreground">Dec 31, 2026</span>
+            <span className="font-sans text-[13px] font-medium text-foreground">
+              {formatDate(expiresAt)}
+            </span>
           </div>
           <div className="flex flex-col gap-[3px]">
             <span className="font-sans text-xs text-disabled">Activations</span>
-            <span className="font-sans text-[13px] font-medium text-foreground">3 of 5 sites</span>
+            <span className="font-sans text-[13px] font-medium text-foreground">
+              {activatedCount} of {maxSites} sites
+            </span>
           </div>
         </div>
       </div>

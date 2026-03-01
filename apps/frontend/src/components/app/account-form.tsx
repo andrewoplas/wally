@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { createClient } from '@/lib/supabase/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AuthFormInput } from '@/components/auth/auth-form-input';
@@ -30,22 +31,56 @@ type AccountFormValues = z.infer<typeof accountSchema>;
 export function AccountForm() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [userDisplay, setUserDisplay] = useState({ name: '', email: '', initials: '' });
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    reset,
+    formState: { errors, isSubmitting },
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountSchema),
-    defaultValues: {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-    },
   });
 
-  function onSubmit(data: AccountFormValues) {
-    console.log(data);
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        const first = data.user.user_metadata?.['first_name'] ?? '';
+        const last = data.user.user_metadata?.['last_name'] ?? '';
+        const email = data.user.email ?? '';
+        reset({ firstName: first, lastName: last, email });
+        const name = first || last ? `${first} ${last}`.trim() : email;
+        const initials = first && last
+          ? `${first[0]}${last[0]}`.toUpperCase()
+          : (email[0] ?? '?').toUpperCase();
+        setUserDisplay({ name, email, initials });
+      }
+    });
+  }, [reset]);
+
+  async function onSubmit(data: AccountFormValues) {
+    setServerError(null);
+    setSuccessMessage(null);
+    const supabase = createClient();
+
+    const updates: Parameters<typeof supabase.auth.updateUser>[0] = {
+      data: { first_name: data.firstName, last_name: data.lastName },
+    };
+
+    if (data.email) updates.email = data.email;
+    if (data.newPassword) updates.password = data.newPassword;
+
+    const { error } = await supabase.auth.updateUser(updates);
+
+    if (error) {
+      setServerError(error.message);
+      return;
+    }
+
+    setSuccessMessage('Changes saved successfully.');
   }
 
   return (
@@ -53,11 +88,11 @@ export function AccountForm() {
       {/* Card header — avatar + user info */}
       <div className="flex items-center gap-3.5 px-6 py-5">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary">
-          <span className="font-sans text-lg font-semibold text-primary-foreground">JD</span>
+          <span className="font-sans text-lg font-semibold text-primary-foreground">{userDisplay.initials}</span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="font-heading text-[15px] font-semibold text-foreground">John Doe</span>
-          <span className="font-sans text-[13px] text-muted-foreground">john.doe@example.com</span>
+          <span className="font-heading text-[15px] font-semibold text-foreground">{userDisplay.name}</span>
+          <span className="font-sans text-[13px] text-muted-foreground">{userDisplay.email}</span>
         </div>
       </div>
 
@@ -170,16 +205,28 @@ export function AccountForm() {
         <div className="h-px bg-surface-divider" />
 
         {/* Card footer */}
-        <div className="flex items-center justify-between px-6 py-4">
-          <button type="button" className="flex items-center gap-1.5 transition-opacity hover:opacity-70">
-            <Trash2 size={13} className="text-destructive-text" />
-            <span className="font-sans text-[13px] text-destructive-text">Delete account</span>
-          </button>
-          <button type="submit" className="flex h-10 items-center rounded-lg bg-foreground px-5 transition-opacity hover:opacity-90">
-            <span className="font-sans text-[13px] font-semibold text-primary-foreground">
-              Save changes
-            </span>
-          </button>
+        <div className="flex flex-col gap-2 px-6 py-4">
+          {serverError && (
+            <p className="text-xs text-destructive font-sans">{serverError}</p>
+          )}
+          {successMessage && (
+            <p className="text-xs text-green-600 font-sans">{successMessage}</p>
+          )}
+          <div className="flex items-center justify-between">
+            <button type="button" className="flex items-center gap-1.5 transition-opacity hover:opacity-70">
+              <Trash2 size={13} className="text-destructive-text" />
+              <span className="font-sans text-[13px] text-destructive-text">Delete account</span>
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex h-10 items-center rounded-lg bg-foreground px-5 transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              <span className="font-sans text-[13px] font-semibold text-primary-foreground">
+                {isSubmitting ? 'Saving…' : 'Save changes'}
+              </span>
+            </button>
+          </div>
         </div>
       </form>
     </div>

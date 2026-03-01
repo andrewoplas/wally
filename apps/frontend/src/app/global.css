@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  /* Blog article prose styles */
+  .prose-wally {
+    @apply text-foreground text-base leading-relaxed;
+  }
+  .prose-wally p {
+    @apply mb-6 leading-[1.8] text-muted-foreground;
+  }
+  .prose-wally h2 {
+    @apply mt-10 mb-4 font-heading text-2xl font-bold text-foreground;
+  }
+  .prose-wally h3 {
+    @apply mt-8 mb-3 font-heading text-xl font-semibold text-foreground;
+  }
+  .prose-wally ul {
+    @apply mb-6 ml-6 list-disc space-y-2 text-muted-foreground;
+  }
+  .prose-wally ol {
+    @apply mb-6 ml-6 list-decimal space-y-2 text-muted-foreground;
+  }
+  .prose-wally li {
+    @apply leading-relaxed;
+  }
+  .prose-wally blockquote {
+    @apply my-8 border-l-4 border-primary bg-primary/[0.06] py-4 pl-6 pr-4 rounded-r-xl italic text-foreground;
+  }
+  .prose-wally strong {
+    @apply font-semibold text-foreground;
+  }
+  .prose-wally a {
+    @apply text-primary underline underline-offset-2 hover:text-primary/80;
+  }
+  .prose-wally code {
+    @apply rounded bg-muted px-1.5 py-0.5 text-sm font-mono text-foreground;
+  }
+}
+
 @layer base {
   :root {
     /* Primary */

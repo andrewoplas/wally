@@ -24,6 +24,11 @@ node_modules
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# env files
+.env
+.env.*
+!.env.example
+
 # misc
 /.sass-cache
 /connect.lock
@@ -44,6 +49,9 @@ Thumbs.db
 # Next.js
 .next
 out
+
+# Supabase
+supabase/.temp/
 
 test-output
 .playwright-mcp

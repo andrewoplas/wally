@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { SupabaseService } from '../../supabase/supabase.service.js';
 import { WallyLoggerService } from '../logger/wally-logger.service.js';
 
 interface AuthenticatedRequest extends Request {
@@ -18,13 +19,11 @@ interface SiteWindow {
 }
 
 const ONE_MINUTE_MS = 60_000;
-const ONE_DAY_MS = 86_400_000;
 
 /**
- * In-memory sliding-window rate limiter keyed by site_id.
- * Enforces per-minute and per-day limits from config.
- *
- * Note: For multi-instance deployments, replace with Redis-backed counters.
+ * Hybrid rate limiter:
+ * - Per-minute: in-memory sliding window (fast, acceptable loss on restart)
+ * - Per-day: Supabase-backed counter (persistent, works across instances)
  */
 @Injectable()
 export class RateLimiterGuard implements CanActivate {
@@ -33,29 +32,30 @@ export class RateLimiterGuard implements CanActivate {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly supabase: SupabaseService,
     private readonly logger: WallyLoggerService,
   ) {
-    // Evict stale windows every hour to prevent unbounded Map growth.
+    // Evict stale per-minute windows every hour to prevent unbounded Map growth.
     this.evictionInterval = setInterval(() => this.evictStaleWindows(), 3_600_000);
   }
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const siteId = req.siteId;
 
     // Skip rate limiting if siteId not set (auth guard handles that)
     if (!siteId) return true;
 
+    const perMinuteLimit = this.configService.get<number>('rateLimitPerSitePerMinute', 30);
+    const perDayLimit = this.configService.get<number>('rateLimitPerSitePerDay', 1000);
+
+    // ── Per-minute check (in-memory) ─────────────────────────────────────────
     const now = Date.now();
     const window = this.getWindow(siteId);
     this.pruneOldRequests(window, now);
 
-    const perMinuteLimit = this.configService.get<number>('rateLimitPerSitePerMinute', 30);
-    const perDayLimit = this.configService.get<number>('rateLimitPerSitePerDay', 1000);
-
     const oneMinuteAgo = now - ONE_MINUTE_MS;
     const requestsLastMinute = window.requests.filter((ts) => ts > oneMinuteAgo).length;
-    const requestsLastDay = window.requests.length;
 
     if (requestsLastMinute >= perMinuteLimit) {
       this.logger.logWithMeta('warn', 'Rate limit exceeded (per-minute)', {
@@ -72,10 +72,20 @@ export class RateLimiterGuard implements CanActivate {
       );
     }
 
-    if (requestsLastDay >= perDayLimit) {
+    // ── Per-day check (Supabase) ──────────────────────────────────────────────
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const { data: currentCount } = await this.supabase.client
+      .from('rate_limits')
+      .select('count')
+      .eq('site_id', siteId)
+      .eq('date', today)
+      .single<{ count: number }>();
+
+    if (currentCount && currentCount.count >= perDayLimit) {
       this.logger.logWithMeta('warn', 'Rate limit exceeded (per-day)', {
         siteId,
-        count: requestsLastDay,
+        count: currentCount.count,
       });
       throw new HttpException(
         {
@@ -87,7 +97,21 @@ export class RateLimiterGuard implements CanActivate {
       );
     }
 
+    // ── Record the request ────────────────────────────────────────────────────
     window.requests.push(now);
+
+    // Increment day counter asynchronously (fire-and-forget; don't block the request)
+    this.supabase.client
+      .rpc('increment_rate_limit', { p_site_id: siteId, p_date: today })
+      .then(({ error }) => {
+        if (error) {
+          this.logger.logWithMeta('error', 'Failed to increment rate limit counter', {
+            siteId,
+            error: error.message,
+          });
+        }
+      });
+
     return true;
   }
 
@@ -99,12 +123,12 @@ export class RateLimiterGuard implements CanActivate {
   }
 
   private pruneOldRequests(window: SiteWindow, now: number): void {
-    const oneDayAgo = now - ONE_DAY_MS;
-    window.requests = window.requests.filter((ts) => ts > oneDayAgo);
+    const oneMinuteAgo = now - ONE_MINUTE_MS;
+    window.requests = window.requests.filter((ts) => ts > oneMinuteAgo);
   }
 
   private evictStaleWindows(): void {
-    const cutoff = Date.now() - ONE_DAY_MS;
+    const cutoff = Date.now() - ONE_MINUTE_MS;
     for (const [siteId, win] of this.windows) {
       if (
         win.requests.length === 0 ||

@@ -1,15 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { MessageCircle, KeyRound, CreditCard, CircleUser, LogOut } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { MessageCircle, KeyRound, CreditCard, CircleUser, LogOut, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UpgradeBanner } from './upgrade-banner';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 export const NAV_ITEMS = [
   { label: 'License', href: '/app/license', icon: KeyRound },
   { label: 'Subscription', href: '/app/subscriptions', icon: CreditCard },
   { label: 'Account', href: '/app/account', icon: CircleUser },
+  { label: 'FAQ', href: '/app/faq', icon: HelpCircle },
 ];
 
 interface AppSidebarProps {
@@ -18,6 +22,27 @@ interface AppSidebarProps {
 
 export function AppSidebar({ showUpgradeBanner = true }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+  }, []);
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  }
+
+  const firstName = user?.user_metadata?.['first_name'] ?? '';
+  const lastName = user?.user_metadata?.['last_name'] ?? '';
+  const displayName = firstName || lastName ? `${firstName} ${lastName}`.trim() : (user?.email ?? '');
+  const initials = firstName && lastName
+    ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+    : (user?.email?.[0] ?? '?').toUpperCase();
 
   return (
     <aside className="flex h-screen w-[240px] shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar px-5 py-7">
@@ -65,18 +90,21 @@ export function AppSidebar({ showUpgradeBanner = true }: AppSidebarProps) {
         {/* User row */}
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
-            <span className="font-sans text-xs font-semibold text-primary-foreground">JD</span>
+            <span className="font-sans text-xs font-semibold text-primary-foreground">{initials}</span>
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate font-sans text-[13px] font-semibold text-foreground">
-              John Doe
+              {displayName}
             </span>
-            <span className="truncate font-sans text-xs text-disabled">john@example.com</span>
+            <span className="truncate font-sans text-xs text-disabled">{user?.email ?? ''}</span>
           </div>
         </div>
 
         {/* Logout */}
-        <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent">
+        <button
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent"
+        >
           <LogOut size={15} className="text-disabled" />
           <span className="font-sans text-[13px] text-muted-foreground">Log out</span>
         </button>

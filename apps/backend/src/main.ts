@@ -23,7 +23,7 @@ async function bootstrap() {
         ? false // tightened in production via env/proxy
         : true,
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'X-Site-ID', 'X-API-Key'],
+    allowedHeaders: ['Content-Type', 'X-Site-ID', 'X-License-Key'],
   });
 
   // Global DTO validation — strip unknown fields, transform primitives
@@ -41,7 +41,7 @@ async function bootstrap() {
       .setTitle('Wally API')
       .setDescription('AI-powered WordPress admin assistant API')
       .setVersion('1.0')
-      .addApiKey({ type: 'apiKey', in: 'header', name: 'X-API-Key' }, 'X-API-Key')
+      .addApiKey({ type: 'apiKey', in: 'header', name: 'X-License-Key' }, 'X-License-Key')
       .addApiKey({ type: 'apiKey', in: 'header', name: 'X-Site-ID' }, 'X-Site-ID')
       .build();
     const document = SwaggerModule.createDocument(app, config);

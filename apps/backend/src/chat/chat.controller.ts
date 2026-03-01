@@ -20,6 +20,7 @@ import {
   ValidationPipe,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiExcludeEndpoint } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 import { RateLimiterGuard } from '../common/guards/rate-limiter.guard.js';
@@ -32,6 +33,7 @@ import type { SiteProfile } from '../knowledge/prompt-builder.service.js';
 
 const MAX_HISTORY_CONTENT = 4_000; // chars per history entry
 
+@ApiTags('chat')
 @Controller('v1/chat')
 @UseGuards(AuthGuard, RateLimiterGuard)
 export class ChatController {
@@ -42,6 +44,7 @@ export class ChatController {
     private readonly logger: WallyLoggerService,
   ) {}
 
+  @ApiExcludeEndpoint()
   @Post()
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))

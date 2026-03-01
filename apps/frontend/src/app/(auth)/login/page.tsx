@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Zap, ShieldCheck, Sparkles } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +13,7 @@ import { AuthDivider } from '@/components/auth/auth-divider';
 import { GoogleButton } from '@/components/auth/google-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { createClient } from '@/lib/supabase/client';
 
 const loginSchema = z.object({
   email: z.email({ message: 'Enter a valid email address' }),
@@ -39,16 +42,32 @@ const loginFeatures = [
 ];
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
 
-  function onSubmit(data: LoginFormValues) {
-    console.log(data);
+  async function onSubmit(data: LoginFormValues) {
+    setServerError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      setServerError(error.message);
+      return;
+    }
+
+    router.push('/app/license');
+    router.refresh();
   }
 
   return (
@@ -106,9 +125,20 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Server error */}
+          {serverError && (
+            <p className="text-sm text-destructive font-sans -mt-4">{serverError}</p>
+          )}
+
           {/* Sign in CTA */}
-          <Button type="submit" variant="solid-primary" size="md" className="w-full justify-center rounded-[14px]">
-            Sign in
+          <Button
+            type="submit"
+            variant="solid-primary"
+            size="md"
+            className="w-full justify-center rounded-[14px]"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
           </Button>
 
           <AuthDivider />

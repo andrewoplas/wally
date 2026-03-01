@@ -2,10 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Plugin: Start (React watch)",
-      "type": "npm",
-      "script": "watch",
-      "path": "wp-content/plugins/wp-ai-assistant/",
+      "label": "Backend: Serve",
+      "type": "shell",
+      "command": "source ~/.nvm/nvm.sh && nvm use && npx nx serve backend",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",
@@ -14,11 +16,25 @@
       "problemMatcher": []
     },
     {
-      "label": "Backend: Dev (node --watch)",
+      "label": "Frontend: Dev",
       "type": "shell",
-      "command": "source ~/.nvm/nvm.sh && nvm use && npm run dev",
+      "command": "source ~/.nvm/nvm.sh && nvm use && npx nx dev frontend",
       "options": {
-        "cwd": "${workspaceFolder}/backend"
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev-servers"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Plugin: Start",
+      "type": "shell",
+      "command": "source ~/.nvm/nvm.sh && nvm use && npm run start & npm run watch:css",
+      "options": {
+        "cwd": "${workspaceFolder}/apps/wally"
       },
       "presentation": {
         "reveal": "always",

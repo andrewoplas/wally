@@ -1,13 +1,27 @@
 import { MessageCircle, CircleUser } from 'lucide-react';
 import { AppSidebar } from '@/components/app/app-sidebar';
 import { BottomTabBar } from '@/components/app/bottom-tab-bar';
+import { createClient } from '@/lib/supabase/server';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: license } = user
+    ? await supabase
+        .from('license_keys')
+        .select('tier')
+        .eq('user_id', user.id)
+        .maybeSingle()
+    : { data: null };
+
+  const showUpgradeBanner = !license || license.tier === 'free';
+
   return (
     <div className="flex h-screen overflow-hidden bg-muted">
       {/* Desktop sidebar */}
       <div className="hidden md:flex">
-        <AppSidebar />
+        <AppSidebar showUpgradeBanner={showUpgradeBanner} />
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -20,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <span className="font-heading text-[15px] font-bold text-foreground">Wally</span>
           </div>
           <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-primary">
-            <span className="font-sans text-xs font-semibold text-primary-foreground">JD</span>
+            <CircleUser size={16} className="text-primary-foreground" />
           </div>
         </header>
 

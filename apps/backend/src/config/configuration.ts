@@ -11,6 +11,10 @@ export interface WallyConfig {
   rateLimitPerSitePerMinute: number;
   rateLimitPerSitePerDay: number;
   skipLicenseValidation: boolean;
+  supabase: {
+    url: string;
+    serviceRoleKey: string;
+  };
   models: Record<string, ModelConfig>;
 }
 
@@ -31,6 +35,11 @@ export default (): WallyConfig => ({
   ),
 
   skipLicenseValidation: process.env['SKIP_LICENSE_VALIDATION'] === 'true',
+
+  supabase: {
+    url: process.env['SUPABASE_URL'] ?? '',
+    serviceRoleKey: process.env['SUPABASE_SERVICE_ROLE_KEY'] ?? '',
+  },
 
   models: {
     'claude-sonnet-4-6': { provider: 'anthropic', modelId: 'claude-sonnet-4-6' },

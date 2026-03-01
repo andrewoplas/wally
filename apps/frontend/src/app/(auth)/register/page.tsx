@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,13 +12,21 @@ import { AuthDivider } from '@/components/auth/auth-divider';
 import { GoogleButton } from '@/components/auth/google-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { createClient } from '@/lib/supabase/client';
+
+const passwordRules = z
+  .string()
+  .min(6, 'Password must be at least 6 characters')
+  .regex(/[a-z]/, 'Password must contain a lowercase letter')
+  .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+  .regex(/[0-9]/, 'Password must contain a digit');
 
 const registerSchema = z
   .object({
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().min(1, 'Last name is required'),
     email: z.email({ message: 'Enter a valid email address' }),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    password: passwordRules,
     confirmPassword: z.string().min(1, 'Please confirm your password'),
     terms: z.literal(true, { message: 'You must accept the terms' }),
   })
@@ -51,16 +61,38 @@ const registerSteps = [
 ];
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   });
 
-  function onSubmit(data: RegisterFormValues) {
-    console.log(data);
+  async function onSubmit(data: RegisterFormValues) {
+    setServerError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          first_name: data.firstName,
+          last_name: data.lastName,
+        },
+      },
+    });
+
+    if (error) {
+      setServerError(error.message);
+      return;
+    }
+
+    router.push('/app/license');
+    router.refresh();
   }
 
   return (
@@ -151,9 +183,20 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          {/* Server error */}
+          {serverError && (
+            <p className="text-sm text-destructive font-sans -mt-3">{serverError}</p>
+          )}
+
           {/* Create account CTA */}
-          <Button type="submit" variant="solid-primary" size="md" className="w-full justify-center rounded-[14px]">
-            Create account
+          <Button
+            type="submit"
+            variant="solid-primary"
+            size="md"
+            className="w-full justify-center rounded-[14px]"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Creating account…' : 'Create account'}
           </Button>
 
           <AuthDivider />

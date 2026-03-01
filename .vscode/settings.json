@@ -2,14 +2,19 @@
   "VsCodeTaskButtons.showCounter": false,
   "VsCodeTaskButtons.tasks": [
     {
-      "label": "$(play) Plugin",
-      "task": "Plugin: Start (React watch)",
-      "tooltip": "Start React watch for wp-ai-assistant plugin"
+      "label": "$(play) Backend",
+      "task": "Backend: Serve",
+      "tooltip": "Start backend server"
     },
     {
-      "label": "$(play) Backend",
-      "task": "Backend: Dev (node --watch)",
-      "tooltip": "Start backend dev server"
+      "label": "$(play) Frontend",
+      "task": "Frontend: Dev",
+      "tooltip": "Start frontend dev server"
+    },
+    {
+      "label": "$(play) Plugin",
+      "task": "Plugin: Start",
+      "tooltip": "Start plugin JS and CSS watch"
     }
   ]
 }

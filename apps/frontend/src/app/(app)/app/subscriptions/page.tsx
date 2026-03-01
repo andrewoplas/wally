@@ -1,8 +1,9 @@
 'use client';
 
-import { Check, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { Check, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { getUserLicense } from '@/lib/api';
 
 type CellValue = boolean | string;
 
@@ -40,17 +41,6 @@ const FEATURES: FeatureRow[] = [
   },
 ];
 
-const FAQS = [
-  { q: 'Can I cancel anytime?', a: null },
-  {
-    q: 'What happens to my sites if I downgrade?',
-    a: 'Your activated sites will be deactivated and the plugin will stop responding to commands. It remains installed and no data is deleted — resubscribe anytime to reactivate.',
-    defaultOpen: true,
-  },
-  { q: 'Is my WordPress data safe?', a: null },
-  { q: 'Which AI models does Wally use?', a: null },
-  { q: 'Do I need technical skills to use Wally?', a: null },
-];
 
 function CellContent({ value, isPro }: { value: CellValue; isPro?: boolean }) {
   if (typeof value === 'boolean') {
@@ -71,43 +61,16 @@ function CellContent({ value, isPro }: { value: CellValue; isPro?: boolean }) {
   );
 }
 
-function FaqCard({
-  q,
-  a,
-  defaultOpen = false,
-}: {
-  q: string;
-  a: string | null;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="overflow-hidden rounded-[var(--radius,12px)] border border-border bg-card">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-6 py-5 text-left"
-      >
-        <span className="font-sans text-sm font-semibold leading-[1.5] text-foreground">{q}</span>
-        {open ? (
-          <ChevronUp size={18} className="shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronDown size={18} className="shrink-0 text-muted-foreground" />
-        )}
-      </button>
-      {open && a && (
-        <>
-          <div className="h-px bg-border" />
-          <p className="px-6 pb-5 font-sans text-[13px] leading-[1.6] text-muted-foreground">{a}</p>
-        </>
-      )}
-    </div>
-  );
-}
-
 const ctaBtn =
   'flex w-full items-center justify-center rounded-full py-2.5 px-4 font-sans text-[13px] font-semibold transition-opacity';
 
 export default function SubscriptionsPage() {
+  const [currentTier, setCurrentTier] = useState<string>('free');
+
+  useEffect(() => {
+    getUserLicense().then((d) => setCurrentTier(d.tier));
+  }, []);
+
   return (
     <div className="flex flex-col gap-8">
       {/* Page header */}
@@ -129,18 +92,30 @@ export default function SubscriptionsPage() {
           <div className="flex flex-1 flex-col items-center justify-center gap-0.5">
             <span className="font-heading text-sm font-bold text-foreground">Free</span>
             <span className="font-sans text-xs font-medium text-muted-foreground">$0/mo</span>
+            {currentTier === 'free' && (
+              <span className="font-sans text-[10px] text-primary font-medium">Your plan</span>
+            )}
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-0.5 bg-[#EDE5FF]">
             <span className="font-heading text-sm font-bold text-primary">Pro</span>
             <span className="font-sans text-xs font-medium text-primary">$12/mo</span>
+            {currentTier === 'pro' && (
+              <span className="font-sans text-[10px] text-primary font-medium">Your plan</span>
+            )}
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-0.5">
             <span className="font-heading text-sm font-bold text-foreground">Agency</span>
             <span className="font-sans text-xs font-medium text-muted-foreground">$49/mo</span>
+            {currentTier === 'agency' && (
+              <span className="font-sans text-[10px] text-primary font-medium">Your plan</span>
+            )}
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-0.5">
             <span className="font-heading text-sm font-bold text-foreground">Enterprise</span>
             <span className="font-sans text-xs font-medium text-muted-foreground">$149/mo</span>
+            {currentTier === 'enterprise' && (
+              <span className="font-sans text-[10px] text-primary font-medium">Your plan</span>
+            )}
           </div>
         </div>
 
@@ -178,51 +153,58 @@ export default function SubscriptionsPage() {
           <div className="flex w-[280px] shrink-0 items-center px-6">
             <span className="font-heading text-[13px] font-bold text-foreground">Get started</span>
           </div>
+          {/* Free */}
           <div className="flex flex-1 items-center justify-center px-4">
-            <button className={cn(ctaBtn, 'bg-muted text-foreground hover:opacity-90')}>
-              Get Started
-            </button>
+            {currentTier === 'free' ? (
+              <button disabled className={cn(ctaBtn, 'bg-muted text-muted-foreground cursor-default opacity-60')}>
+                Current Plan
+              </button>
+            ) : (
+              <button className={cn(ctaBtn, 'bg-muted text-foreground hover:opacity-90')}>
+                Get Started
+              </button>
+            )}
           </div>
+          {/* Pro */}
           <div className="flex flex-1 items-center justify-center bg-[#F0EAFF] px-4">
-            <button className={cn(ctaBtn, 'bg-primary text-primary-foreground hover:opacity-90')}>
-              Start Free Trial
-            </button>
+            {currentTier === 'pro' ? (
+              <button disabled className={cn(ctaBtn, 'bg-primary/50 text-primary-foreground cursor-default opacity-70')}>
+                Current Plan
+              </button>
+            ) : (
+              <button className={cn(ctaBtn, 'bg-primary text-primary-foreground hover:opacity-90')}>
+                Start Free Trial
+              </button>
+            )}
           </div>
+          {/* Agency */}
           <div className="flex flex-1 items-center justify-center px-4">
-            <button className={cn(ctaBtn, 'bg-muted text-foreground hover:opacity-90')}>
-              Start Free Trial
-            </button>
+            {currentTier === 'agency' ? (
+              <button disabled className={cn(ctaBtn, 'bg-muted text-muted-foreground cursor-default opacity-60')}>
+                Current Plan
+              </button>
+            ) : (
+              <button className={cn(ctaBtn, 'bg-muted text-foreground hover:opacity-90')}>
+                Start Free Trial
+              </button>
+            )}
           </div>
+          {/* Enterprise */}
           <div className="flex flex-1 items-center justify-center px-4">
-            <button
-              className={cn(
-                ctaBtn,
-                'border border-border bg-transparent text-foreground hover:opacity-80',
-              )}
-            >
-              Contact Sales
-            </button>
+            {currentTier === 'enterprise' ? (
+              <button disabled className={cn(ctaBtn, 'border border-border bg-transparent text-muted-foreground cursor-default opacity-60')}>
+                Current Plan
+              </button>
+            ) : (
+              <button className={cn(ctaBtn, 'border border-border bg-transparent text-foreground hover:opacity-80')}>
+                Contact Sales
+              </button>
+            )}
           </div>
         </div>
       </div>
       </div>
 
-      {/* FAQ */}
-      <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-heading text-lg font-bold text-foreground">
-            Frequently Asked Questions
-          </h2>
-          <p className="font-sans text-[13px] text-muted-foreground">
-            Everything you need to know about Wally
-          </p>
-        </div>
-        <div className="flex flex-col gap-3">
-          {FAQS.map((faq) => (
-            <FaqCard key={faq.q} q={faq.q} a={faq.a} defaultOpen={faq.defaultOpen} />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
