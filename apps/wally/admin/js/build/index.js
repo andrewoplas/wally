@@ -1193,9 +1193,7 @@ __webpack_require__.r(__webpack_exports__);
 
 marked__WEBPACK_IMPORTED_MODULE_1__.marked.setOptions({
   breaks: true,
-  gfm: true,
-  headerIds: false,
-  mangle: false
+  gfm: true
 });
 const ALLOWED_TAGS = new Set(['p', 'br', 'strong', 'b', 'em', 'i', 'code', 'pre', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'blockquote', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td']);
 function sanitizeHtml(html) {

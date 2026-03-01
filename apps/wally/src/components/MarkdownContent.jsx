@@ -1,7 +1,7 @@
 import { useMemo, useRef, useEffect } from '@wordpress/element';
 import { marked } from 'marked';
 
-marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+marked.setOptions({ breaks: true, gfm: true });
 
 const ALLOWED_TAGS = new Set([
     'p', 'br', 'strong', 'b', 'em', 'i', 'code', 'pre',

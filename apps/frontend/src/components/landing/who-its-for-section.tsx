@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { ShieldCheck, Zap, Languages, Users, Building2, MessageCircle, Rocket } from 'lucide-react';
 import Image from 'next/image';
 import { SectionBadge } from './shared/section-badge';
@@ -56,12 +56,12 @@ const audiences = [
   },
 ];
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: 'easeOut', delay: i * 0.15 },
+    transition: { duration: 0.5, ease: 'easeOut' as const, delay: i * 0.15 },
   }),
 };
 

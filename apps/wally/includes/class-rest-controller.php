@@ -218,7 +218,7 @@ class RestController {
 			$wpdb->prepare(
 				"SELECT role, content FROM {$msg_table}
 				 WHERE conversation_id = %d
-				 ORDER BY created_at DESC
+				 ORDER BY created_at DESC, id DESC
 				 LIMIT %d",
 				$conversation_id, self::HISTORY_LIMIT
 			)
@@ -417,7 +417,7 @@ class RestController {
 			$wpdb->prepare(
 				"SELECT role, content FROM {$msg_table}
 				 WHERE conversation_id = %d
-				 ORDER BY created_at DESC
+				 ORDER BY created_at DESC, id DESC
 				 LIMIT %d",
 				$conversation_id, self::HISTORY_LIMIT
 			)
@@ -870,7 +870,7 @@ class RestController {
 			$wpdb->prepare(
 				"SELECT role, content FROM {$msg_table}
 				 WHERE conversation_id = %d
-				 ORDER BY created_at ASC
+				 ORDER BY created_at ASC, id ASC
 				 LIMIT 2",
 				$id
 			)
@@ -961,7 +961,7 @@ class RestController {
 
 		$messages = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$msg_table} WHERE conversation_id = %d ORDER BY created_at ASC",
+				"SELECT * FROM {$msg_table} WHERE conversation_id = %d ORDER BY created_at ASC, id ASC",
 				$id
 			)
 		);
