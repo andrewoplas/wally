@@ -158,6 +158,8 @@ module.exports = {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'hue-shift': 'hue-shift 8s ease-in-out infinite',
         'draw-line': 'draw-line 0.6s ease-out forwards',
+        'marquee-left': 'marquee-left var(--marquee-duration, 60s) linear infinite',
+        'marquee-right': 'marquee-right var(--marquee-duration, 60s) linear infinite',
       },
       keyframes: {
         'accordion-down': {
@@ -197,6 +199,14 @@ module.exports = {
         'draw-line': {
           '0%': { width: '0%' },
           '100%': { width: '100%' },
+        },
+        'marquee-left': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        'marquee-right': {
+          '0%': { transform: 'translateX(-50%)' },
+          '100%': { transform: 'translateX(0)' },
         },
       },
     },
