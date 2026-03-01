@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Wally** is an AI-powered WordPress admin assistant — a chat sidebar inside wp-admin that lets users manage their site through natural language. It uses a **hybrid SaaS model**: the WordPress plugin is a thin client, and all AI orchestration runs on the backend server.
 
+**Official domain:** `https://www.wallychat.com` — use this as the canonical site URL everywhere (fallback in sitemap, robots, metadata, JSON-LD, etc.).
+
 ## Monorepo Structure
 
 This is an **Nx 22.5.3 monorepo** with these apps:

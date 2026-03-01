@@ -117,7 +117,7 @@ export default async function BlogPostPage({
     publisher: {
       '@type': 'Organization',
       name: 'Wally',
-      url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://usewally.com',
+      url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.wallychat.com',
     },
     image: post.image,
   };

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { BLOG_POSTS } from '@/lib/blog-data';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://usewally.com';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.wallychat.com';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [

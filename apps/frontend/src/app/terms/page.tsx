@@ -3,8 +3,23 @@ import { MessageCircle } from 'lucide-react';
 import { LegalFooter } from '@/components/legal/legal-footer';
 
 export const metadata = {
-  title: 'Terms of Service | Wally',
+  title: 'Terms of Service',
   description: 'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
+  openGraph: {
+    title: 'Terms of Service | Wally',
+    description: 'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
+    url: '/terms',
+    type: 'website',
+    images: [{ url: '/site-og.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Service | Wally',
+    description: 'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
+    images: ['/site-og.png'],
+  },
+  alternates: { canonical: '/terms' },
+  robots: { index: true, follow: false },
 };
 
 const sections = [

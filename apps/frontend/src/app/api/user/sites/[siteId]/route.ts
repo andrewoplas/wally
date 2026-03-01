@@ -6,23 +6,19 @@ export async function DELETE(
   { params }: { params: Promise<{ siteId: string }> },
 ) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { siteId } = await params;
 
-  const { error } = await supabase
-    .from('sites')
-    .update({ is_active: false })
-    .eq('id', siteId)
-    .eq('user_id', user.id); // Ensures users can only deactivate their own sites
+  const res = await fetch(`${process.env.BACKEND_URL}/v1/user/sites/${siteId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ success: true });
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
 }

@@ -3,8 +3,23 @@ import { MessageCircle } from 'lucide-react';
 import { LegalFooter } from '@/components/legal/legal-footer';
 
 export const metadata = {
-  title: 'Privacy Policy | Wally',
+  title: 'Privacy Policy',
   description: 'Privacy Policy for Wally, the AI-powered WordPress admin assistant.',
+  openGraph: {
+    title: 'Privacy Policy | Wally',
+    description: 'Privacy Policy for Wally, the AI-powered WordPress admin assistant.',
+    url: '/privacy',
+    type: 'website',
+    images: [{ url: '/site-og.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Privacy Policy | Wally',
+    description: 'Privacy Policy for Wally, the AI-powered WordPress admin assistant.',
+    images: ['/site-og.png'],
+  },
+  alternates: { canonical: '/privacy' },
+  robots: { index: true, follow: false },
 };
 
 const sections = [

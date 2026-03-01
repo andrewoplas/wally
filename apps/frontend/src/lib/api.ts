@@ -1,3 +1,11 @@
+export interface LicenseSite {
+  id: string;
+  domain: string | null;
+  is_active: boolean;
+  activated_at: string | null;
+  license_expires_at: string | null;
+}
+
 export interface UserLicense {
   id: string | null;
   key: string | null;
@@ -6,6 +14,7 @@ export interface UserLicense {
   expires_at: string | null;
   status: string;
   activated_count: number;
+  sites: LicenseSite[];
 }
 
 /** GET /api/user/license — fetch the current user's license info */

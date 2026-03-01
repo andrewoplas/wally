@@ -18,14 +18,14 @@ export const metadata: Metadata = {
       'Insights, tips & updates for WordPress managers. Learn how to streamline your WordPress workflow with AI-powered automation.',
     url: '/blog',
     type: 'website',
-    images: [{ url: '/og-blog.png', width: 1200, height: 630 }],
+    images: [{ url: '/site-og.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Blog — Wally',
     description:
       'Insights, tips & updates for WordPress managers.',
-    images: ['/og-blog.png'],
+    images: ['/site-og.png'],
   },
   alternates: { canonical: '/blog' },
 };

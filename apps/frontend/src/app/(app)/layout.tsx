@@ -1,4 +1,10 @@
+import type { Metadata } from 'next';
 import { MessageCircle, CircleUser } from 'lucide-react';
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+import { redirect } from 'next/navigation';
 import { AppSidebar } from '@/components/app/app-sidebar';
 import { BottomTabBar } from '@/components/app/bottom-tab-bar';
 import { createClient } from '@/lib/supabase/server';
@@ -7,13 +13,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: license } = user
-    ? await supabase
-        .from('license_keys')
-        .select('tier')
-        .eq('user_id', user.id)
-        .maybeSingle()
-    : { data: null };
+  if (!user) {
+    redirect('/login');
+  }
+
+  const { data: license } = await supabase
+    .from('license_keys')
+    .select('tier')
+    .eq('user_id', user.id)
+    .maybeSingle();
 
   const showUpgradeBanner = !license || license.tier === 'free';
 

@@ -5,35 +5,18 @@ import { UpgradeBannerPage } from '@/components/app/upgrade-banner-page';
 
 export default async function LicensePage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  let { data: license } = user
-    ? await supabase
-        .from('license_keys')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle()
-    : { data: null };
-
-  // Fallback: create a free key if none exists (handles existing users + trigger failures)
-  if (!license && user) {
-    const newKey = `wally_live_sk_${crypto.randomUUID().replace(/-/g, '')}`;
-    const { data: created } = await supabase
-      .from('license_keys')
-      .insert({ user_id: user.id, key: newKey, tier: 'free', max_sites: 1 })
-      .select()
-      .single();
-    license = created;
+  if (!session) {
+    return null;
   }
 
-  const { data: sites } = license
-    ? await supabase
-        .from('sites')
-        .select('id, domain, is_active, activated_at, license_expires_at')
-        .eq('license_key_id', license.id)
-        .eq('is_active', true)
-        .order('activated_at', { ascending: false })
-    : { data: [] };
+  const res = await fetch(`${process.env.BACKEND_URL}/v1/user/license`, {
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+
+  const licenseData = res.ok ? await res.json() : null;
+  const { sites, ...license } = licenseData ?? {};
 
   const isFree = !license || license.tier === 'free';
 
