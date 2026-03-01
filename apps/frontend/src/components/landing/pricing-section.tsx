@@ -168,7 +168,7 @@ export function PricingSection() {
                 {/* CTA */}
                 <div className="flex flex-col items-center gap-3">
                   <Button
-                    href="#"
+                    href="/app/license"
                     size="md"
                     variant={
                       tier.ctaVariant === 'primary' ? 'solid-primary' :

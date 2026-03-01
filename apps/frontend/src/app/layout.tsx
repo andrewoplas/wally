@@ -1,5 +1,6 @@
 import './global.css';
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,12 +21,15 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.wallychat.com'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.wallychat.com',
+  ),
   title: {
     default: 'Wally — AI WordPress Assistant',
     template: '%s | Wally',
   },
-  description: 'Manage your WordPress site by just asking. Wally is an AI chat assistant inside wp-admin that handles your site tasks — no menus, no tickets, no tech skills needed.',
+  description:
+    'Manage your WordPress site by just asking. Wally is an AI chat assistant inside wp-admin that handles your site tasks — no menus, no tickets, no tech skills needed.',
   keywords: [
     'WordPress AI assistant',
     'WordPress automation',
@@ -39,7 +43,14 @@ export const metadata = {
   openGraph: {
     siteName: 'Wally',
     type: 'website',
-    images: [{ url: '/site-og.png', width: 1200, height: 630, alt: 'Wally — AI WordPress Assistant' }],
+    images: [
+      {
+        url: '/site-og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Wally — AI WordPress Assistant',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
@@ -65,8 +76,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${plusJakartaSans.variable} ${jetBrainsMono.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${plusJakartaSans.variable} ${jetBrainsMono.variable}`}
+    >
       <body className="bg-background text-foreground font-sans antialiased">
+        <Analytics />
         {children}
       </body>
     </html>

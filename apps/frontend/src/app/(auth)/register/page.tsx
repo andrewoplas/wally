@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -62,6 +62,8 @@ const registerSteps = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/app/license';
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -91,7 +93,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push('/app/license');
+    router.push(next);
     router.refresh();
   }
 
@@ -201,13 +203,13 @@ export default function RegisterPage() {
 
           <AuthDivider />
 
-          <GoogleButton />
+          <GoogleButton next={next} />
 
           {/* Sign in prompt */}
           <div className="flex items-center justify-center gap-1">
             <span className="text-sm text-muted-foreground font-sans">Already have an account?</span>
             <Link
-              href="/login"
+              href={next !== '/app/license' ? `/login?next=${encodeURIComponent(next)}` : '/login'}
               className="text-sm font-medium text-primary font-heading hover:underline"
             >
               Sign in

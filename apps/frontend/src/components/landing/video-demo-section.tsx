@@ -10,7 +10,7 @@ export function VideoDemoSection() {
   const [playing, setPlaying] = useState(false);
 
   return (
-    <section className="bg-lp-hero-dark py-24">
+    <section id="demo" className="bg-lp-hero-dark py-24">
       <Container className="flex flex-col items-center text-center">
         <AnimatedSection>
           <SectionBadge icon={Play} variant="dark">

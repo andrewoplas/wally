@@ -3,16 +3,20 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-export function GoogleButton() {
+export function GoogleButton({ next }: { next?: string }) {
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleGoogleSignIn() {
     setIsLoading(true);
     const supabase = createClient();
+    const callbackUrl = new URL('/auth/callback', window.location.origin);
+    if (next) {
+      callbackUrl.searchParams.set('next', next);
+    }
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: callbackUrl.toString(),
       },
     });
     // No need to reset isLoading — browser will navigate away

@@ -379,13 +379,13 @@ export function HeroSection() {
           transition={{ duration: 0.5, delay: 0.8 }}
         >
           <Button
-            href="#"
+            href="/app/license"
             variant="solid-white"
             className="shadow-[0_0_32px_rgba(255,255,255,0.19)]"
           >
-            Install Free Plugin
+            Get Started
           </Button>
-          <Button href="#" variant="outline-dark">
+          <Button href="#demo" variant="outline-dark">
             See it in action
           </Button>
         </motion.div>

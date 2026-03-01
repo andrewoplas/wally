@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Zap, ShieldCheck, Sparkles } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -43,6 +43,8 @@ const loginFeatures = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/app/license';
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -66,7 +68,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push('/app/license');
+    router.push(next);
     router.refresh();
   }
 
@@ -143,13 +145,13 @@ export default function LoginPage() {
 
           <AuthDivider />
 
-          <GoogleButton />
+          <GoogleButton next={next} />
 
           {/* Sign up prompt */}
           <div className="flex items-center justify-center gap-1">
             <span className="text-sm text-muted-foreground font-sans">Don&apos;t have an account?</span>
             <Link
-              href="/register"
+              href={next !== '/app/license' ? `/register?next=${encodeURIComponent(next)}` : '/register'}
               className="text-sm font-medium text-primary font-heading hover:underline"
             >
               Create one

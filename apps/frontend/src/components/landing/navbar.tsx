@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Menu, MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/client';
 
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
@@ -21,6 +22,13 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => setIsLoggedIn(!!data.user));
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -92,20 +100,32 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
 
           {/* Desktop CTAs */}
           <div className="hidden items-center gap-3 md:flex">
-            <Button
-              href="#"
-              size="sm"
-              variant={scrolled && !isDark ? 'outline' : 'outline-dark'}
-            >
-              Download Free
-            </Button>
-            <Button
-              href="#"
-              size="sm"
-              variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
-            >
-              Get Pro
-            </Button>
+            {isLoggedIn ? (
+              <Button
+                href="/app/account"
+                size="sm"
+                variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
+              >
+                My Account
+              </Button>
+            ) : (
+              <>
+                <Button
+                  href="/login"
+                  size="sm"
+                  variant={scrolled && !isDark ? 'outline' : 'outline-dark'}
+                >
+                  Log In
+                </Button>
+                <Button
+                  href="/register"
+                  size="sm"
+                  variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -149,22 +169,35 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
                 </a>
               ))}
               <div className="flex gap-3 pt-2">
-                <Button
-                  href="#"
-                  size="sm"
-                  variant={scrolled && !isDark ? 'outline' : 'outline-dark'}
-                  className="flex-1 justify-center"
-                >
-                  Download Free
-                </Button>
-                <Button
-                  href="#"
-                  size="sm"
-                  variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
-                  className="flex-1 justify-center"
-                >
-                  Get Pro
-                </Button>
+                {isLoggedIn ? (
+                  <Button
+                    href="/app/account"
+                    size="sm"
+                    variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
+                    className="flex-1 justify-center"
+                  >
+                    My Account
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      href="/login"
+                      size="sm"
+                      variant={scrolled && !isDark ? 'outline' : 'outline-dark'}
+                      className="flex-1 justify-center"
+                    >
+                      Log In
+                    </Button>
+                    <Button
+                      href="/register"
+                      size="sm"
+                      variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
+                      className="flex-1 justify-center"
+                    >
+                      Get Started
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

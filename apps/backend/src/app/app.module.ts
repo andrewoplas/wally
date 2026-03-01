@@ -6,6 +6,7 @@ import { ChatModule } from '../chat/chat.module.js';
 import { LicenseModule } from '../license/license.module.js';
 import { UsageModule } from '../usage/usage.module.js';
 import { HealthModule } from '../health/health.module.js';
+import { UserModule } from '../user/user.module.js';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { HealthModule } from '../health/health.module.js';
     LicenseModule,
     UsageModule,
     HealthModule,
+    UserModule,
   ],
 })
 export class AppModule {}

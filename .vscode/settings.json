@@ -1,20 +1,29 @@
 {
-  "VsCodeTaskButtons.showCounter": false,
-  "VsCodeTaskButtons.tasks": [
-    {
-      "label": "$(play) Backend",
-      "task": "Backend: Serve",
-      "tooltip": "Start backend server"
-    },
-    {
-      "label": "$(play) Frontend",
-      "task": "Frontend: Dev",
-      "tooltip": "Start frontend dev server"
-    },
-    {
-      "label": "$(play) Plugin",
-      "task": "Plugin: Start",
-      "tooltip": "Start plugin JS and CSS watch"
-    }
-  ]
+  "actionButtons": {
+    "defaultColor": "#68C147",
+    "reloadButton": null,
+    "loadNpmCommands": false,
+    "commands": [
+      {
+        "name": "$(play) Backend",
+        "color": "#68C147",
+        "command": "npx nx serve backend"
+      },
+      {
+        "name": "$(play) Frontend",
+        "color": "#68C147",
+        "command": "npx nx dev frontend"
+      },
+      {
+        "name": "$(play) Plugin",
+        "color": "#68C147",
+        "command": "cd apps/wally && npm run start & npm run watch:css"
+      },
+      {
+        "name": "$(sync) Generate API",
+        "color": "#4FC3F7",
+        "command": "npm run generate:api"
+      }
+    ]
+  }
 }

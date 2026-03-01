@@ -339,12 +339,12 @@ export function FinalCtaSection() {
           transition={{ delay: 0.9, duration: 0.4 }}
         >
           <Button
-            href="#"
+            href="/app/license"
             variant="solid-white"
             icon={<Download className="h-5 w-5" />}
             className="animate-pulse-glow"
           >
-            Install Free Plugin
+            Get Started
           </Button>
           <Button href="#" variant="ghost-dark">
             Get notified of updates

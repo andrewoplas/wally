@@ -33,7 +33,9 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = pathname === '/login' || pathname === '/register';
 
   if (isAppRoute && !user) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const url = new URL('/register', request.url);
+    url.searchParams.set('next', pathname);
+    return NextResponse.redirect(url);
   }
 
   if (isAuthRoute && user) {
