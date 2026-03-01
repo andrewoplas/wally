@@ -65,7 +65,7 @@
     .wpaia-markdown {
         @apply text-[15px] leading-normal text-wpaia-text;
     }
-    .wpaia-markdown p { margin: 0 0 0.75em; }
+    .wpaia-markdown p { font-size: unset; margin: 0 0 0.75em; }
     .wpaia-markdown p:last-child { margin-bottom: 0; }
     .wpaia-markdown h1, .wpaia-markdown h2, .wpaia-markdown h3,
     .wpaia-markdown h4, .wpaia-markdown h5, .wpaia-markdown h6 {

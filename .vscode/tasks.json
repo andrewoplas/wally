@@ -4,7 +4,7 @@
     {
       "label": "Backend: Serve",
       "type": "shell",
-      "command": "source ~/.nvm/nvm.sh && nvm use && npx nx serve backend",
+      "command": "npx nx serve backend",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -18,7 +18,7 @@
     {
       "label": "Frontend: Dev",
       "type": "shell",
-      "command": "source ~/.nvm/nvm.sh && nvm use && npx nx dev frontend",
+      "command": "npx nx dev frontend",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -30,9 +30,23 @@
       "problemMatcher": []
     },
     {
+      "label": "Generate: API Client",
+      "type": "shell",
+      "command": "npm run generate:api",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "codegen"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Plugin: Start",
       "type": "shell",
-      "command": "source ~/.nvm/nvm.sh && nvm use && npm run start & npm run watch:css",
+      "command": "npm run start & npm run watch:css",
       "options": {
         "cwd": "${workspaceFolder}/apps/wally"
       },

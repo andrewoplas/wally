@@ -78,6 +78,7 @@ class Plugin {
 
         // Site tools.
         $executor->register_tool( new Tools\GetSiteInfo() );
+        $executor->register_tool( new Tools\GetSiteHealth() );
         $executor->register_tool( new Tools\GetOption() );
         $executor->register_tool( new Tools\UpdateOption() );
 

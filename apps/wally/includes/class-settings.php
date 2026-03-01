@@ -81,6 +81,10 @@ class Settings {
             $tool_perms  = [];
 
             foreach ( $all_roles as $role ) {
+                if ( $role === 'administrator' ) {
+                    $tool_perms[ $role ] = $all_actions;
+                    continue;
+                }
                 $tool_perms[ $role ] = [];
                 foreach ( $all_actions as $action ) {
                     if ( ! empty( $_POST['wally_perm'][ $role ][ $action ] ) ) {
@@ -408,10 +412,12 @@ class Settings {
                                     </thead>
                                     <tbody>
                                         <?php foreach ( $defaults as $role => $default_actions ) :
-                                            $active_actions = ( is_array( $overrides ) && isset( $overrides[ $role ] ) )
-                                                ? $overrides[ $role ]
-                                                : $default_actions;
                                             $is_admin_role = $role === 'administrator';
+                                            $active_actions = $is_admin_role
+                                                ? $all_actions
+                                                : ( ( is_array( $overrides ) && isset( $overrides[ $role ] ) )
+                                                    ? $overrides[ $role ]
+                                                    : $default_actions );
                                         ?>
                                         <tr>
                                             <td class="wpaia-td-role"><?php echo esc_html( ucfirst( $role ) ); ?></td>
@@ -722,7 +728,8 @@ class Settings {
 
         /* ── Permission checkbox ─────────────────── */
         .wpaia-perm-toggle { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-        .wpaia-perm-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .wpaia-perm-toggle input { position: absolute; opacity: 0 !important; width: 0; height: 0; -webkit-appearance: none; appearance: none; }
+        .wpaia-perm-toggle input::before, .wpaia-perm-toggle input::after { display: none !important; }
         .wpaia-perm-box {
             width: 16px; height: 16px; border-radius: 6px;
             border: 1px solid #C5C5CB; background: #FFFFFF;

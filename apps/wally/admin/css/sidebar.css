@@ -273,6 +273,7 @@
     color: rgb(24 24 27 / var(--tw-text-opacity));
   }
   .wpaia-markdown p {
+    font-size: unset;
     margin: 0 0 0.75em;
   }
   .wpaia-markdown p:last-child {

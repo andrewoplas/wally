@@ -72,26 +72,9 @@
           "cwd": "apps/backend"
         }
       },
-      "generate:spec": {
+      "generate-api": {
         "executor": "nx:run-commands",
-        "outputs": [
-          "{workspaceRoot}/openapi.json"
-        ],
-        "options": {
-          "command": "curl -sf http://localhost:3000/api/docs-json -o ../../openapi.json && echo 'OpenAPI spec saved to openapi.json'",
-          "cwd": "apps/backend"
-        }
-      },
-      "generate:api": {
-        "executor": "nx:run-commands",
-        "cache": true,
-        "inputs": [
-          "{workspaceRoot}/openapi.json",
-          "{workspaceRoot}/orval.config.ts"
-        ],
-        "outputs": [
-          "{workspaceRoot}/libs/api-client/src/generated/**"
-        ],
+        "cache": false,
         "options": {
           "command": "npx orval --config ../../orval.config.ts",
           "cwd": "apps/backend"

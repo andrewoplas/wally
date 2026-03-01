@@ -1,13 +1,13 @@
 export interface WallyFetchConfig {
   siteId: string;
-  apiKey: string;
+  licenseKey: string;
   baseUrl?: string;
 }
 
 let _config: WallyFetchConfig = {
   siteId: '',
-  apiKey: '',
-  baseUrl: 'http://localhost:3000/api',
+  licenseKey: '',
+  baseUrl: 'http://localhost:3100/api',
 };
 
 /** Call once at app bootstrap to set auth credentials. */
@@ -30,7 +30,7 @@ export async function wallyFetch<T>(
     headers: {
       'Content-Type': 'application/json',
       'X-Site-ID': _config.siteId,
-      'X-API-Key': _config.apiKey,
+      'X-License-Key': _config.licenseKey,
       ...options?.headers,
     },
   });

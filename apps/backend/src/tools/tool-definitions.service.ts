@@ -176,6 +176,12 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     parameters: { type: 'object', properties: {} },
   },
   {
+    name: 'get_site_health',
+    description: 'Run WordPress Site Health checks and return a summary of passed, recommended, and critical issues.',
+    category: 'site',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
     name: 'get_option',
     description: 'Read a WordPress option value by key',
     category: 'site',

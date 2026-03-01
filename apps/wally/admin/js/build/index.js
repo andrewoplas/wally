@@ -127,7 +127,7 @@ const ChatSidebar = () => {
     setLoading(true);
     try {
       const conv = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
-        path: `wp-ai-assistant/v1/conversations/${id}`
+        path: `wally/v1/conversations/${id}`
       });
       setConversationId(id);
       setMessages((conv.messages || []).map(m => ({
@@ -422,7 +422,7 @@ const ChatSidebar = () => {
               });
               if (isNewConversation && receivedConvId) {
                 _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
-                  path: `wp-ai-assistant/v1/conversations/${receivedConvId}/title`,
+                  path: `wally/v1/conversations/${receivedConvId}/title`,
                   method: 'POST'
                 }).catch(() => {});
               }
@@ -522,7 +522,7 @@ const ChatSidebar = () => {
   const handleConfirm = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async actionId => {
     try {
       const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
-        path: `wp-ai-assistant/v1/confirm/${actionId}`,
+        path: `wally/v1/confirm/${actionId}`,
         method: 'POST',
         data: {
           approved: true
@@ -536,7 +536,7 @@ const ChatSidebar = () => {
   const handleReject = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async actionId => {
     try {
       await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
-        path: `wp-ai-assistant/v1/confirm/${actionId}`,
+        path: `wally/v1/confirm/${actionId}`,
         method: 'POST',
         data: {
           approved: false
@@ -1022,7 +1022,7 @@ const ConversationList = ({
   const [search, setSearch] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
   const fetchConversations = () => {
     _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
-      path: 'wp-ai-assistant/v1/conversations'
+      path: 'wally/v1/conversations'
     }).then(setConversations).catch(() => {});
   };
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
@@ -1033,7 +1033,7 @@ const ConversationList = ({
     setDeleting(id);
     try {
       await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
-        path: `wp-ai-assistant/v1/conversations/${id}`,
+        path: `wally/v1/conversations/${id}`,
         method: 'DELETE'
       });
       setConversations(prev => prev.filter(c => c.id !== id));
@@ -1924,7 +1924,7 @@ const SettingsPanel = () => {
   const [saving, setSaving] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
-      path: 'wp-ai-assistant/v1/settings'
+      path: 'wally/v1/settings'
     }).then(data => {
       if (data.confirm_destructive !== undefined) setConfirmDestructive(data.confirm_destructive);
       if (data.stream_responses !== undefined) setStreamResponses(data.stream_responses);
@@ -1936,7 +1936,7 @@ const SettingsPanel = () => {
     if (!isAdmin) return;
     setSaving(true);
     _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
-      path: 'wp-ai-assistant/v1/settings',
+      path: 'wally/v1/settings',
       method: 'PATCH',
       data: patch
     }).catch(() => {}).finally(() => setSaving(false));

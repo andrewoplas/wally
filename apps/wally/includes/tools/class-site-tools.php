@@ -4,7 +4,7 @@ namespace Wally\Tools;
 /**
  * Site tools for reading and updating WordPress site information and options.
  *
- * Tools: get_site_info, get_option, update_option.
+ * Tools: get_site_info, get_site_health, get_option, update_option.
  * Category: "site" — restricted to administrators and editors (read) per permission matrix.
  */
 
@@ -70,6 +70,83 @@ class GetSiteInfo extends ToolInterface {
 			'page_count'          => (int) wp_count_posts( 'page' )->publish,
 			'user_count'          => (int) count_users()['total_users'],
 			'debug_mode'          => defined( 'WP_DEBUG' ) && WP_DEBUG,
+		];
+	}
+}
+
+/**
+ * Run WordPress Site Health checks and return a status summary.
+ */
+class GetSiteHealth extends ToolInterface {
+
+	public function get_name(): string {
+		return 'get_site_health';
+	}
+
+	public function get_description(): string {
+		return 'Run WordPress Site Health checks and return a summary of passed, recommended, and critical issues.';
+	}
+
+	public function get_category(): string {
+		return 'site';
+	}
+
+	public function get_action(): string {
+		return 'read';
+	}
+
+	public function get_parameters_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [],
+			'required'   => [],
+		];
+	}
+
+	public function get_required_capability(): string {
+		return 'manage_options';
+	}
+
+	public function execute( array $input ): array {
+		if ( ! class_exists( 'WP_Site_Health' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-site-health.php';
+		}
+
+		$health = WP_Site_Health::get_instance();
+		$tests  = WP_Site_Health::get_tests();
+
+		$results = [
+			'good'        => [],
+			'recommended' => [],
+			'critical'    => [],
+		];
+
+		foreach ( $tests['direct'] as $test ) {
+			$callback = $test['test'];
+			if ( is_string( $callback ) ) {
+				$callback = [ $health, "get_test_{$callback}" ];
+			}
+			if ( ! is_callable( $callback ) ) {
+				continue;
+			}
+			$result = call_user_func( $callback );
+			$status = $result['status'] ?? 'good';
+			$results[ $status ][] = [
+				'label'       => $result['label'] ?? '',
+				'description' => wp_strip_all_tags( $result['description'] ?? '' ),
+			];
+		}
+
+		return [
+			'good'        => $results['good'],
+			'recommended' => $results['recommended'],
+			'critical'    => $results['critical'],
+			'summary'     => sprintf(
+				'%d passed, %d recommended, %d critical.',
+				count( $results['good'] ),
+				count( $results['recommended'] ),
+				count( $results['critical'] )
+			),
 		];
 	}
 }

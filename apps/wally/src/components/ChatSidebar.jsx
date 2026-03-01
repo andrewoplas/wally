@@ -100,7 +100,7 @@ const ChatSidebar = () => {
     const loadConversation = useCallback(async (id) => {
         setLoading(true);
         try {
-            const conv = await apiFetch({ path: `wp-ai-assistant/v1/conversations/${id}` });
+            const conv = await apiFetch({ path: `wally/v1/conversations/${id}` });
             setConversationId(id);
             setMessages(
                 (conv.messages || []).map(m => ({
@@ -287,7 +287,7 @@ const ChatSidebar = () => {
                         case 'done':
                             setMessages(prev => { const u = [...prev]; const l = u[u.length-1]; if(l?.streaming) u[u.length-1] = {...l, streaming:false, toolsRunning:null}; return u; });
                             if (isNewConversation && receivedConvId) {
-                                apiFetch({ path: `wp-ai-assistant/v1/conversations/${receivedConvId}/title`, method: 'POST' }).catch(() => {});
+                                apiFetch({ path: `wally/v1/conversations/${receivedConvId}/title`, method: 'POST' }).catch(() => {});
                             }
                             break;
                     }
@@ -327,14 +327,14 @@ const ChatSidebar = () => {
 
     const handleConfirm = useCallback(async (actionId) => {
         try {
-            const response = await apiFetch({ path: `wp-ai-assistant/v1/confirm/${actionId}`, method: 'POST', data: { approved: true } });
+            const response = await apiFetch({ path: `wally/v1/confirm/${actionId}`, method: 'POST', data: { approved: true } });
             updateConfirmationStatus(actionId, 'confirmed', response.result?.message || response.result?.error || 'Action completed.');
         } catch (err) { updateConfirmationStatus(actionId, 'pending', `Error: ${err.message}`); }
     }, [updateConfirmationStatus]);
 
     const handleReject = useCallback(async (actionId) => {
         try {
-            await apiFetch({ path: `wp-ai-assistant/v1/confirm/${actionId}`, method: 'POST', data: { approved: false } });
+            await apiFetch({ path: `wally/v1/confirm/${actionId}`, method: 'POST', data: { approved: false } });
             updateConfirmationStatus(actionId, 'rejected', 'Action cancelled.');
         } catch (err) { updateConfirmationStatus(actionId, 'pending', `Error: ${err.message}`); }
     }, [updateConfirmationStatus]);

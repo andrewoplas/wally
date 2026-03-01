@@ -561,7 +561,7 @@ class RestController {
 				'site_profile'         => $site_profile,
 				'tool_results'         => $tool_results,
 				'pending_tool_calls'   => $tool_calls,
-			], \$license_key );
+			], $license_key );
 
 			if ( is_wp_error( $response ) ) {
 				$accumulated_text .= "\n\nI executed the tools but couldn't get a follow-up response.";

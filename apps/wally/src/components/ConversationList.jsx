@@ -45,7 +45,7 @@ const ConversationList = ({ currentId, onSelect, onNew, onClose, onBack, onDragS
     const [search, setSearch] = useState('');
 
     const fetchConversations = () => {
-        apiFetch({ path: 'wp-ai-assistant/v1/conversations' })
+        apiFetch({ path: 'wally/v1/conversations' })
             .then(setConversations)
             .catch(() => {});
     };
@@ -56,7 +56,7 @@ const ConversationList = ({ currentId, onSelect, onNew, onClose, onBack, onDragS
         e.stopPropagation();
         setDeleting(id);
         try {
-            await apiFetch({ path: `wp-ai-assistant/v1/conversations/${id}`, method: 'DELETE' });
+            await apiFetch({ path: `wally/v1/conversations/${id}`, method: 'DELETE' });
             setConversations(prev => prev.filter(c => c.id !== id));
             if (currentId === id) onNew();
         } catch {} finally { setDeleting(null); }

@@ -31,7 +31,7 @@ const SettingsPanel = () => {
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        apiFetch({ path: 'wp-ai-assistant/v1/settings' })
+        apiFetch({ path: 'wally/v1/settings' })
             .then((data) => {
                 if (data.confirm_destructive !== undefined) setConfirmDestructive(data.confirm_destructive);
                 if (data.stream_responses !== undefined) setStreamResponses(data.stream_responses);
@@ -45,7 +45,7 @@ const SettingsPanel = () => {
     const saveSettings = (patch) => {
         if (!isAdmin) return;
         setSaving(true);
-        apiFetch({ path: 'wp-ai-assistant/v1/settings', method: 'PATCH', data: patch })
+        apiFetch({ path: 'wally/v1/settings', method: 'PATCH', data: patch })
             .catch(() => {})
             .finally(() => setSaving(false));
     };
