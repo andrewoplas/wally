@@ -12,7 +12,12 @@ const NAV_LINKS = [
   { label: 'Docs', href: '#' },
 ];
 
-export function Navbar() {
+interface NavbarProps {
+  variant?: 'default' | 'dark';
+}
+
+export function Navbar({ variant = 'default' }: NavbarProps) {
+  const isDark = variant === 'dark';
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -42,28 +47,30 @@ export function Navbar() {
         className={cn(
           'fixed top-[3px] left-0 z-50 w-full transition-all duration-200',
           scrolled
-            ? 'bg-white/95 shadow-sm backdrop-blur-md'
+            ? isDark
+              ? 'bg-[#0C0A1A]/95 shadow-sm shadow-black/20 backdrop-blur-md'
+              : 'bg-white/95 shadow-sm backdrop-blur-md'
             : 'bg-transparent'
         )}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-20">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <a href="/" className="flex items-center gap-2">
             <MessageCircle
               className={cn(
                 'h-7 w-7 transition-colors',
-                scrolled ? 'text-primary' : 'text-lp-purple-light'
+                scrolled && !isDark ? 'text-primary' : 'text-lp-purple-light'
               )}
             />
             <span
               className={cn(
                 'font-heading text-2xl font-bold transition-colors',
-                scrolled ? 'text-foreground' : 'text-white'
+                scrolled && !isDark ? 'text-foreground' : 'text-white'
               )}
             >
               Wally
             </span>
-          </div>
+          </a>
 
           {/* Desktop nav links */}
           <div className="hidden items-center gap-8 md:flex">
@@ -73,7 +80,7 @@ export function Navbar() {
                 href={link.href}
                 className={cn(
                   'relative text-[15px] font-medium transition-colors after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all hover:after:w-full',
-                  scrolled
+                  scrolled && !isDark
                     ? 'text-muted-foreground hover:text-foreground'
                     : 'text-lp-hero-muted hover:text-white'
                 )}
@@ -88,14 +95,14 @@ export function Navbar() {
             <Button
               href="#"
               size="sm"
-              variant={scrolled ? 'outline' : 'outline-dark'}
+              variant={scrolled && !isDark ? 'outline' : 'outline-dark'}
             >
               Download Free
             </Button>
             <Button
               href="#"
               size="sm"
-              variant={scrolled ? 'solid-primary' : 'solid-white'}
+              variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
             >
               Get Pro
             </Button>
@@ -106,7 +113,7 @@ export function Navbar() {
             onClick={() => setMobileOpen(!mobileOpen)}
             className={cn(
               'md:hidden',
-              scrolled ? 'text-foreground' : 'text-white'
+              scrolled && !isDark ? 'text-foreground' : 'text-white'
             )}
           >
             {mobileOpen ? (
@@ -122,7 +129,7 @@ export function Navbar() {
           <div
             className={cn(
               'border-t px-6 py-4 md:hidden',
-              scrolled
+              scrolled && !isDark
                 ? 'border-border bg-white'
                 : 'border-white/10 bg-lp-hero-dark/95 backdrop-blur-md'
             )}
@@ -135,7 +142,7 @@ export function Navbar() {
                   onClick={() => setMobileOpen(false)}
                   className={cn(
                     'text-[15px] font-medium',
-                    scrolled ? 'text-foreground' : 'text-lp-hero-muted'
+                    scrolled && !isDark ? 'text-foreground' : 'text-lp-hero-muted'
                   )}
                 >
                   {link.label}
@@ -145,7 +152,7 @@ export function Navbar() {
                 <Button
                   href="#"
                   size="sm"
-                  variant={scrolled ? 'outline' : 'outline-dark'}
+                  variant={scrolled && !isDark ? 'outline' : 'outline-dark'}
                   className="flex-1 justify-center"
                 >
                   Download Free
@@ -153,7 +160,7 @@ export function Navbar() {
                 <Button
                   href="#"
                   size="sm"
-                  variant={scrolled ? 'solid-primary' : 'solid-white'}
+                  variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
                   className="flex-1 justify-center"
                 >
                   Get Pro

@@ -123,6 +123,12 @@ module.exports = {
           'system-ui',
           'sans-serif',
         ],
+        mono: [
+          'var(--font-jetbrains-mono)',
+          'ui-monospace',
+          'SFMono-Regular',
+          'monospace',
+        ],
       },
       fontSize: {
         h1: ['2rem', { lineHeight: '1.5', fontWeight: '700' }],

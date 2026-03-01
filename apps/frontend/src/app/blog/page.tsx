@@ -1,386 +1,211 @@
-'use client';
-
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Clock, Search } from 'lucide-react';
+import type { Metadata } from 'next';
 import Image from 'next/image';
-import {
-  AnimatedSection,
-  StaggerContainer,
-  StaggerItem,
-} from '@/components/landing/shared/animated-section';
-import { Container } from '@/components/landing/shared/container';
+import Link from 'next/link';
+import { PenLine } from 'lucide-react';
 import { Navbar } from '@/components/landing/navbar';
 import { Footer } from '@/components/landing/footer';
-import { cn } from '@/lib/utils';
+import { BlogGrid } from '@/components/blog/blog-grid';
+import { NewsletterCta } from '@/components/blog/newsletter-cta';
+import { BLOG_POSTS } from '@/lib/blog-data';
 
-
-const CATEGORIES = [
-  'All Posts',
-  'AI & Automation',
-  'WordPress',
-  'Productivity',
-  'Tutorials',
-];
-
-export interface BlogPost {
-  slug: string;
-  category: string;
-  date: string;
-  readTime: string;
-  title: string;
-  excerpt: string;
-  author: { name: string; role: string };
-  featured: boolean;
-  image: string;
-  tagColor: string;
-}
-
-export const BLOG_POSTS: BlogPost[] = [
-  {
-    slug: 'ai-powered-wordpress-management',
-    category: 'AI & Automation',
-    date: 'Feb 28, 2026',
-    readTime: '8 min read',
-    title: 'How AI Is Rewriting the Rules of WordPress Management',
-    excerpt:
-      "Discover how Wally's AI assistant transforms complex site management tasks into simple conversations — no plugin menus, no documentation hunting.",
-    author: { name: 'Sarah Chen', role: 'Head of Product' },
-    featured: true,
-    image: '/blog/ai-wordpress-management.png',
-    tagColor: 'bg-[#A78BFA] text-white',
+export const metadata: Metadata = {
+  title: 'Blog — Wally',
+  description:
+    'Insights, tips & updates for WordPress managers. Learn how to streamline your WordPress workflow with AI-powered automation.',
+  openGraph: {
+    title: 'Blog — Wally',
+    description:
+      'Insights, tips & updates for WordPress managers. Learn how to streamline your WordPress workflow with AI-powered automation.',
+    url: '/blog',
+    type: 'website',
+    images: [{ url: '/og-blog.png', width: 1200, height: 630 }],
   },
-  {
-    slug: 'top-productivity-tips-wp-admin',
-    category: 'WordPress',
-    date: 'Feb 20, 2026',
-    readTime: '4 min read',
-    title:
-      '5 WordPress Tasks You Can Now Do with a Single Chat Message',
-    excerpt:
-      'From updating plugins to creating posts, Wally handles your entire WordPress workflow through natural language commands.',
-    author: { name: 'Marcus Webb', role: 'Developer Advocate' },
-    featured: false,
-    image: '/blog/productivity-tips.png',
-    tagColor: 'bg-[#F0F0FF] text-[#6D28D9]',
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Blog — Wally',
+    description:
+      'Insights, tips & updates for WordPress managers.',
+    images: ['/og-blog.png'],
   },
-  {
-    slug: 'rest-api-guide-2026',
-    category: 'Tutorials',
-    date: 'Feb 14, 2026',
-    readTime: '10 min read',
-    title: 'The Complete Guide to WordPress REST API in 2026',
-    excerpt:
-      "Everything you need to know about building on WordPress's REST API — from authentication to custom endpoints and beyond.",
-    author: { name: 'Priya Nair', role: 'Technical Writer' },
-    featured: false,
-    image: '/blog/rest-api-guide.png',
-    tagColor: 'bg-[#FFF0E0] text-[#B45309]',
-  },
-  {
-    slug: 'content-workflows-with-ai',
-    category: 'Productivity',
-    date: 'Feb 6, 2026',
-    readTime: '5 min read',
-    title:
-      'Building a Faster Content Workflow with AI Assistants',
-    excerpt:
-      "Stop copy-pasting between tools. Here's how modern content teams are using AI to publish 3x faster without sacrificing quality.",
-    author: { name: 'Sarah Chen', role: 'Head of Product' },
-    featured: false,
-    image: '/blog/content-workflows.png',
-    tagColor: 'bg-[#DCFCE7] text-[#15803D]',
-  },
-  {
-    slug: 'getting-started-wally-plugin',
-    category: 'Tutorials',
-    date: 'Jan 28, 2026',
-    readTime: '8 min read',
-    title: 'Getting Started with Wally: Your First 10 Minutes',
-    excerpt:
-      'A step-by-step walkthrough for installing the Wally plugin, connecting your WordPress site, and making your first AI-powered site change.',
-    author: { name: 'Priya Nair', role: 'Technical Writer' },
-    featured: false,
-    image: '/blog/getting-started.png',
-    tagColor: 'bg-[#F0F0FF] text-[#6D28D9]',
-  },
-];
-
-function AuthorAvatar({ name, size = 36 }: { name: string; size?: number }) {
-  const initials = name
-    .split(' ')
-    .map((n) => n[0])
-    .join('');
-  return (
-    <div
-      className="flex flex-shrink-0 items-center justify-center rounded-full bg-[#E5E5E5] text-[12px] font-bold text-[#888]"
-      style={{ width: size, height: size }}
-    >
-      {initials}
-    </div>
-  );
-}
-
-function FeaturedCard({ post }: { post: BlogPost }) {
-  return (
-    <AnimatedSection>
-      <a
-        href={`/blog/${post.slug}`}
-        className="group flex flex-col overflow-hidden bg-white lg:flex-row"
-      >
-        {/* Content */}
-        <div className="flex flex-1 flex-col gap-6 py-12 pr-14 lg:py-12">
-          <div className="flex items-center gap-3">
-            <span
-              className={cn(
-                'inline-flex items-center rounded px-2.5 py-1 text-[11px] font-semibold',
-                post.tagColor
-              )}
-            >
-              {post.category}
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[2px] text-[#888]">
-              Featured
-            </span>
-          </div>
-
-          <h2 className="font-heading text-3xl font-extrabold leading-[1.1] text-[#0A0A0A] transition-colors group-hover:text-primary lg:text-4xl">
-            {post.title}
-          </h2>
-
-          <p className="max-w-[520px] text-[15px] leading-relaxed text-[#666]">
-            {post.excerpt}
-          </p>
-
-          <div className="flex items-center gap-4">
-            <AuthorAvatar name={post.author.name} />
-            <div>
-              <p className="text-[13px] font-semibold text-[#1A1A1A]">
-                {post.author.name}
-              </p>
-              <p className="text-[12px] text-[#888]">
-                {post.date} &middot; {post.readTime}
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <span className="inline-flex items-center rounded-pill bg-[#F5F5F5] px-4 py-2.5 text-[14px] font-medium text-[#0A0A0A] transition-colors group-hover:bg-primary/10 group-hover:text-primary">
-              Read Article &rarr;
-            </span>
-          </div>
-        </div>
-
-        {/* Image */}
-        <div className="relative h-64 w-full flex-shrink-0 overflow-hidden rounded-xl lg:h-auto lg:w-[540px]">
-          <Image
-            src={post.image}
-            alt={post.title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        </div>
-      </a>
-    </AnimatedSection>
-  );
-}
-
-function PostCard({ post }: { post: BlogPost }) {
-  return (
-    <StaggerItem>
-      <a
-        href={`/blog/${post.slug}`}
-        className="group flex flex-col overflow-hidden rounded-xl border border-[#E5E5E5] bg-white transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
-      >
-        {/* Image */}
-        <div className="relative h-[220px] w-full overflow-hidden">
-          <Image
-            src={post.image}
-            alt={post.title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-1 flex-col gap-4 p-6">
-          <span
-            className={cn(
-              'inline-flex w-fit items-center rounded px-2.5 py-1 text-[11px] font-semibold',
-              post.tagColor
-            )}
-          >
-            {post.category}
-          </span>
-
-          <h3 className="font-heading text-lg font-bold leading-[1.2] text-[#0A0A0A] transition-colors group-hover:text-primary">
-            {post.title}
-          </h3>
-
-          <p className="flex-1 text-[13px] leading-relaxed text-[#666] line-clamp-3">
-            {post.excerpt}
-          </p>
-
-          {/* Meta */}
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-2.5">
-              <AuthorAvatar name={post.author.name} size={28} />
-              <span className="text-[13px] font-medium text-[#1A1A1A]">
-                {post.author.name}
-              </span>
-            </div>
-            <span className="flex items-center gap-1 text-[12px] text-[#888]">
-              <Clock className="h-3 w-3" />
-              {post.readTime}
-            </span>
-          </div>
-        </div>
-      </a>
-    </StaggerItem>
-  );
-}
+  alternates: { canonical: '/blog' },
+};
 
 export default function BlogPage() {
-  const [activeCategory, setActiveCategory] = useState('All Posts');
-  const [searchQuery, setSearchQuery] = useState('');
-
   const featured = BLOG_POSTS.find((p) => p.featured)!;
   const rest = BLOG_POSTS.filter((p) => !p.featured);
-
-  const filtered = rest.filter((p) => {
-    const matchesCategory =
-      activeCategory === 'All Posts' || p.category === activeCategory;
-    const matchesSearch =
-      !searchQuery ||
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
 
-      {/* Editorial Hero */}
-      <section className="bg-white px-6 pt-28 pb-12 lg:px-20">
-        <Container>
-          <div className="flex flex-col gap-8">
-            <motion.p
-              className="text-[11px] font-semibold uppercase tracking-[2px] text-[#888]"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              The Wally Blog
-            </motion.p>
+      {/* ─── Hero Section ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden" style={{ height: 'auto' }}>
+        {/* Background layers */}
+        <div className="absolute inset-0" aria-hidden="true">
+          {/* Gradient background */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(to bottom, #0C0A1A 0%, #0E0C22 6%, #13102E 12%, #1A1240 18%, #1E1548 24%, #221850 30%, #2D1F62 37%, #3D2B74 44%, #4A3580 50%, #6B52A0 56%, #9E85C8 62%, #C8BAE0 68%, #E8E0F2 74%, #F5F3FF 78%, #FFFFFF 82%)',
+            }}
+          />
+          {/* Central glow */}
+          <div
+            className="absolute left-1/2 top-0 -translate-x-1/2"
+            style={{
+              width: 900,
+              height: 550,
+              marginTop: -20,
+              background:
+                'radial-gradient(ellipse at center, rgba(124,58,237,0.21) 0%, rgba(91,33,182,0.09) 50%, transparent 100%)',
+              filter: 'blur(80px)',
+            }}
+          />
+          {/* Side glow left */}
+          <div
+            className="absolute"
+            style={{
+              left: -80,
+              top: 50,
+              width: 500,
+              height: 400,
+              background:
+                'radial-gradient(ellipse at center, rgba(109,40,217,0.13) 0%, transparent 100%)',
+              filter: 'blur(60px)',
+            }}
+          />
+          {/* Side glow right */}
+          <div
+            className="absolute"
+            style={{
+              right: -80,
+              top: 40,
+              width: 500,
+              height: 400,
+              background:
+                'radial-gradient(ellipse at center, rgba(76,29,149,0.09) 0%, transparent 100%)',
+              filter: 'blur(60px)',
+            }}
+          />
+          {/* Bottom light wash */}
+          <div
+            className="absolute bottom-0 left-0 right-0"
+            style={{
+              height: 380,
+              background:
+                'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.25) 30%, white 70%)',
+            }}
+          />
 
-            <motion.h1
-              className="max-w-[900px] font-heading text-5xl font-extrabold leading-[0.95] text-[#0A0A0A] md:text-7xl lg:text-[80px]"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              Ideas, insights &amp;
-              <br />
-              automation for
-              <br />
-              WordPress teams.
-            </motion.h1>
-
-            {/* Divider */}
-            <motion.div
-              className="h-[2px] w-full bg-[#0A0A0A]"
-              initial={{ scaleX: 0, originX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+          {/* Decorative stars */}
+          {[
+            { left: 250, top: 60, size: 4, opacity: 0.5 },
+            { left: '76%', top: 90, size: 3, opacity: 0.4 },
+            { left: 160, top: 200, size: 5, opacity: 0.35, color: '#C4B5FD' },
+            { left: '87%', top: 160, size: 3, opacity: 0.3 },
+            { left: '48%', top: 40, size: 4, opacity: 0.45 },
+            { left: '33%', top: 120, size: 2, opacity: 0.35 },
+            { left: '64%', top: 50, size: 3, opacity: 0.4, color: '#DDD6FE' },
+            { left: '26%', top: 30, size: 3, opacity: 0.3 },
+          ].map((star, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                left: star.left,
+                top: star.top,
+                width: star.size,
+                height: star.size,
+                backgroundColor: star.color ?? '#FFFFFF',
+                opacity: star.opacity,
+                filter: `blur(${star.size > 3 ? 2 : 1.5}px)`,
+              }}
             />
+          ))}
+        </div>
 
-            {/* Filter pills */}
-            <motion.div
-              className="flex flex-wrap items-center gap-3"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.5 }}
-            >
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={cn(
-                    'rounded-pill px-5 py-2 text-[13px] font-medium transition-colors',
-                    activeCategory === cat
-                      ? 'bg-[#0A0A0A] text-white'
-                      : 'border border-[#E5E5E5] bg-white text-[#666] hover:border-[#999] hover:text-[#333]'
-                  )}
-                >
-                  {cat}
-                </button>
-              ))}
-            </motion.div>
+        {/* Hero content */}
+        <div className="relative z-10 flex flex-col items-center gap-5 px-6 pt-32 pb-0 md:px-20 md:pt-36 lg:px-20 lg:pt-40">
+          {/* Badge */}
+          <div className="flex items-center gap-1.5 rounded-full border border-white/[.13] bg-white/[.06] px-4 py-1.5">
+            <PenLine className="h-3.5 w-3.5 text-[#C4B5FD]" />
+            <span className="text-[13px] font-semibold text-[#C4B5FD]">
+              Wally Blog
+            </span>
           </div>
-        </Container>
-      </section>
 
-      {/* Featured post */}
-      {activeCategory === 'All Posts' && !searchQuery && (
-        <section className="bg-white px-6 pb-16 lg:px-20">
-          <Container>
-            <FeaturedCard post={featured} />
-          </Container>
-        </section>
-      )}
+          {/* Title */}
+          <h1 className="max-w-[700px] text-center font-heading text-3xl font-extrabold leading-[1.15] text-white md:text-4xl lg:text-[48px]">
+            Insights, tips &amp; updates
+            <br />
+            for WordPress managers
+          </h1>
 
-      {/* Article Grid */}
-      <section className="bg-white px-6 pb-20 lg:px-20">
-        <Container>
-          <div className="flex flex-col gap-8">
-            <div className="flex items-center justify-between">
-              <AnimatedSection>
-                <p className="text-[11px] font-semibold uppercase tracking-[2px] text-[#888]">
-                  {activeCategory === 'All Posts' && !searchQuery
-                    ? 'Latest Articles'
-                    : `${filtered.length} article${filtered.length !== 1 ? 's' : ''} found`}
-                </p>
-              </AnimatedSection>
+          {/* Subtitle */}
+          <p className="max-w-[600px] text-center text-base leading-[1.6] text-[#E0D8F0] md:text-lg">
+            Learn how to streamline your WordPress workflow with AI-powered
+            automation, best practices, and expert guides.
+          </p>
+        </div>
+
+        {/* Featured Card */}
+        <div className="relative z-10 mx-auto mt-10 w-full max-w-[1200px] px-6 pb-16 md:mt-12 md:px-10 lg:px-[120px] lg:pb-20">
+          <Link
+            href={`/blog/${featured.slug}`}
+            className="group flex flex-col overflow-hidden rounded-[20px] border border-[#E4E4E7] bg-white lg:flex-row"
+            style={{
+              boxShadow: '0 12px 40px -8px rgba(0,0,0,0.08)',
+            }}
+          >
+            {/* Image */}
+            <div className="relative h-56 w-full flex-shrink-0 overflow-hidden sm:h-64 lg:h-auto lg:w-[560px]">
+              <Image
+                src={featured.image}
+                alt={featured.title}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                priority
+              />
             </div>
 
-            <div className="h-px w-full bg-[#E5E5E5]" />
-
-            {filtered.length > 0 ? (
-              <StaggerContainer
-                className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
-                staggerDelay={0.08}
+            {/* Content */}
+            <div className="flex flex-1 flex-col justify-center gap-5 p-8 md:p-10 lg:p-12">
+              <span
+                className="inline-flex w-fit rounded-full px-3 py-1 text-[12px] font-semibold"
+                style={{
+                  backgroundColor: featured.tagColor.bg,
+                  color: featured.tagColor.text,
+                }}
               >
-                {filtered.map((post) => (
-                  <PostCard key={post.slug} post={post} />
-                ))}
-              </StaggerContainer>
-            ) : (
-              <AnimatedSection className="flex flex-col items-center gap-4 py-20 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F5F5F5]">
-                  <Search className="h-6 w-6 text-[#888]" />
-                </div>
-                <p className="font-heading text-lg font-semibold text-[#0A0A0A]">
-                  No articles found
-                </p>
-                <p className="text-sm text-[#888]">
-                  Try a different keyword or category.
-                </p>
-                <button
-                  onClick={() => {
-                    setActiveCategory('All Posts');
-                    setSearchQuery('');
-                  }}
-                  className="mt-2 rounded-pill bg-[#0A0A0A] px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#333]"
-                >
-                  Clear filters
-                </button>
-              </AnimatedSection>
-            )}
-          </div>
-        </Container>
+                {featured.category}
+              </span>
+
+              <h2 className="font-heading text-2xl font-bold leading-[1.3] text-[#18181B] transition-colors group-hover:text-primary md:text-[28px]">
+                {featured.title}
+              </h2>
+
+              <p className="text-[16px] leading-[1.6] text-[#71717A]">
+                {featured.excerpt}
+              </p>
+
+              <div className="flex items-center gap-4 pt-2 text-[14px] text-[#71717A]">
+                <span>{featured.date}</span>
+                <span className="inline-block h-1 w-1 rounded-full bg-[#D4D4D8]" />
+                <span>{featured.readTime}</span>
+              </div>
+            </div>
+          </Link>
+        </div>
       </section>
 
+      {/* ─── Blog Posts Grid ──────────────────────────────────────────── */}
+      <BlogGrid posts={rest} />
+
+      {/* ─── Newsletter CTA ───────────────────────────────────────────── */}
+      <NewsletterCta variant="light" />
+
+      {/* ─── Footer ───────────────────────────────────────────────────── */}
       <Footer />
     </div>
   );

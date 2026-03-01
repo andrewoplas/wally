@@ -3,7 +3,7 @@ import { defineConfig } from 'orval';
 export default defineConfig({
   wallyApi: {
     input: {
-      target: './openapi.json',
+      target: 'http://localhost:3100/api/docs-json',
     },
     output: {
       target: './libs/api-client/src/generated/index.ts',
