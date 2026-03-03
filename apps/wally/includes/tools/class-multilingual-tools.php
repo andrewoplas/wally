@@ -243,10 +243,6 @@ class ListPolylangLanguages extends ToolInterface {
 
 		$languages = [];
 		foreach ( $language_slugs as $slug ) {
-			$name   = pll_languages_list( [ 'hide_empty' => 0, 'fields' => 'name' ] );
-			$locale = pll_languages_list( [ 'hide_empty' => 0, 'fields' => 'locale' ] );
-
-			// Get count of posts in this language.
 			$count = function_exists( 'pll_count_posts' ) ? pll_count_posts( $slug ) : 0;
 			$home  = function_exists( 'pll_home_url' ) ? pll_home_url( $slug ) : '';
 
