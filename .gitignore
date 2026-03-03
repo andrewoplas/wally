@@ -56,3 +56,18 @@ supabase/.temp/
 test-output
 .playwright-mcp
 screenshots
+
+# Ralph (runtime state)
+.ralph/.call_count
+.ralph/.circuit_breaker_history
+.ralph/.circuit_breaker_state
+.ralph/.exit_signals
+.ralph/.last_reset
+.ralph/.loop_start_sha
+.ralph/.ralph_session
+.ralph/.ralph_session_history
+.ralph/.response_analysis
+.ralph/live.log
+.ralph/logs/
+.ralph/status.json
+.ralph/progress.json
