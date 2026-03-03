@@ -27,7 +27,7 @@ namespace Wally\Tools;
 class AcfListPostTypes extends ToolInterface {
 
 	public static function can_register(): bool {
-		return function_exists( 'acf_get_post_types' );
+		return function_exists( 'acf_get_acf_post_types' );
 	}
 
 	public function get_name(): string { return 'acf_list_post_types'; }
@@ -46,13 +46,13 @@ class AcfListPostTypes extends ToolInterface {
 	public function get_required_capability(): string { return 'manage_options'; }
 
 	public function execute( array $input ): array {
-		$post_types = acf_get_post_types();
+		$post_types = acf_get_acf_post_types();
 		$result     = [];
 
 		foreach ( $post_types as $pt ) {
 			$result[] = [
 				'key'          => $pt['key'] ?? '',
-				'slug'         => $pt['name'] ?? '',
+				'slug'         => $pt['post_type'] ?? '',
 				'singular'     => $pt['labels']['singular_name'] ?? ( $pt['singular_label'] ?? '' ),
 				'plural'       => $pt['labels']['name'] ?? ( $pt['label'] ?? '' ),
 				'description'  => $pt['description'] ?? '',
@@ -126,7 +126,9 @@ class AcfCreatePostType extends ToolInterface {
 
 		$result = acf_update_post_type( [
 			'key'            => 'post_type_' . $slug,
+			'title'          => $plural,
 			'name'           => $slug,
+			'post_type'      => $slug,
 			'label'          => $plural,
 			'singular_label' => $singular,
 			'labels'         => [ 'name' => $plural, 'singular_name' => $singular ],
@@ -210,6 +212,7 @@ class AcfUpdatePostType extends ToolInterface {
 		if ( isset( $input['plural_label'] ) ) {
 			$existing['label']          = sanitize_text_field( $input['plural_label'] );
 			$existing['labels']['name'] = $existing['label'];
+			$existing['title']          = $existing['label'];
 		}
 		if ( isset( $input['description'] ) ) {
 			$existing['description'] = sanitize_text_field( $input['description'] );
@@ -246,8 +249,8 @@ class AcfUpdatePostType extends ToolInterface {
 	}
 
 	private function find_post_type( string $identifier ): ?array {
-		foreach ( acf_get_post_types() as $pt ) {
-			if ( ( $pt['key'] ?? '' ) === $identifier || ( $pt['name'] ?? '' ) === $identifier ) {
+		foreach ( acf_get_acf_post_types() as $pt ) {
+			if ( ( $pt['key'] ?? '' ) === $identifier || ( $pt['post_type'] ?? '' ) === $identifier ) {
 				return $pt;
 			}
 		}
@@ -290,8 +293,8 @@ class AcfDeletePostType extends ToolInterface {
 		$identifier = sanitize_text_field( $input['key'] );
 		$existing   = null;
 
-		foreach ( acf_get_post_types() as $pt ) {
-			if ( ( $pt['key'] ?? '' ) === $identifier || ( $pt['name'] ?? '' ) === $identifier ) {
+		foreach ( acf_get_acf_post_types() as $pt ) {
+			if ( ( $pt['key'] ?? '' ) === $identifier || ( $pt['post_type'] ?? '' ) === $identifier ) {
 				$existing = $pt;
 				break;
 			}
@@ -330,7 +333,7 @@ class AcfDeletePostType extends ToolInterface {
 class AcfListTaxonomies extends ToolInterface {
 
 	public static function can_register(): bool {
-		return function_exists( 'acf_get_taxonomies' );
+		return function_exists( 'acf_get_acf_taxonomies' );
 	}
 
 	public function get_name(): string { return 'acf_list_taxonomies'; }
@@ -349,13 +352,13 @@ class AcfListTaxonomies extends ToolInterface {
 	public function get_required_capability(): string { return 'manage_options'; }
 
 	public function execute( array $input ): array {
-		$taxonomies = acf_get_taxonomies();
+		$taxonomies = acf_get_acf_taxonomies();
 		$result     = [];
 
 		foreach ( $taxonomies as $tax ) {
 			$result[] = [
 				'key'          => $tax['key'] ?? '',
-				'slug'         => $tax['name'] ?? ( $tax['taxonomy'] ?? '' ),
+				'slug'         => $tax['taxonomy'] ?? '',
 				'singular'     => $tax['labels']['singular_name'] ?? ( $tax['singular_label'] ?? '' ),
 				'plural'       => $tax['labels']['name'] ?? ( $tax['label'] ?? '' ),
 				'description'  => $tax['description'] ?? '',
@@ -423,6 +426,7 @@ class AcfCreateTaxonomy extends ToolInterface {
 
 		$result = acf_update_taxonomy( [
 			'key'            => 'taxonomy_' . $slug,
+			'title'          => $plural,
 			'name'           => $slug,
 			'taxonomy'       => $slug,
 			'label'          => $plural,
@@ -493,8 +497,8 @@ class AcfUpdateTaxonomy extends ToolInterface {
 		$identifier = sanitize_text_field( $input['key'] );
 		$existing   = null;
 
-		foreach ( acf_get_taxonomies() as $tax ) {
-			if ( ( $tax['key'] ?? '' ) === $identifier || ( $tax['name'] ?? '' ) === $identifier || ( $tax['taxonomy'] ?? '' ) === $identifier ) {
+		foreach ( acf_get_acf_taxonomies() as $tax ) {
+			if ( ( $tax['key'] ?? '' ) === $identifier || ( $tax['taxonomy'] ?? '' ) === $identifier ) {
 				$existing = $tax;
 				break;
 			}
@@ -511,6 +515,7 @@ class AcfUpdateTaxonomy extends ToolInterface {
 		if ( isset( $input['plural_label'] ) ) {
 			$existing['label']          = sanitize_text_field( $input['plural_label'] );
 			$existing['labels']['name'] = $existing['label'];
+			$existing['title']          = $existing['label'];
 		}
 		if ( isset( $input['description'] ) ) {
 			$existing['description'] = sanitize_text_field( $input['description'] );
@@ -573,8 +578,8 @@ class AcfDeleteTaxonomy extends ToolInterface {
 		$identifier = sanitize_text_field( $input['key'] );
 		$existing   = null;
 
-		foreach ( acf_get_taxonomies() as $tax ) {
-			if ( ( $tax['key'] ?? '' ) === $identifier || ( $tax['name'] ?? '' ) === $identifier || ( $tax['taxonomy'] ?? '' ) === $identifier ) {
+		foreach ( acf_get_acf_taxonomies() as $tax ) {
+			if ( ( $tax['key'] ?? '' ) === $identifier || ( $tax['taxonomy'] ?? '' ) === $identifier ) {
 				$existing = $tax;
 				break;
 			}

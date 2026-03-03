@@ -135,6 +135,12 @@ class RestController {
 	public function handle_chat( $request ) {
 		$user_id = get_current_user_id();
 
+		WallyLogger::info( 'Chat request received', [
+			'user_id'         => $user_id,
+			'conversation_id' => $request->get_param( 'conversation_id' ),
+			'stream'          => $request->get_param( 'stream' ),
+		]);
+
 		// Enforce per-user daily rate limit before any message processing.
 		if ( RateLimiter::is_rate_limited( $user_id ) ) {
 			$status = RateLimiter::get_status( $user_id );
@@ -777,13 +783,13 @@ class RestController {
 		curl_close( $ch );
 
 		if ( $curl_error ) {
-			error_log( sprintf( '[Wally] cURL error calling %s: %s', $url, $curl_error ) );
+			WallyLogger::error( 'cURL error calling backend', [ 'url' => $url, 'error' => $curl_error ] );
 			return new \WP_Error( 'backend_curl_error', $curl_error );
 		}
 
 		if ( $http_code >= 400 ) {
 			$detail = mb_substr( $raw_body, 0, 1000 );
-			error_log( sprintf( '[Wally] Backend %s returned HTTP %d: %s', $url, $http_code, $detail ) );
+			WallyLogger::error( 'Backend HTTP error (streaming)', [ 'url' => $url, 'http_code' => $http_code, 'body' => $detail ] );
 			return new \WP_Error( 'backend_error', "Backend returned HTTP {$http_code}: {$detail}" );
 		}
 
@@ -818,7 +824,7 @@ class RestController {
 		]);
 
 		if ( is_wp_error( $response ) ) {
-			error_log( sprintf( '[Wally] wp_remote_post to %s failed: %s', $url, $response->get_error_message() ) );
+			WallyLogger::error( 'wp_remote_post failed', [ 'url' => $url, 'error' => $response->get_error_message() ] );
 			return $response;
 		}
 
@@ -827,7 +833,7 @@ class RestController {
 
 		if ( $code >= 400 ) {
 			$detail = mb_substr( $body, 0, 1000 );
-			error_log( sprintf( '[Wally] Backend %s returned HTTP %d: %s', $url, $code, $detail ) );
+			WallyLogger::error( 'Backend HTTP error (buffered)', [ 'url' => $url, 'http_code' => $code, 'body' => $detail ] );
 			$decoded   = json_decode( $body, true );
 			$error_msg = $decoded['message'] ?? $decoded['error'] ?? "Backend returned HTTP {$code}";
 			return new \WP_Error( 'backend_error', $error_msg );
@@ -960,10 +966,11 @@ class RestController {
 
 	public function get_conversation( $request ) {
 		global $wpdb;
-		$conv_table = $wpdb->prefix . 'wally_conversations';
-		$msg_table  = $wpdb->prefix . 'wally_messages';
-		$id         = (int) $request['id'];
-		$user_id    = get_current_user_id();
+		$conv_table    = $wpdb->prefix . 'wally_conversations';
+		$msg_table     = $wpdb->prefix . 'wally_messages';
+		$actions_table = $wpdb->prefix . 'wally_actions';
+		$id            = (int) $request['id'];
+		$user_id       = get_current_user_id();
 
 		$conv = $wpdb->get_row(
 			$wpdb->prepare(
@@ -983,7 +990,19 @@ class RestController {
 			)
 		);
 
+		// Include confirmation-related actions so the frontend can reconstruct confirmation cards.
+		$actions = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, tool_name, tool_input, status, created_at
+				 FROM {$actions_table}
+				 WHERE conversation_id = %d AND status IN ('pending', 'confirmed', 'cancelled')
+				 ORDER BY created_at ASC, id ASC",
+				$id
+			)
+		);
+
 		$conv->messages = $messages;
+		$conv->actions  = $actions;
 		return rest_ensure_response( $conv );
 	}
 
@@ -1015,9 +1034,18 @@ class RestController {
 	 * Handle action confirmation or rejection.
 	 */
 	public function confirm_action( $request ) {
+		global $wpdb;
+
 		$action_id = (int) $request['action_id'];
 		$approved  = (bool) $request->get_param( 'approved' );
 		$user_id   = get_current_user_id();
+
+		WallyLogger::info( 'Confirm action request', [
+			'action_id' => $action_id,
+			'approved'  => $approved,
+			'user_id'   => $user_id,
+		]);
+
 		$executor  = ToolExecutor::instance();
 
 		if ( $approved ) {
@@ -1026,9 +1054,32 @@ class RestController {
 			$result = $executor->reject_action( $action_id, $user_id );
 		}
 
+		// Persist the result message so it appears when loading conversation history.
+		$action = AuditLog::get_action( $action_id );
+		if ( $action && $action->conversation_id ) {
+			$msg_table       = $wpdb->prefix . 'wally_messages';
+			$message_content = $result['result']['message'] ?? $result['result']['error'] ?? null;
+
+			if ( $message_content ) {
+				$wpdb->insert( $msg_table, [
+					'conversation_id' => (int) $action->conversation_id,
+					'role'            => 'assistant',
+					'content'         => $message_content,
+				]);
+			}
+		}
+
 		$status_code = $result['success'] ? 200 : 400;
 		if ( $result['status'] === 'denied' ) {
 			$status_code = 403;
+		}
+
+		if ( ! $result['success'] ) {
+			WallyLogger::error( "confirm_action failed", [
+				'action_id' => $action_id,
+				'error'     => $result['result']['error'] ?? 'unknown',
+				'status'    => $result['status'] ?? 'unknown',
+			]);
 		}
 
 		return new \WP_REST_Response( $result, $status_code );

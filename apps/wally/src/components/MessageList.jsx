@@ -48,7 +48,7 @@ const ToolProgressCard = ({ toolsRunning }) => {
     return (
         <div className="mt-2 rounded-2xl bg-wpaia-bg p-4">
             <div className="flex items-center gap-2.5">
-                <span className="inline-block w-4 h-4 rounded-full border-2 border-wpaia-border border-t-wpaia-primary animate-spin flex-shrink-0" aria-hidden="true" />
+                <span className="wpaia-spinner w-4 h-4" aria-hidden="true" />
                 <div className="flex flex-col gap-0.5">
                     <span className="text-[13px] font-semibold text-wpaia-text">{title}</span>
                 </div>
@@ -57,7 +57,7 @@ const ToolProgressCard = ({ toolsRunning }) => {
                 <div className="mt-3 flex flex-col gap-2 pl-[38px]">
                     {toolsRunning.map((tool, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs text-wpaia-muted">
-                            <span className="inline-block w-3 h-3 rounded-full border-2 border-wpaia-border border-t-wpaia-primary animate-spin flex-shrink-0" aria-hidden="true" />
+                            <span className="wpaia-spinner w-3 h-3" aria-hidden="true" />
                             <span>{tool.replace(/_/g, ' ')}</span>
                         </div>
                     ))}
@@ -71,7 +71,7 @@ const ToolResultCard = ({ status, toolName, detail }) => (
     <div className="mt-2 rounded-2xl bg-wpaia-bg p-4">
         <div className="flex items-center gap-2.5">
             <span className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg text-white ${status === 'success' ? 'bg-[#14B8A6]' : status === 'error' ? 'bg-wpaia-error-text' : 'bg-wpaia-muted'}`}>
-                {status === 'success' ? <LuCheck size={14} /> : status === 'running' ? <span className="inline-block w-3 h-3 rounded-full border-2 border-wpaia-border border-t-wpaia-primary animate-spin" /> : <LuX size={14} />}
+                {status === 'success' ? <LuCheck size={14} /> : status === 'running' ? <span className="wpaia-spinner w-3 h-3" /> : <LuX size={14} />}
             </span>
             <div className="flex flex-col gap-0.5">
                 <span className="text-[13px] font-semibold text-wpaia-text">{toolName}</span>
@@ -247,7 +247,7 @@ const MessageList = ({ messages, loading, onConfirm, onReject, onRetry, onDismis
                                 )}
                                 {msg.toolsRunning?.length > 0 && <ToolProgressCard toolsRunning={msg.toolsRunning} />}
                                 {msg.toolResults?.length > 0 && msg.toolResults.map((result, j) => <ToolResultCard key={j} {...result} />)}
-                                {msg.confirmation && <ConfirmAction confirmation={msg.confirmation} onConfirm={onConfirm} onReject={onReject} />}
+                                {msg.confirmations?.map((confirmation) => <ConfirmAction key={confirmation.action_id} confirmation={confirmation} onConfirm={onConfirm} onReject={onReject} />)}
                                 {msg.createdAt && !msg.streaming && (
                                     <span className="text-[10px] text-wpaia-hint mt-1 block">{formatTimestamp(msg.createdAt)}</span>
                                 )}

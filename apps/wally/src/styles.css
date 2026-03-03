@@ -108,6 +108,13 @@
     }
     .wpaia-copy-btn:hover { @apply bg-white/20 text-white; }
     .wpaia-copy-btn-success { @apply bg-wpaia-success-text/80 text-white; }
+
+    /* Tool progress spinner */
+    .wpaia-spinner {
+        @apply inline-block rounded-full border-2 border-solid border-wpaia-border flex-shrink-0;
+        border-top-color: #8B5CF6;
+        animation: wpaia-spin 0.8s linear infinite;
+    }
   }
 }
 
@@ -117,6 +124,10 @@
     .wpaia-scrollbar::-webkit-scrollbar-track  { background: transparent; }
     .wpaia-scrollbar::-webkit-scrollbar-thumb  { @apply bg-wpaia-border rounded-full; }
   }
+}
+
+@keyframes wpaia-spin {
+    to { transform: rotate(360deg); }
 }
 
 @keyframes wpaia-dot-bounce {

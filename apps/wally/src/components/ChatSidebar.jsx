@@ -105,13 +105,44 @@ const ChatSidebar = () => {
         try {
             const conv = await apiFetch({ path: `wally/v1/conversations/${id}` });
             setConversationId(id);
-            setMessages(
-                (conv.messages || []).map(m => ({
-                    role: m.role,
-                    content: m.content,
-                    createdAt: m.created_at || null,
-                }))
-            );
+
+            const msgs = (conv.messages || []).map(m => ({
+                role: m.role,
+                content: m.content,
+                createdAt: m.created_at || null,
+            }));
+
+            // Reconstruct confirmation cards from actions stored in the audit log.
+            for (const action of (conv.actions || [])) {
+                const actionTime = new Date(action.created_at).getTime();
+
+                // Find the first assistant message created at or after this action
+                // (the action is logged before the assistant message is saved).
+                let bestIdx = -1;
+                for (let i = 0; i < msgs.length; i++) {
+                    if (msgs[i].role === 'assistant' && msgs[i].createdAt) {
+                        if (new Date(msgs[i].createdAt).getTime() >= actionTime) { bestIdx = i; break; }
+                    }
+                }
+
+                if (bestIdx >= 0) {
+                    const status = action.status === 'confirmed' ? 'confirmed'
+                        : action.status === 'cancelled' ? 'rejected'
+                        : 'pending';
+                    let preview = {};
+                    try { preview = JSON.parse(action.tool_input || '{}'); } catch {}
+
+                    if (!msgs[bestIdx].confirmations) msgs[bestIdx].confirmations = [];
+                    msgs[bestIdx].confirmations.push({
+                        action_id: parseInt(action.id),
+                        tool_name: action.tool_name,
+                        preview,
+                        status,
+                    });
+                }
+            }
+
+            setMessages(msgs);
         } catch {
             setMessages([{ role: 'assistant', content: 'Could not load conversation.' }]);
         } finally {
@@ -283,7 +314,7 @@ const ChatSidebar = () => {
                             setConversationId(data.id); receivedConvId = data.id;
                             break;
                         case 'confirmation':
-                            setMessages(prev => { const u = [...prev]; const l = u[u.length-1]; if(l?.streaming) u[u.length-1] = {...l, confirmation:{action_id:data.action_id,tool_name:data.tool_name,preview:data.preview,status:'pending'}}; return u; });
+                            setMessages(prev => { const u = [...prev]; const l = u[u.length-1]; if(l?.streaming) { const existing = l.confirmations || []; u[u.length-1] = {...l, confirmations:[...existing,{action_id:data.action_id,tool_name:data.tool_name,preview:data.preview,status:'pending'}]}; } return u; });
                             break;
                         case 'tool_start':
                             setMessages(prev => { const u = [...prev]; const l = u[u.length-1]; if(l?.streaming) u[u.length-1] = {...l, toolsRunning: data.tools||[]}; return u; });
@@ -328,8 +359,8 @@ const ChatSidebar = () => {
 
     const updateConfirmationStatus = useCallback((actionId, newStatus, resultMessage) => {
         setMessages(prev => prev.map(msg => {
-            if (msg.confirmation?.action_id === actionId) return { ...msg, confirmation: { ...msg.confirmation, status: newStatus } };
-            return msg;
+            if (!msg.confirmations) return msg;
+            return { ...msg, confirmations: msg.confirmations.map(c => c.action_id === actionId ? { ...c, status: newStatus } : c) };
         }));
         if (resultMessage) setMessages(prev => [...prev, { role: 'assistant', content: resultMessage }]);
     }, []);
@@ -338,14 +369,22 @@ const ChatSidebar = () => {
         try {
             const response = await apiFetch({ path: `wally/v1/confirm/${actionId}`, method: 'POST', data: { approved: true } });
             updateConfirmationStatus(actionId, 'confirmed', response.result?.message || response.result?.error || 'Action completed.');
-        } catch (err) { updateConfirmationStatus(actionId, 'pending', `Error: ${err.message}`); }
+        } catch (err) {
+            console.error('[Wally] confirm action failed:', err);
+            const errMsg = err?.result?.error || err?.message || err?.data?.message || 'Unknown error';
+            updateConfirmationStatus(actionId, 'pending', `Error: ${errMsg}`);
+        }
     }, [updateConfirmationStatus]);
 
     const handleReject = useCallback(async (actionId) => {
         try {
             await apiFetch({ path: `wally/v1/confirm/${actionId}`, method: 'POST', data: { approved: false } });
             updateConfirmationStatus(actionId, 'rejected', 'Action cancelled.');
-        } catch (err) { updateConfirmationStatus(actionId, 'pending', `Error: ${err.message}`); }
+        } catch (err) {
+            console.error('[Wally] reject action failed:', err);
+            const errMsg = err?.result?.error || err?.message || err?.data?.message || 'Unknown error';
+            updateConfirmationStatus(actionId, 'pending', `Error: ${errMsg}`);
+        }
     }, [updateConfirmationStatus]);
 
     const handleRetry = useCallback((retryText) => {
@@ -442,7 +481,7 @@ const ChatSidebar = () => {
                             </div>
                         </div>
                     )}
-                    <MessageInput onSend={sendMessage} disabled={loading || !hasLicense || messages.some(m => m.confirmation?.status === 'pending')} value={inputText} onChange={setInputText} isStreaming={loading} onStop={handleStop} placeholder={!hasLicense ? 'Activate your license to start chatting…' : messages.some(m => m.confirmation?.status === 'pending') ? 'Waiting for confirmation…' : undefined} />
+                    <MessageInput onSend={sendMessage} disabled={loading || !hasLicense || messages.some(m => m.confirmations?.some(c => c.status === 'pending'))} value={inputText} onChange={setInputText} isStreaming={loading} onStop={handleStop} placeholder={!hasLicense ? 'Activate your license to start chatting…' : messages.some(m => m.confirmations?.some(c => c.status === 'pending')) ? 'Waiting for confirmation…' : undefined} />
                 </>
             )}
         </div>

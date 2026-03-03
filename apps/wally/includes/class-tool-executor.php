@@ -122,15 +122,23 @@ class ToolExecutor {
 		int $conversation_id = 0,
 		int $message_id = 0
 	): array {
+		WallyLogger::info( "Tool execute started: {$tool_name}", [
+			'user_id'         => $user_id,
+			'conversation_id' => $conversation_id,
+			'input'           => $input,
+		]);
+
 		// 1. Find tool in registry.
 		$tool = $this->get_tool( $tool_name );
 		if ( ! $tool ) {
+			WallyLogger::error( "Unknown tool: {$tool_name}" );
 			return $this->fail( "Unknown tool: {$tool_name}", $tool_name, $input, $user_id, $conversation_id, $message_id );
 		}
 
 		// 2. Validate input against JSON schema.
 		$validation = $this->validate_input( $input, $tool->get_parameters_schema() );
 		if ( ! $validation['valid'] ) {
+			WallyLogger::error( "Input validation failed for {$tool_name}", [ 'errors' => $validation['errors'] ] );
 			return $this->fail(
 				'Input validation failed: ' . implode( '; ', $validation['errors'] ),
 				$tool_name, $input, $user_id, $conversation_id, $message_id
@@ -139,6 +147,10 @@ class ToolExecutor {
 
 		// 3. Check WordPress capability.
 		if ( ! user_can( $user_id, $tool->get_required_capability() ) ) {
+			WallyLogger::warning( "Permission denied for {$tool_name}", [
+				'user_id'  => $user_id,
+				'required' => $tool->get_required_capability(),
+			]);
 			return $this->deny(
 				"Insufficient permissions. Requires: {$tool->get_required_capability()}",
 				$tool_name, $input, $user_id, $conversation_id, $message_id
@@ -147,6 +159,10 @@ class ToolExecutor {
 
 		// 4. Check role-based action permission.
 		if ( ! Permissions::can_use_action( $tool->get_action(), $user_id ) ) {
+			WallyLogger::warning( "Action denied for {$tool_name}", [
+				'user_id' => $user_id,
+				'action'  => $tool->get_action(),
+			]);
 			return $this->deny(
 				"Action '{$tool->get_action()}' is not permitted for your role.",
 				$tool_name, $input, $user_id, $conversation_id, $message_id
@@ -165,6 +181,8 @@ class ToolExecutor {
 				'tool_output'     => [ 'message' => 'Awaiting user confirmation.' ],
 				'status'          => 'pending',
 			]);
+
+			WallyLogger::info( "Tool {$tool_name} awaiting confirmation", [ 'action_id' => $action_id ] );
 
 			return [
 				'success'   => true,
@@ -191,9 +209,12 @@ class ToolExecutor {
 	 * @return array Execution result.
 	 */
 	public function confirm_action( int $action_id, int $user_id ): array {
+		WallyLogger::info( "Confirming action {$action_id}", [ 'user_id' => $user_id ] );
+
 		$action = AuditLog::get_action( $action_id );
 
 		if ( ! $action ) {
+			WallyLogger::error( "Action {$action_id} not found for confirmation" );
 			return [
 				'success' => false,
 				'status'  => 'failed',
@@ -202,6 +223,7 @@ class ToolExecutor {
 		}
 
 		if ( (int) $action->user_id !== $user_id ) {
+			WallyLogger::warning( "User {$user_id} tried to confirm action {$action_id} owned by user {$action->user_id}" );
 			return [
 				'success' => false,
 				'status'  => 'denied',
@@ -210,6 +232,7 @@ class ToolExecutor {
 		}
 
 		if ( $action->status !== 'pending' ) {
+			WallyLogger::warning( "Action {$action_id} is already {$action->status}, cannot confirm" );
 			return [
 				'success' => false,
 				'status'  => 'failed',
@@ -219,6 +242,7 @@ class ToolExecutor {
 
 		$tool = $this->get_tool( $action->tool_name );
 		if ( ! $tool ) {
+			WallyLogger::error( "Tool '{$action->tool_name}' no longer registered for action {$action_id}" );
 			AuditLog::update_action( $action_id, [
 				'status'      => 'failed',
 				'tool_output' => [ 'error' => 'Tool no longer registered.' ],
@@ -231,6 +255,8 @@ class ToolExecutor {
 		}
 
 		$input = json_decode( $action->tool_input, true ) ?: [];
+
+		WallyLogger::info( "Executing confirmed action {$action_id}: {$action->tool_name}", [ 'input' => $input ] );
 
 		return $this->run_tool(
 			$tool,
@@ -250,9 +276,12 @@ class ToolExecutor {
 	 * @return array Result.
 	 */
 	public function reject_action( int $action_id, int $user_id ): array {
+		WallyLogger::info( "Rejecting action {$action_id}", [ 'user_id' => $user_id ] );
+
 		$action = AuditLog::get_action( $action_id );
 
 		if ( ! $action ) {
+			WallyLogger::error( "Action {$action_id} not found for rejection" );
 			return [
 				'success' => false,
 				'status'  => 'failed',
@@ -261,6 +290,7 @@ class ToolExecutor {
 		}
 
 		if ( (int) $action->user_id !== $user_id ) {
+			WallyLogger::warning( "User {$user_id} tried to reject action {$action_id} owned by user {$action->user_id}" );
 			return [
 				'success' => false,
 				'status'  => 'denied',
@@ -269,6 +299,7 @@ class ToolExecutor {
 		}
 
 		if ( $action->status !== 'pending' ) {
+			WallyLogger::warning( "Action {$action_id} is already {$action->status}, cannot reject" );
 			return [
 				'success' => false,
 				'status'  => 'failed',
@@ -280,6 +311,8 @@ class ToolExecutor {
 			'status'      => 'cancelled',
 			'tool_output' => [ 'message' => 'Action rejected by user.' ],
 		]);
+
+		WallyLogger::info( "Action {$action_id} ({$action->tool_name}) rejected by user {$user_id}" );
 
 		return [
 			'success'   => true,
@@ -308,11 +341,14 @@ class ToolExecutor {
 		int $message_id,
 		?int $action_id = null
 	): array {
+		$tool_name = $tool->get_name();
+		WallyLogger::info( "Tool executing: {$tool_name}", [ 'input' => $input, 'action_id' => $action_id ] );
+
 		try {
 			$result = $tool->execute( $input );
 
 			$log_data = [
-				'status'      => 'success',
+				'status'      => $action_id ? 'confirmed' : 'success',
 				'tool_output' => $result,
 			];
 
@@ -324,12 +360,14 @@ class ToolExecutor {
 					'conversation_id' => $conversation_id,
 					'message_id'      => $message_id,
 					'user_id'         => $user_id,
-					'tool_name'       => $tool->get_name(),
+					'tool_name'       => $tool_name,
 					'tool_input'      => $input,
 					'tool_output'     => $result,
 					'status'          => 'success',
 				]);
 			}
+
+			WallyLogger::info( "Tool succeeded: {$tool_name}", [ 'action_id' => $action_id, 'result' => $result ] );
 
 			return [
 				'success'   => true,
@@ -338,6 +376,15 @@ class ToolExecutor {
 				'action_id' => $action_id,
 			];
 		} catch ( \Throwable $e ) {
+			WallyLogger::error( "Tool exception: {$tool_name}", [
+				'error'   => $e->getMessage(),
+				'code'    => $e->getCode(),
+				'file'    => $e->getFile(),
+				'line'    => $e->getLine(),
+				'input'   => $input,
+				'user_id' => $user_id,
+			]);
+
 			$error_data = [
 				'error'   => $e->getMessage(),
 				'code'    => $e->getCode(),
@@ -355,7 +402,7 @@ class ToolExecutor {
 					'conversation_id' => $conversation_id,
 					'message_id'      => $message_id,
 					'user_id'         => $user_id,
-					'tool_name'       => $tool->get_name(),
+					'tool_name'       => $tool_name,
 					'tool_input'      => $input,
 					'tool_output'     => $error_data,
 					'status'          => 'failed',

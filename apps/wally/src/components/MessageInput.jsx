@@ -44,7 +44,7 @@ const MessageInput = ({ onSend, disabled, value: externalValue, onChange: extern
                         disabled={disabled}
                         rows={1}
                         aria-label="Message input"
-                        className="w-full resize-none border-0 bg-transparent py-3 text-[15px] text-wpaia-text font-sans placeholder:text-wpaia-hint focus:outline-none leading-normal focus:shadow-none"
+                        className="w-full resize-none overflow-hidden border-0 bg-transparent py-3 text-[15px] text-wpaia-text font-sans placeholder:text-wpaia-hint focus:outline-none leading-normal focus:shadow-none"
                     />
                 </div>
                 {isStreaming ? (
