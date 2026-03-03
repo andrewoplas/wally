@@ -26,6 +26,17 @@
         "parallel": true
       }
     },
+    "version": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npm version {args.bump} --no-git-tag-version",
+          "NEW_VER=$(node -p \"require('./package.json').version\") && sed -i '' \"s/^ \\* Version:.*/ * Version:     $NEW_VER/\" wally.php && sed -i '' \"s/define( 'WALLY_VERSION', '[^']*' )/define( 'WALLY_VERSION', '$NEW_VER' )/\" wally.php && echo \"Bumped to $NEW_VER\""
+        ],
+        "cwd": "apps/wally",
+        "parallel": false
+      }
+    },
     "package": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],

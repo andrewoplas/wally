@@ -8,6 +8,7 @@ import {
   useScroll,
   useTransform,
   useInView,
+  type MotionValue,
 } from 'framer-motion';
 import {
   Flame,
@@ -158,7 +159,7 @@ function FloatingPill({
 }: {
   pill: Pill;
   index: number;
-  scrollY: ReturnType<typeof useTransform>;
+  scrollY: MotionValue<number>;
   isVisible: boolean;
 }) {
   const parallaxY = useTransform(scrollY, (v: number) => v * pill.speed);
