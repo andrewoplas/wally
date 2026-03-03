@@ -36,8 +36,6 @@ if ( file_exists( $wally_env_file ) ) {
     }
 }
 
-print_r('$wally_backend_url');
-print_r($wally_backend_url);
 define( 'WALLY_DEFAULT_BACKEND_URL', $wally_backend_url );
 unset( $wally_backend_url, $wally_env_file );
 
