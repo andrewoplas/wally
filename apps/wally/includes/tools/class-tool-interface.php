@@ -67,6 +67,19 @@ abstract class ToolInterface {
 	}
 
 	/**
+	 * Whether this tool should be registered.
+	 *
+	 * Override in subclasses to add preconditions, e.g. checking
+	 * that a third-party plugin is active before registering tools
+	 * that depend on it.
+	 *
+	 * @return bool
+	 */
+	public static function can_register(): bool {
+		return true;
+	}
+
+	/**
 	 * Execute the tool with validated input.
 	 *
 	 * Called only after input validation and permission checks pass.

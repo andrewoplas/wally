@@ -448,8 +448,7 @@ class ElementorClearCssCache extends ToolInterface {
 	public function get_parameters_schema(): array {
 		return [
 			'type'       => 'object',
-			'properties' => [],
-			'required'   => [],
+			'properties' => (object) [],
 		];
 	}
 

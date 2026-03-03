@@ -28,8 +28,7 @@ class Settings {
             }
 
             if ( $license_key_changed ) {
-                $backend_url = esc_url_raw( trim( $_POST['wally_backend_url'] ?? get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ) ), [ 'http', 'https' ] );
-                $activation_notice = self::activate_site( $license_key, $backend_url );
+                $activation_notice = self::activate_site( $license_key, WALLY_DEFAULT_BACKEND_URL );
             }
 
             $all_wp_roles  = array_keys( wp_roles()->roles );
@@ -65,17 +64,6 @@ class Settings {
             $notification_sounds = ! empty( $_POST['wally_notification_sounds'] );
             update_option( 'wally_notification_sounds', $notification_sounds );
 
-            $backend_url_input = esc_url_raw( trim( $_POST['wally_backend_url'] ?? 'http://localhost:3100/api/v1' ), [ 'http', 'https' ] );
-            if ( $backend_url_input ) {
-                update_option( 'wally_backend_url', $backend_url_input );
-            }
-
-            $model = sanitize_text_field( $_POST['wally_model'] ?? 'claude-haiku-4-5' );
-            $valid_models = [ 'claude-haiku-4-5', 'claude-sonnet-4-5', 'claude-opus-4', 'gpt-4o', 'gpt-4o-mini' ];
-            if ( in_array( $model, $valid_models, true ) ) {
-                update_option( 'wally_model', $model );
-            }
-
             $all_actions = Permissions::get_all_actions();
             $all_roles   = array_keys( Permissions::get_default_permissions() );
             $tool_perms  = [];
@@ -101,8 +89,6 @@ class Settings {
         $token_budget   = get_option( 'wally_monthly_token_budget', 0 );
         $data_retention = get_option( 'wally_data_retention', 90 );
         $custom_prompt = get_option( 'wally_custom_prompt', '' );
-        $backend_url   = get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' );
-        $model         = get_option( 'wally_model', 'claude-haiku-4-5' );
         $site_profile  = SiteScanner::get_profile();
 
         $profile_display = [
@@ -230,33 +216,7 @@ class Settings {
                                 <input type="password" name="wally_license_key" class="wpaia-input"
                                        value="<?php echo esc_attr( $license_key ); ?>"
                                        placeholder="Enter your license key" autocomplete="off" />
-                                <span class="wpaia-hint">Stored encrypted. Find your key in your account dashboard.</span>
-                            </div>
-                        </div>
-
-                        <!-- API Connection Card -->
-                        <div class="wpaia-card">
-                            <div class="wpaia-card-title">API Connection</div>
-                            <p class="wpaia-card-desc">Configure the backend orchestration server that handles AI requests.</p>
-
-                            <div class="wpaia-field">
-                                <label class="wpaia-label">Backend URL</label>
-                                <input type="url" name="wally_backend_url" class="wpaia-input"
-                                       value="<?php echo esc_attr( $backend_url ); ?>"
-                                       placeholder="http://localhost:3100/api/v1" />
-                                <span class="wpaia-hint">The URL of the Wally backend server.</span>
-                            </div>
-
-                            <div class="wpaia-field">
-                                <label class="wpaia-label">AI Model</label>
-                                <select name="wally_model" class="wpaia-select">
-                                    <option value="claude-haiku-4-5" <?php selected( $model, 'claude-haiku-4-5' ); ?>>Claude Haiku 4.5 (Fast)</option>
-                                    <option value="claude-sonnet-4-5" <?php selected( $model, 'claude-sonnet-4-5' ); ?>>Claude Sonnet 4.5 (Balanced)</option>
-                                    <option value="claude-opus-4" <?php selected( $model, 'claude-opus-4' ); ?>>Claude Opus 4 (Advanced)</option>
-                                    <option value="gpt-4o" <?php selected( $model, 'gpt-4o' ); ?>>GPT-4o</option>
-                                    <option value="gpt-4o-mini" <?php selected( $model, 'gpt-4o-mini' ); ?>>GPT-4o Mini (Fast)</option>
-                                </select>
-                                <span class="wpaia-hint">The AI model used for generating responses.</span>
+                                <span class="wpaia-hint">Stored encrypted. Get your key from your <a href="https://www.wallychat.com/app/license" target="_blank" rel="noopener noreferrer">account dashboard</a>.</span>
                             </div>
                         </div>
 
@@ -886,7 +846,7 @@ class Settings {
         $code = wp_remote_retrieve_response_code( $response );
         $body = json_decode( wp_remote_retrieve_body( $response ), true );
 
-        if ( ! $body['valid'] ?? false ) {
+        if ( ! ( $body['valid'] ?? false ) ) {
             $error_map = [
                 'max_sites_reached'  => sprintf(
                     'Max sites reached (%d/%d). Deactivate another site from your dashboard first.',

@@ -372,7 +372,7 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] px-4 py-1.5 text-[13px] font-semibold text-lp-purple-light">
             <Sparkles className="h-3.5 w-3.5 text-lp-purple-light" />
-            Now in Private Beta
+            AI-Powered WordPress Assistant
           </span>
         </motion.div>
 
@@ -383,7 +383,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          Be first to manage WordPress by just asking.
+          Manage your WordPress site by just asking.
         </motion.h1>
 
         {/* Subheadline */}
@@ -394,9 +394,9 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
-          Wally is an AI chat assistant inside wp-admin — currently in
+          A chat assistant inside wp-admin that handles your site tasks —
           <br className="hidden sm:block" />
-          private beta. Join the waitlist for early access.
+          no menus, no tickets, no tech skills needed.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -407,11 +407,11 @@ export function HeroSection() {
           transition={{ duration: 0.5, delay: 0.8 }}
         >
           <Button
-            href="#waitlist"
+            href="/app/license"
             variant="solid-white"
             className="shadow-[0_0_32px_rgba(255,255,255,0.19)]"
           >
-            Join the Waitlist
+            Get Started
           </Button>
           <Button href="#demo" variant="outline-dark">
             See it in action

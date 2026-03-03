@@ -30,10 +30,10 @@ export class ToolResultItemDto {
 }
 
 export class ToolResultRequestDto {
-  @ApiProperty({ description: 'LLM model identifier' })
+  @ApiPropertyOptional({ description: 'LLM model identifier (defaults to server config)' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  model!: string;
+  model?: string;
 
   @ApiProperty({ type: [ToolResultItemDto], description: 'One or more tool execution results' })
   @IsArray()
@@ -54,6 +54,11 @@ export class ToolResultRequestDto {
   @ApiPropertyOptional({ type: 'object' })
   @IsOptional()
   site_profile?: unknown;
+
+  @ApiPropertyOptional({ type: 'array', items: { type: 'object' }, description: 'Tool definitions from the WP plugin (single source of truth)' })
+  @IsOptional()
+  @IsArray()
+  tool_definitions?: unknown[];
 
   @ApiPropertyOptional()
   @IsOptional()

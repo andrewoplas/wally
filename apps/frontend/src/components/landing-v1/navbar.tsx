@@ -8,8 +8,9 @@ import { createClient } from '@/lib/supabase/client';
 
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
-  { label: 'Beta Program', href: '#beta-program' },
+  { label: 'Pricing', href: '#pricing' },
   { label: 'Blog', href: '/blog' },
+  { label: 'Docs', href: '#' },
 ];
 
 interface NavbarProps {
@@ -131,11 +132,11 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
                   Log In
                 </Button>
                 <Button
-                  href="#waitlist"
+                  href="/register"
                   size="sm"
                   variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
                 >
-                  Join Waitlist
+                  Get Started
                 </Button>
               </>
             )}
@@ -203,12 +204,12 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
                       Log In
                     </Button>
                     <Button
-                      href="#waitlist"
+                      href="/register"
                       size="sm"
                       variant={scrolled && !isDark ? 'solid-primary' : 'solid-white'}
                       className="flex-1 justify-center"
                     >
-                      Join Waitlist
+                      Get Started
                     </Button>
                   </>
                 )}

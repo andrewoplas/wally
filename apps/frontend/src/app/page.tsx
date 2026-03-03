@@ -6,16 +6,16 @@ import { VideoDemoSection } from '@/components/landing/video-demo-section';
 import { HowItWorksSection } from '@/components/landing/how-it-works-section';
 import { WhoItsForSection } from '@/components/landing/who-its-for-section';
 import { TrustSafetySection } from '@/components/landing/trust-safety-section';
-import { PricingSection } from '@/components/landing/pricing-section';
+import { BetaProgramSection } from '@/components/landing/beta-program-section';
 import { FinalCtaSection } from '@/components/landing/final-cta-section';
 import { Footer } from '@/components/landing/footer';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.wallychat.com';
 
 export const metadata: Metadata = {
-  title: 'Wally — Manage Your WordPress Site by Just Asking',
+  title: 'Wally — Private Beta: Be First to Manage WordPress by Just Asking',
   description:
-    'Wally is an AI chat assistant inside wp-admin that handles your WordPress site tasks through natural language — no menus, no tickets, no tech skills needed.',
+    'Wally is an AI chat assistant inside wp-admin — currently in private beta. Join the waitlist for early access to manage your WordPress site through natural language.',
   keywords: [
     'WordPress AI assistant',
     'WordPress automation',
@@ -25,21 +25,23 @@ export const metadata: Metadata = {
     'wp-admin AI',
     'WordPress chatbot',
     'manage WordPress with AI',
+    'WordPress beta',
+    'WordPress waitlist',
     'Wally',
   ],
   openGraph: {
-    title: 'Wally — Manage Your WordPress Site by Just Asking',
+    title: 'Wally — Private Beta: Be First to Manage WordPress by Just Asking',
     description:
-      'An AI chat assistant inside wp-admin that handles your site tasks — no menus, no tickets, no tech skills needed.',
+      'An AI chat assistant inside wp-admin — currently in private beta. Join the waitlist for early access.',
     url: SITE_URL,
     type: 'website',
     images: [{ url: '/site-og.png', width: 1200, height: 630, alt: 'Wally — AI WordPress Assistant' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Wally — Manage Your WordPress Site by Just Asking',
+    title: 'Wally — Private Beta: Be First to Manage WordPress by Just Asking',
     description:
-      'An AI chat assistant inside wp-admin that handles your site tasks — no menus, no tickets, no tech skills needed.',
+      'An AI chat assistant inside wp-admin — currently in private beta. Join the waitlist for early access.',
     images: ['/site-og.png'],
   },
   alternates: {
@@ -87,7 +89,7 @@ export default function LandingPage() {
       <HowItWorksSection />
       <WhoItsForSection />
       <TrustSafetySection />
-      <PricingSection />
+      <BetaProgramSection />
       <FinalCtaSection />
       <Footer />
     </main>

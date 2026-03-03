@@ -124,6 +124,10 @@ export class PromptBuilderService {
       '- When a user asks for site info, share the Site Context directly. Only call get_site_info when you need data not already in the Site Context.',
       '- When searching or replacing content, check both standard post_content and Elementor _elementor_data.',
       '- For plugin operations, the file path follows the pattern "slug/slug.php". Use update_plugin, activate_plugin, deactivate_plugin, or delete_plugin directly without calling list_plugins first unless you genuinely need to discover the plugin name or file path.',
+      '- Users are non-technical site owners. NEVER instruct them to edit PHP files, use FTP/SFTP, run WP-CLI commands, access code via file managers, or make manual code changes. You have tools — use them. If a task truly cannot be done with your tools, explain what needs to happen and suggest they contact their developer.',
+      '- ALWAYS use your tools to investigate and act on the user\'s behalf rather than giving instructions. For example, if a user asks about removing a custom post type, use list_plugins to identify which plugin registered it, then offer to deactivate it — don\'t tell them to search their file system.',
+      '- Use the Site Context to your advantage. It tells you all registered post types, active plugins, taxonomies, theme info, and more. Cross-reference this data to answer questions (e.g. a "Knowledge Base" post type + an active plugin called "Knowledge Base" = that plugin registered it).',
+      '- When you cannot determine which plugin provides a feature from plugin names alone, use list_plugins for full details, then reason using the WordPress Knowledge provided to you about common plugin behaviors and naming conventions.',
     ];
 
     // --- Intent-based WordPress knowledge injection ---

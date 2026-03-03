@@ -47,6 +47,21 @@ const THINKING_BUDGET = 6000;
 const modelSupportsThinking = (modelId: string): boolean =>
   ENABLE_THINKING && !modelId.includes('haiku');
 
+// ─── Retry Config ────────────────────────────────────────────────────────────
+
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 1000;
+
+const isRetryable = (err: unknown): boolean => {
+  if (err instanceof Anthropic.APIError) {
+    return err.status === 429 || err.status === 529 || err.status === 503;
+  }
+  const msg = String((err as Error)?.message ?? '');
+  return msg.includes('overloaded') || msg.includes('Overloaded');
+};
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 @Injectable()
@@ -69,14 +84,17 @@ export class LlmService {
    * @param systemPrompt Complete system prompt
    * @param messages     Conversation history in Anthropic message format
    * @param res          Express response object for SSE streaming
+   * @param tools        Optional pre-formatted tool definitions from the WP plugin.
+   *                     When provided, these are used instead of the hardcoded definitions.
    */
   async sendToLLM(options: {
     model: string;
     systemPrompt: string;
     messages: Array<{ role: 'user' | 'assistant'; content: string | unknown[] }>;
     res: Response;
+    tools?: unknown[];
   }): Promise<LlmResponse> {
-    const { model, systemPrompt, messages, res } = options;
+    const { model, systemPrompt, messages, res, tools: overrideTools } = options;
     const models = this.config.get<WallyConfig['models']>('models') ?? {};
     const modelConfig = models[model];
 
@@ -88,11 +106,11 @@ export class LlmService {
     const { provider, modelId } = modelConfig;
 
     if (provider === 'anthropic') {
-      return this.sendToAnthropic({ modelId, systemPrompt, messages, res });
+      return this.sendToAnthropic({ modelId, systemPrompt, messages, res, overrideTools });
     }
 
     if (provider === 'openai') {
-      return this.sendToOpenAI({ modelId, systemPrompt, messages, res });
+      return this.sendToOpenAI({ modelId, systemPrompt, messages, res, overrideTools });
     }
 
     throw new Error(`Unknown provider: ${provider}`);
@@ -105,13 +123,14 @@ export class LlmService {
     systemPrompt: string;
     messages: Array<{ role: 'user' | 'assistant'; content: string | unknown[] }>;
     res: Response;
+    overrideTools?: unknown[];
   }): Promise<LlmResponse> {
-    const { modelId, systemPrompt, messages, res } = options;
+    const { modelId, systemPrompt, messages, res, overrideTools } = options;
 
     const client = this.getAnthropicClient();
     if (!client) throw new Error('Anthropic API key not configured');
 
-    const tools = this.toolDefinitions.getToolsForProvider('anthropic') as Anthropic.Tool[];
+    const tools = (overrideTools ?? this.toolDefinitions.getToolsForProvider('anthropic')) as Anthropic.Tool[];
     const withThinking = modelSupportsThinking(modelId);
     const maxTokens = withThinking ? THINKING_BUDGET + 4096 : 4096;
 
@@ -124,43 +143,65 @@ export class LlmService {
       toolCount: tools.length,
     });
 
-    const stream = client.messages.stream({
+    const streamParams = {
       model: modelId,
       max_tokens: maxTokens,
       system: systemPrompt,
       messages: messages as Anthropic.MessageParam[],
       tools,
       ...(withThinking && {
-        thinking: { type: 'enabled', budget_tokens: THINKING_BUDGET },
+        thinking: { type: 'enabled' as const, budget_tokens: THINKING_BUDGET },
       }),
-    });
+    };
 
-    let inThinkingBlock = false;
+    let lastError: unknown;
+    let finalMessage: Anthropic.Message | undefined;
 
-    for await (const event of stream) {
-      if (event.type === 'content_block_start') {
-        if (event.content_block.type === 'thinking') {
-          inThinkingBlock = true;
-          this.sseWrite(res, { type: 'thinking_start' });
-        } else if (event.content_block.type === 'text') {
-          inThinkingBlock = false;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        const delay = RETRY_BASE_MS * 2 ** (attempt - 1);
+        this.logger.warn(`Retrying Anthropic request (attempt ${attempt + 1}/${MAX_RETRIES + 1}) after ${delay}ms`);
+        await sleep(delay);
+      }
+
+      try {
+        const stream = client.messages.stream(streamParams);
+        let inThinkingBlock = false;
+
+        for await (const event of stream) {
+          if (event.type === 'content_block_start') {
+            if (event.content_block.type === 'thinking') {
+              inThinkingBlock = true;
+              this.sseWrite(res, { type: 'thinking_start' });
+            } else if (event.content_block.type === 'text') {
+              inThinkingBlock = false;
+            }
+          } else if (event.type === 'content_block_delta') {
+            const delta = event.delta as { type: string; thinking?: string; text?: string };
+            if (delta.type === 'thinking_delta' && delta.thinking) {
+              this.sseWrite(res, { type: 'thinking', content: delta.thinking });
+            } else if (delta.type === 'text_delta' && delta.text) {
+              this.sseWrite(res, { type: 'token', content: delta.text });
+            }
+          } else if (event.type === 'content_block_stop') {
+            if (inThinkingBlock) {
+              this.sseWrite(res, { type: 'thinking_end' });
+              inThinkingBlock = false;
+            }
+          }
         }
-      } else if (event.type === 'content_block_delta') {
-        const delta = event.delta as { type: string; thinking?: string; text?: string };
-        if (delta.type === 'thinking_delta' && delta.thinking) {
-          this.sseWrite(res, { type: 'thinking', content: delta.thinking });
-        } else if (delta.type === 'text_delta' && delta.text) {
-          this.sseWrite(res, { type: 'token', content: delta.text });
-        }
-      } else if (event.type === 'content_block_stop') {
-        if (inThinkingBlock) {
-          this.sseWrite(res, { type: 'thinking_end' });
-          inThinkingBlock = false;
+
+        finalMessage = await stream.finalMessage();
+        break; // success
+      } catch (err) {
+        lastError = err;
+        if (!isRetryable(err) || attempt === MAX_RETRIES) {
+          throw err;
         }
       }
     }
 
-    const finalMessage = await stream.finalMessage();
+    if (!finalMessage) throw lastError;
 
     return {
       content: finalMessage.content as LlmContentBlock[],
@@ -182,13 +223,14 @@ export class LlmService {
     systemPrompt: string;
     messages: Array<{ role: 'user' | 'assistant'; content: string | unknown[] }>;
     res: Response;
+    overrideTools?: unknown[];
   }): Promise<LlmResponse> {
-    const { modelId, systemPrompt, messages, res } = options;
+    const { modelId, systemPrompt, messages, res, overrideTools } = options;
 
     const client = this.getOpenAIClient();
     if (!client) throw new Error('OpenAI API key not configured');
 
-    const tools = this.toolDefinitions.getToolsForProvider('openai') as OpenAI.Chat.ChatCompletionTool[];
+    const tools = (overrideTools ?? this.toolDefinitions.getToolsForProvider('openai')) as OpenAI.Chat.ChatCompletionTool[];
 
     // Convert Anthropic-style messages to OpenAI format
     const openaiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [

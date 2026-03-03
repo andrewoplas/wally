@@ -15,10 +15,10 @@ export class ChatRequestDto {
   @MaxLength(10_000)
   message!: string;
 
-  @ApiProperty({ description: 'LLM model identifier' })
+  @ApiPropertyOptional({ description: 'LLM model identifier (defaults to server config)' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  model!: string;
+  model?: string;
 
   @ApiPropertyOptional({ type: 'array', items: { type: 'object' }, maxItems: 100 })
   @IsOptional()
@@ -29,6 +29,11 @@ export class ChatRequestDto {
   @ApiPropertyOptional({ type: 'object' })
   @IsOptional()
   site_profile?: unknown;
+
+  @ApiPropertyOptional({ type: 'array', items: { type: 'object' }, description: 'Tool definitions from the WP plugin (single source of truth)' })
+  @IsOptional()
+  @IsArray()
+  tool_definitions?: unknown[];
 
   @ApiPropertyOptional()
   @IsOptional()

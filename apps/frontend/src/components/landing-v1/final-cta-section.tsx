@@ -3,13 +3,14 @@
 import { motion } from 'framer-motion';
 import {
   Sparkles,
+  Download,
   CircleCheck,
   ShieldCheck,
   MessageCircle,
   Pencil,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { WaitlistForm } from './waitlist-form';
+import { Button } from '@/components/ui/button';
 
 const floatingCards = [
   {
@@ -162,7 +163,7 @@ export function FinalCtaSection() {
   }, []);
 
   return (
-    <section id="waitlist" className="relative overflow-hidden">
+    <section className="relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 animate-hue-shift" />
 
@@ -303,7 +304,7 @@ export function FinalCtaSection() {
         >
           <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-5 py-2 text-sm font-semibold text-white/80">
             <Sparkles className="h-4 w-4" />
-            Join the private beta
+            Ready to get started?
           </span>
         </motion.div>
 
@@ -314,9 +315,9 @@ export function FinalCtaSection() {
           viewport={{ once: true }}
           transition={{ delay: 0.5, duration: 0.6 }}
         >
-          Be the first to manage
+          Stop navigating menus.
           <br />
-          WordPress by just asking.
+          Start just asking.
         </motion.h2>
 
         <motion.p
@@ -326,8 +327,8 @@ export function FinalCtaSection() {
           viewport={{ once: true }}
           transition={{ delay: 0.7, duration: 0.5 }}
         >
-          Join the waitlist now. Early testers shape the product
-          and lock in founding-member pricing.
+          Join thousands of WordPress users who manage their sites through
+          natural conversation. Free forever — no credit card needed.
         </motion.p>
 
         <motion.div
@@ -337,7 +338,17 @@ export function FinalCtaSection() {
           viewport={{ once: true }}
           transition={{ delay: 0.9, duration: 0.4 }}
         >
-          <WaitlistForm source="final-cta" variant="dark" />
+          <Button
+            href="/app/license"
+            variant="solid-white"
+            icon={<Download className="h-5 w-5" />}
+            className="animate-pulse-glow"
+          >
+            Get Started
+          </Button>
+          <Button href="#" variant="ghost-dark">
+            Get notified of updates
+          </Button>
         </motion.div>
 
         <motion.p
@@ -347,7 +358,7 @@ export function FinalCtaSection() {
           viewport={{ once: true }}
           transition={{ delay: 1.1, duration: 0.4 }}
         >
-          Free to join &middot; Invite-only &middot; Launching soon
+          Free forever &middot; No credit card &middot; 2-minute setup
         </motion.p>
       </div>
     </section>

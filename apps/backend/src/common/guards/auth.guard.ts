@@ -91,6 +91,10 @@ export class AuthGuard implements CanActivate {
         features: DEFAULT_FEATURES['pro'],
         expiresAt: null,
       };
+
+      // Ensure a site row exists so rate_limits / usage foreign keys work.
+      this.ensureDevSiteExists(siteId);
+
       return true;
     }
 
@@ -108,6 +112,30 @@ export class AuthGuard implements CanActivate {
     void site;
 
     return true;
+  }
+
+  /** Fire-and-forget upsert of a dev site row so FK-dependent tables work. */
+  private ensureDevSiteExists(siteId: string): void {
+    this.supabase.client
+      .from('sites')
+      .upsert(
+        {
+          id: siteId,
+          site_id: siteId,
+          license_tier: 'pro',
+          is_active: true,
+          features: {},
+        },
+        { onConflict: 'site_id' },
+      )
+      .then(({ error }) => {
+        if (error) {
+          this.logger.logWithMeta('warn', 'Failed to upsert dev site row', {
+            siteId,
+            error: error.message,
+          });
+        }
+      });
   }
 
   private async validateLicenseAndSite(

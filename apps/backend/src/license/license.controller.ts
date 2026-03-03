@@ -131,11 +131,22 @@ export class LicenseController {
     const features = DEFAULT_FEATURES[license.tier] ?? DEFAULT_FEATURES['free'];
 
     // Step 2: Count currently active sites for this license
-    const { count: activeCount } = await this.supabase.client
+    const { count: activeCount, error: countError } = await this.supabase.client
       .from('sites')
       .select('id', { count: 'exact', head: true })
       .eq('license_key_id', license.id)
       .eq('is_active', true);
+
+    if (countError) {
+      this.logger.logWithMeta('error', 'Failed to count active sites', {
+        license_id: license.id,
+        error: countError.message,
+      });
+      throw new HttpException(
+        { error: 'service_unavailable', message: 'Could not verify site count. Please try again.' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
 
     const currentActiveCount = activeCount ?? 0;
 

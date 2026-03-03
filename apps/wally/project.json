@@ -25,6 +25,22 @@
         "cwd": "apps/wally",
         "parallel": true
       }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "commands": [
+          "rm -rf ../../dist/wally",
+          "mkdir -p ../../dist/wally",
+          "rsync -a --exclude-from=.distignore . ../../dist/wally/",
+          "cd ../../dist && VERSION=$(node -p \"require('../apps/wally/package.json').version\") && zip -r wally-$VERSION.zip wally/",
+          "rm -rf ../../dist/wally",
+          "echo \"Package created: dist/wally-$(node -p \"require('./package.json').version\").zip\""
+        ],
+        "cwd": "apps/wally",
+        "parallel": false
+      }
     }
   }
 }

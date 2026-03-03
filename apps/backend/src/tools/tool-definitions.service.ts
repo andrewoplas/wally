@@ -23,7 +23,7 @@ export interface JsonSchema {
 export interface ToolDefinition {
   name: string;
   description: string;
-  category: 'content' | 'site' | 'plugins' | 'search' | 'elementor';
+  category: string;
   requires_confirmation?: boolean;
   parameters: JsonSchema;
 }
@@ -58,7 +58,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     parameters: {
       type: 'object',
       properties: {
-        post_type: { type: 'string', enum: ['post', 'page'], default: 'post', description: 'Post type to list' },
+        post_type: { type: 'string', default: 'post', description: 'Post type to list (e.g. post, page, or any custom post type slug from Site Context)' },
         status: { type: 'string', enum: ['publish', 'draft', 'pending', 'private', 'trash', 'any'], default: 'any' },
         search: { type: 'string', description: 'Search term to filter results' },
         per_page: { type: 'integer', default: 10, description: 'Results per page (max 100)' },
@@ -90,7 +90,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
         title: { type: 'string', description: 'Post title' },
         content: { type: 'string', description: 'Post content (HTML)' },
         status: { type: 'string', enum: ['draft', 'publish', 'pending'], default: 'draft' },
-        post_type: { type: 'string', enum: ['post', 'page'], default: 'post' },
+        post_type: { type: 'string', default: 'post', description: 'Post type (e.g. post, page, or any custom post type slug from Site Context)' },
         categories: { type: 'array', items: { type: 'integer' }, description: 'Category IDs' },
         tags: { type: 'array', items: { type: 'integer' }, description: 'Tag IDs' },
       },
@@ -202,7 +202,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
       type: 'object',
       properties: {
         option_name: { type: 'string', description: 'The option key to update' },
-        option_value: { description: 'The new value' },
+        option_value: { type: 'string', description: 'The new value' },
       },
       required: ['option_name', 'option_value'],
     },
@@ -417,5 +417,78 @@ export class ToolDefinitionsService {
    */
   requiresConfirmation(toolName: string): boolean {
     return TOOL_DEFINITIONS.some((t) => t.name === toolName && t.requires_confirmation === true);
+  }
+
+  // ─── Dynamic Tools (from WP plugin) ──────────────────────────────────────────
+
+  /**
+   * Parse raw tool definitions from the WP plugin into typed ToolDefinition[].
+   * Returns null if the input is invalid or empty.
+   */
+  parseDynamicTools(raw: unknown[] | undefined): ToolDefinition[] | null {
+    if (!Array.isArray(raw) || raw.length === 0) return null;
+
+    const tools: ToolDefinition[] = [];
+    for (const item of raw) {
+      const t = item as Record<string, unknown>;
+      if (typeof t.name !== 'string' || typeof t.description !== 'string') continue;
+
+      // Normalise parameters: PHP json_encode serialises empty arrays as []
+      // instead of {} which the Anthropic API rejects for `properties`.
+      const params = (t.parameters as Record<string, unknown>) ?? {};
+      const properties = params.properties;
+      if (!properties || Array.isArray(properties)) {
+        params.properties = {};
+      }
+      if (!params.type) {
+        params.type = 'object';
+      }
+
+      tools.push({
+        name: t.name,
+        description: t.description,
+        category: (typeof t.category === 'string' ? t.category : 'content'),
+        requires_confirmation: t.requires_confirmation === true,
+        parameters: params as JsonSchema,
+      });
+    }
+
+    return tools.length > 0 ? tools : null;
+  }
+
+  /**
+   * Convert dynamic tool definitions to a specific LLM provider format.
+   */
+  getDynamicToolsForProvider(
+    provider: LlmProvider,
+    dynamicTools: ToolDefinition[],
+  ): AnthropicTool[] | OpenAiTool[] {
+    if (provider === 'anthropic') {
+      return dynamicTools.map(
+        (tool): AnthropicTool => ({
+          name: tool.name,
+          description: tool.description,
+          input_schema: tool.parameters,
+        }),
+      );
+    }
+
+    return dynamicTools.map(
+      (tool): OpenAiTool => ({
+        type: 'function',
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters,
+        },
+      }),
+    );
+  }
+
+  /**
+   * Check whether a tool requires confirmation using dynamic definitions.
+   */
+  dynamicRequiresConfirmation(toolName: string, dynamicTools: ToolDefinition[]): boolean {
+    return dynamicTools.some((t) => t.name === toolName && t.requires_confirmation === true);
   }
 }

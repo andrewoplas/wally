@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
-import { LuPlus, LuTrash2, LuDownload, LuSettings, LuCircleHelp, LuX, LuEllipsisVertical, LuMaximize2, LuMinimize2 } from 'react-icons/lu';
+import { LuPlus, LuTrash2, LuDownload, LuSettings, LuCircleHelp, LuX, LuEllipsisVertical, LuMaximize2, LuMinimize2, LuTriangleAlert } from 'react-icons/lu';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import ConversationList from './ConversationList';
@@ -13,6 +13,9 @@ const DEFAULT_HEIGHT = 620;
 const POPUP_MARGIN = 16;
 
 const ChatSidebar = () => {
+    const hasLicense = window.wpaiaData?.hasLicense ?? true;
+    const settingsUrl = window.wpaiaData?.settingsUrl ?? '';
+
     const [isOpen, setIsOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [view, setView] = useState('chat');
@@ -179,6 +182,12 @@ const ChatSidebar = () => {
             errorTitle = 'Rate Limit Reached';
             errorMessage = 'Too many requests sent in a short period.';
             errorExplanation = 'You have reached your message limit. Please wait a moment before trying again.';
+        } else if (status === 403 && message.toLowerCase().includes('license')) {
+            errorTitle = 'License Not Activated';
+            errorMessage = 'No license key is configured for this site.';
+            errorExplanation = settingsUrl
+                ? <>Please <a href={settingsUrl} style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>open Wally settings</a> to enter your license key.</>
+                : 'Please configure your license key in the Wally settings page.';
         } else if (status === 403) {
             errorTitle = 'Permission Denied';
             errorMessage = 'Your account does not have access to this feature.';
@@ -419,7 +428,21 @@ const ChatSidebar = () => {
             {view === 'chat' && (
                 <>
                     <MessageList messages={messages} loading={loading} onConfirm={handleConfirm} onReject={handleReject} onRetry={handleRetry} onDismissError={handleDismissError} onChipSelect={(chipText) => setInputText(chipText)} />
-                    <MessageInput onSend={sendMessage} disabled={loading || messages.some(m => m.confirmation?.status === 'pending')} value={inputText} onChange={setInputText} isStreaming={loading} onStop={handleStop} placeholder={messages.some(m => m.confirmation?.status === 'pending') ? 'Waiting for confirmation…' : undefined} />
+                    {!hasLicense && (
+                        <div className="mx-4 mb-3 rounded-xl border border-solid border-amber-200 bg-amber-50 p-3.5 text-[13px] text-amber-900">
+                            <div className="flex items-start gap-2.5">
+                                <LuTriangleAlert size={15} className="flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="m-0 font-semibold">License key required</p>
+                                    <p className="m-0 mt-1">
+                                        To start using Wally, add your license key in{' '}
+                                        <a href={settingsUrl} className="underline font-semibold" style={{ color: 'inherit' }}>plugin settings</a>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <MessageInput onSend={sendMessage} disabled={loading || !hasLicense || messages.some(m => m.confirmation?.status === 'pending')} value={inputText} onChange={setInputText} isStreaming={loading} onStop={handleStop} placeholder={!hasLicense ? 'Activate your license to start chatting…' : messages.some(m => m.confirmation?.status === 'pending') ? 'Waiting for confirmation…' : undefined} />
                 </>
             )}
         </div>

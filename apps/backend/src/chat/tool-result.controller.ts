@@ -22,14 +22,17 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiExcludeEndpoint } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 import { RateLimiterGuard } from '../common/guards/rate-limiter.guard.js';
 import { LlmService } from '../llm/llm.service.js';
 import { PromptBuilderService } from '../knowledge/prompt-builder.service.js';
+import { ToolDefinitionsService } from '../tools/tool-definitions.service.js';
 import { MessageBuilderService } from '../common/message-builder.service.js';
 import { WallyLoggerService } from '../common/logger/wally-logger.service.js';
 import { ToolResultRequestDto } from './dto/tool-result.dto.js';
 import type { SiteProfile } from '../knowledge/prompt-builder.service.js';
+import type { WallyConfig } from '../config/configuration.js';
 
 const MAX_HISTORY_CONTENT = 4_000;
 
@@ -40,8 +43,10 @@ export class ToolResultController {
   constructor(
     private readonly llm: LlmService,
     private readonly promptBuilder: PromptBuilderService,
+    private readonly toolDefinitions: ToolDefinitionsService,
     private readonly messageBuilder: MessageBuilderService,
     private readonly logger: WallyLoggerService,
+    private readonly config: ConfigService<WallyConfig>,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -54,13 +59,14 @@ export class ToolResultController {
     @Res() res: Response,
   ): Promise<void> {
     const {
-      model,
       conversation_history,
       site_profile,
       custom_system_prompt,
       tool_results,
       pending_tool_calls,
+      tool_definitions,
     } = body;
+    const model = body.model || this.config.get<string>('defaultModel')!;
 
     // Set up SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
@@ -98,23 +104,44 @@ export class ToolResultController {
         tool_results as Array<{ tool_call_id: string; tool_name: string; result: unknown; is_error?: boolean }>,
       );
 
+      // Resolve dynamic tools from the WP plugin (single source of truth).
+      const dynamicTools = this.toolDefinitions.parseDynamicTools(tool_definitions);
+      let formattedTools: unknown[] | undefined;
+      if (dynamicTools) {
+        const models = this.config.get<WallyConfig['models']>('models') ?? {};
+        const modelConfig = models[model];
+        if (modelConfig) {
+          formattedTools = this.toolDefinitions.getDynamicToolsForProvider(
+            modelConfig.provider,
+            dynamicTools,
+          ) as unknown[];
+        }
+      }
+
       const response = await this.llm.sendToLLM({
         model,
         systemPrompt,
         messages: messages as Array<{ role: 'user' | 'assistant'; content: string | unknown[] }>,
         res,
+        tools: formattedTools,
       });
 
       // Continue tool-use loop if the LLM wants more tools
       const toolUseBlocks = response.content.filter((b) => b.type === 'tool_use');
+      const toolSource = dynamicTools ?? this.toolDefinitions.getAllTools();
+
       for (const toolCall of toolUseBlocks) {
+        const toolDef = toolSource.find((t) => t.name === toolCall.name);
+        const requiresConfirmation = toolDef?.requires_confirmation ?? false;
+
         res.write(
           `data: ${JSON.stringify({
             type: 'tool_call',
             tool_call_id: toolCall.id,
             tool: toolCall.name,
             input: toolCall.input,
-            status: 'execute',
+            requires_confirmation: requiresConfirmation,
+            status: requiresConfirmation ? 'pending_confirmation' : 'execute',
           })}\n\n`,
         );
       }

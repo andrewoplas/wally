@@ -32,8 +32,7 @@ class GetSiteInfo extends ToolInterface {
 	public function get_parameters_schema(): array {
 		return [
 			'type'       => 'object',
-			'properties' => [],
-			'required'   => [],
+			'properties' => (object) [],
 		];
 	}
 
@@ -98,8 +97,7 @@ class GetSiteHealth extends ToolInterface {
 	public function get_parameters_schema(): array {
 		return [
 			'type'       => 'object',
-			'properties' => [],
-			'required'   => [],
+			'properties' => (object) [],
 		];
 	}
 

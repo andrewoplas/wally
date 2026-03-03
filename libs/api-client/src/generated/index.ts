@@ -188,3 +188,69 @@ export const healthControllerCheck = async ( options?: RequestInit): Promise<hea
   
 
 
+export type userControllerGetLicenseResponse200 = {
+  data: void
+  status: 200
+}
+
+export type userControllerGetLicenseResponseSuccess = (userControllerGetLicenseResponse200) & {
+  headers: Headers;
+};
+;
+
+export type userControllerGetLicenseResponse = (userControllerGetLicenseResponseSuccess)
+
+export const getUserControllerGetLicenseUrl = () => {
+
+
+  
+
+  return `/api/v1/user/license`
+}
+
+export const userControllerGetLicense = async ( options?: RequestInit): Promise<userControllerGetLicenseResponse> => {
+  
+  return wallyFetch<userControllerGetLicenseResponse>(getUserControllerGetLicenseUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+export type userControllerDeactivateSiteResponse200 = {
+  data: void
+  status: 200
+}
+
+export type userControllerDeactivateSiteResponseSuccess = (userControllerDeactivateSiteResponse200) & {
+  headers: Headers;
+};
+;
+
+export type userControllerDeactivateSiteResponse = (userControllerDeactivateSiteResponseSuccess)
+
+export const getUserControllerDeactivateSiteUrl = (siteId: string,) => {
+
+
+  
+
+  return `/api/v1/user/sites/${siteId}`
+}
+
+export const userControllerDeactivateSite = async (siteId: string, options?: RequestInit): Promise<userControllerDeactivateSiteResponse> => {
+  
+  return wallyFetch<userControllerDeactivateSiteResponse>(getUserControllerDeactivateSiteUrl(siteId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+  
+
+

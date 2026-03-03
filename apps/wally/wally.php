@@ -21,6 +21,26 @@ define( 'WALLY_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WALLY_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WALLY_PLUGIN_FILE', __FILE__ );
 
+// Load backend URL from .env if present (local dev), otherwise use production default.
+$wally_backend_url = 'https://wally.up.railway.app/api/v1';
+$wally_env_file    = WALLY_PLUGIN_DIR . '.env';
+if ( file_exists( $wally_env_file ) ) {
+    foreach ( file( $wally_env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ) as $line ) {
+        if ( str_starts_with( trim( $line ), '#' ) ) {
+            continue;
+        }
+        if ( str_starts_with( $line, 'BACKEND_URL=' ) ) {
+            $wally_backend_url = substr( $line, strlen( 'BACKEND_URL=' ) );
+            break;
+        }
+    }
+}
+
+print_r('$wally_backend_url');
+print_r($wally_backend_url);
+define( 'WALLY_DEFAULT_BACKEND_URL', $wally_backend_url );
+unset( $wally_backend_url, $wally_env_file );
+
 // Composer autoload
 if ( file_exists( WALLY_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
     require_once WALLY_PLUGIN_DIR . 'vendor/autoload.php';

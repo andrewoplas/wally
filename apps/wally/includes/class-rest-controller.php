@@ -166,6 +166,16 @@ class RestController {
 			);
 		}
 
+		// Check that a license key has been configured before contacting backend.
+		$license_key_enc = get_option( 'wally_license_key', '' );
+		if ( empty( $license_key_enc ) ) {
+			return new \WP_Error(
+				'license_not_configured',
+				'No license key configured. Please activate Wally in the plugin settings.',
+				[ 'status' => 403 ]
+			);
+		}
+
 		$stream_enabled = (bool) get_option( 'wally_stream_responses', true );
 		$stream         = $stream_enabled && (bool) $request->get_param( 'stream' );
 
@@ -247,12 +257,12 @@ class RestController {
 		);
 
 		// 4. Prepare backend connection info.
-		$backend_url      = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
+		$backend_url      = rtrim( WALLY_DEFAULT_BACKEND_URL, '/' );
 		$license_key_enc  = get_option( 'wally_license_key', '' );
 		$license_key      = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
-		$model            = get_option( 'wally_model', 'claude-haiku-4-5' );
-		$site_profile  = SiteScanner::get_profile();
-		$custom_prompt = get_option( 'wally_custom_prompt', '' );
+		$site_profile     = SiteScanner::get_profile();
+		$custom_prompt    = get_option( 'wally_custom_prompt', '' );
+		$tool_definitions = ToolExecutor::instance()->get_tool_definitions();
 
 		// 5. Begin SSE output.
 		$this->start_sse();
@@ -266,10 +276,10 @@ class RestController {
 		$total_token_count = 0;
 
 		$chat_payload = [
-			'model'                => $model,
 			'message'              => $message,
 			'conversation_history' => $conversation_history,
 			'site_profile'         => $site_profile,
+			'tool_definitions'     => $tool_definitions,
 		];
 		if ( $custom_prompt ) {
 			$chat_payload['custom_system_prompt'] = $custom_prompt;
@@ -342,9 +352,9 @@ class RestController {
 			$result = $this->stream_backend_sse(
 				$backend_url . '/tool-result',
 				[
-					'model'                => $model,
 					'conversation_history' => $history_with_current,
 					'site_profile'         => $site_profile,
+					'tool_definitions'     => $tool_definitions,
 					'tool_results'         => $tool_results,
 					'pending_tool_calls'   => $tool_calls,
 				],
@@ -437,18 +447,18 @@ class RestController {
 			'content'         => $message,
 		]);
 
-		$backend_url      = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
+		$backend_url      = rtrim( WALLY_DEFAULT_BACKEND_URL, '/' );
 		$license_key_enc  = get_option( 'wally_license_key', '' );
 		$license_key      = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
-		$model            = get_option( 'wally_model', 'claude-haiku-4-5' );
 		$site_profile     = SiteScanner::get_profile();
 		$custom_prompt    = get_option( 'wally_custom_prompt', '' );
+		$tool_definitions = ToolExecutor::instance()->get_tool_definitions();
 
 		$chat_payload = [
-			'model'                => $model,
 			'message'              => $message,
 			'conversation_history' => $conversation_history,
 			'site_profile'         => $site_profile,
+			'tool_definitions'     => $tool_definitions,
 		];
 		if ( $custom_prompt ) {
 			$chat_payload['custom_system_prompt'] = $custom_prompt;
@@ -481,9 +491,9 @@ class RestController {
 
 		if ( ! empty( $tool_calls ) ) {
 			$result = $this->process_tool_calls_json(
-				$tool_calls, $user_id, $conversation_id, $backend_url, $license_key, $model,
+				$tool_calls, $user_id, $conversation_id, $backend_url, $license_key,
 				array_merge( $conversation_history, [ [ 'role' => 'user', 'content' => $message ] ] ),
-				$site_profile, $reply_text
+				$site_profile, $tool_definitions, $reply_text
 			);
 			$reply_text         = $result['reply'];
 			$confirmation       = $result['confirmation'];
@@ -518,8 +528,8 @@ class RestController {
 	 */
 	private function process_tool_calls_json(
 		array $tool_calls, int $user_id, int $conversation_id,
-		string $backend_url, string $license_key, string $model,
-		array $conversation_history, array $site_profile, string $accumulated_text
+		string $backend_url, string $license_key,
+		array $conversation_history, array $site_profile, array $tool_definitions, string $accumulated_text
 	): array {
 		$executor          = ToolExecutor::instance();
 		$confirmation      = null;
@@ -556,9 +566,9 @@ class RestController {
 			}
 
 			$response = $this->backend_request_buffered( $backend_url . '/tool-result', [
-				'model'                => $model,
 				'conversation_history' => $conversation_history,
 				'site_profile'         => $site_profile,
+				'tool_definitions'     => $tool_definitions,
 				'tool_results'         => $tool_results,
 				'pending_tool_calls'   => $tool_calls,
 			], $license_key );
@@ -683,6 +693,7 @@ class RestController {
 
 		$site_id          = md5( get_site_url() );
 		$buffer           = '';
+		$raw_body         = '';
 		$accumulated_text = '';
 		$tool_calls       = [];
 		$token_usage      = [ 'input_tokens' => 0, 'output_tokens' => 0 ];
@@ -707,8 +718,10 @@ class RestController {
 			],
 			CURLOPT_TIMEOUT        => self::BACKEND_TIMEOUT,
 			CURLOPT_RETURNTRANSFER => false,
-			CURLOPT_WRITEFUNCTION  => function ( $ch, $chunk ) use ( &$buffer, &$accumulated_text, &$tool_calls, &$token_usage, $controller ) {
-				$buffer .= $chunk;
+			CURLOPT_WRITEFUNCTION  => function ( $ch, $chunk ) use ( &$buffer, &$raw_body, &$accumulated_text, &$tool_calls, &$token_usage, $controller ) {
+				// Capture raw body for error diagnostics.
+				$raw_body .= $chunk;
+				$buffer   .= $chunk;
 
 				// Process complete SSE lines (terminated by \n).
 				while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
@@ -764,11 +777,14 @@ class RestController {
 		curl_close( $ch );
 
 		if ( $curl_error ) {
+			error_log( sprintf( '[Wally] cURL error calling %s: %s', $url, $curl_error ) );
 			return new \WP_Error( 'backend_curl_error', $curl_error );
 		}
 
 		if ( $http_code >= 400 ) {
-			return new \WP_Error( 'backend_error', "Backend returned HTTP {$http_code}" );
+			$detail = mb_substr( $raw_body, 0, 1000 );
+			error_log( sprintf( '[Wally] Backend %s returned HTTP %d: %s', $url, $http_code, $detail ) );
+			return new \WP_Error( 'backend_error', "Backend returned HTTP {$http_code}: {$detail}" );
 		}
 
 		return [
@@ -802,6 +818,7 @@ class RestController {
 		]);
 
 		if ( is_wp_error( $response ) ) {
+			error_log( sprintf( '[Wally] wp_remote_post to %s failed: %s', $url, $response->get_error_message() ) );
 			return $response;
 		}
 
@@ -809,8 +826,10 @@ class RestController {
 		$body = wp_remote_retrieve_body( $response );
 
 		if ( $code >= 400 ) {
+			$detail = mb_substr( $body, 0, 1000 );
+			error_log( sprintf( '[Wally] Backend %s returned HTTP %d: %s', $url, $code, $detail ) );
 			$decoded   = json_decode( $body, true );
-			$error_msg = $decoded['error'] ?? "Backend returned HTTP {$code}";
+			$error_msg = $decoded['message'] ?? $decoded['error'] ?? "Backend returned HTTP {$code}";
 			return new \WP_Error( 'backend_error', $error_msg );
 		}
 
@@ -886,15 +905,13 @@ class RestController {
 			'content' => mb_substr( $m->content, 0, 600 ),
 		], $messages );
 
-		$backend_url     = rtrim( get_option( 'wally_backend_url', 'http://localhost:3100/api/v1' ), '/' );
+		$backend_url     = rtrim( WALLY_DEFAULT_BACKEND_URL, '/' );
 		$license_key_enc = get_option( 'wally_license_key', '' );
 		$license_key     = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
-		$model           = get_option( 'wally_model', 'claude-haiku-4-5' );
 
 		$response = $this->backend_request_buffered(
 			$backend_url . '/chat',
 			[
-				'model'                => $model,
 				'message'              => 'Write a concise title (4-6 words) for this conversation that captures what the user was trying to accomplish. Reply with ONLY the title — no quotes, no trailing punctuation, no explanation.',
 				'conversation_history' => $history,
 				'site_profile'         => [],

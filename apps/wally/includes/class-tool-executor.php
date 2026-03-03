@@ -75,6 +75,29 @@ class ToolExecutor {
 	}
 
 	/**
+	 * Export all registered tool definitions for the backend.
+	 *
+	 * Returns an array of tool schemas in the format consumed by the
+	 * NestJS backend's ToolDefinitionsService. This makes the PHP plugin
+	 * the single source of truth for tool definitions.
+	 *
+	 * @return array[] Array of tool definition arrays.
+	 */
+	public function get_tool_definitions(): array {
+		$definitions = [];
+		foreach ( $this->tools as $tool ) {
+			$definitions[] = [
+				'name'                  => $tool->get_name(),
+				'description'           => $tool->get_description(),
+				'category'              => $tool->get_category(),
+				'requires_confirmation' => $tool->requires_confirmation(),
+				'parameters'            => $tool->get_parameters_schema(),
+			];
+		}
+		return $definitions;
+	}
+
+	/**
 	 * Execute a tool by name with full validation pipeline.
 	 *
 	 * Pipeline: find tool → validate input → check capability → check

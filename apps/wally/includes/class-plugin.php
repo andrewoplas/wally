@@ -58,47 +58,33 @@ class Plugin {
     }
 
     /**
-     * Register all tools with the ToolExecutor.
+     * Register all tools with the ToolExecutor via auto-discovery.
+     *
+     * Scans the tools directory for PHP class files, loads them, and
+     * registers every non-abstract ToolInterface subclass whose
+     * can_register() method returns true. This allows new tools to be
+     * added by simply creating a class file — no manual registration needed.
      */
     private function register_tools() {
-        $executor = ToolExecutor::instance();
+        $executor  = ToolExecutor::instance();
+        $tools_dir = WALLY_PLUGIN_DIR . 'includes/tools/';
 
-        // Content tools.
-        $executor->register_tool( new Tools\ListPosts() );
-        $executor->register_tool( new Tools\GetPost() );
-        $executor->register_tool( new Tools\CreatePost() );
-        $executor->register_tool( new Tools\UpdatePost() );
-        $executor->register_tool( new Tools\DeletePost() );
+        // Load all tool class files so their classes become available.
+        foreach ( glob( $tools_dir . 'class-*-tools.php' ) as $file ) {
+            require_once $file;
+        }
 
-        // Taxonomy tools.
-        $executor->register_tool( new Tools\ListCategories() );
-        $executor->register_tool( new Tools\ListTags() );
-        $executor->register_tool( new Tools\CreateCategory() );
-        $executor->register_tool( new Tools\CreateTag() );
-
-        // Site tools.
-        $executor->register_tool( new Tools\GetSiteInfo() );
-        $executor->register_tool( new Tools\GetSiteHealth() );
-        $executor->register_tool( new Tools\GetOption() );
-        $executor->register_tool( new Tools\UpdateOption() );
-
-        // Plugin management tools.
-        $executor->register_tool( new Tools\ListPlugins() );
-        $executor->register_tool( new Tools\InstallPlugin() );
-        $executor->register_tool( new Tools\ActivatePlugin() );
-        $executor->register_tool( new Tools\DeactivatePlugin() );
-        $executor->register_tool( new Tools\UpdatePlugin() );
-        $executor->register_tool( new Tools\DeletePlugin() );
-
-        // Search tools.
-        $executor->register_tool( new Tools\SearchContent() );
-        $executor->register_tool( new Tools\ReplaceContent() );
-
-        // Elementor tools.
-        $executor->register_tool( new Tools\ElementorSearchContent() );
-        $executor->register_tool( new Tools\ElementorReplaceContent() );
-        $executor->register_tool( new Tools\ElementorGetPageStructure() );
-        $executor->register_tool( new Tools\ElementorClearCssCache() );
+        // Find and register every concrete ToolInterface implementation.
+        foreach ( get_declared_classes() as $class_name ) {
+            if (
+                str_starts_with( $class_name, 'Wally\\Tools\\' ) &&
+                is_subclass_of( $class_name, Tools\ToolInterface::class ) &&
+                ! ( new \ReflectionClass( $class_name ) )->isAbstract() &&
+                $class_name::can_register()
+            ) {
+                $executor->register_tool( new $class_name() );
+            }
+        }
     }
 
     public function enqueue_admin_assets( $hook ) {
@@ -144,6 +130,8 @@ class Plugin {
             'userRole'        => $user_role,
             'userPermissions' => Permissions::get_allowed_actions(),
             'isAdmin'         => current_user_can( 'manage_options' ),
+            'hasLicense'      => ! empty( get_option( 'wally_license_key', '' ) ),
+            'settingsUrl'     => admin_url( 'admin.php?page=wally' ),
         ]);
     }
 

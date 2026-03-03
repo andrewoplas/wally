@@ -22,6 +22,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiExcludeEndpoint } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 import { RateLimiterGuard } from '../common/guards/rate-limiter.guard.js';
 import { LlmService } from '../llm/llm.service.js';
@@ -30,6 +31,7 @@ import { ToolDefinitionsService } from '../tools/tool-definitions.service.js';
 import { WallyLoggerService } from '../common/logger/wally-logger.service.js';
 import { ChatRequestDto } from './dto/chat.dto.js';
 import type { SiteProfile } from '../knowledge/prompt-builder.service.js';
+import type { WallyConfig } from '../config/configuration.js';
 
 const MAX_HISTORY_CONTENT = 4_000; // chars per history entry
 
@@ -42,6 +44,7 @@ export class ChatController {
     private readonly promptBuilder: PromptBuilderService,
     private readonly toolDefinitions: ToolDefinitionsService,
     private readonly logger: WallyLoggerService,
+    private readonly config: ConfigService<WallyConfig>,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -53,8 +56,9 @@ export class ChatController {
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    const { model, message, conversation_history, site_profile, custom_system_prompt } =
+    const { message, conversation_history, site_profile, tool_definitions, custom_system_prompt } =
       body;
+    const model = body.model || this.config.get<string>('defaultModel')!;
 
     // Set up SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
@@ -91,19 +95,35 @@ export class ChatController {
       }
       messages.push({ role: 'user', content: message });
 
+      // Resolve dynamic tools from the WP plugin (single source of truth).
+      // Falls back to hardcoded definitions when the plugin doesn't send any.
+      const dynamicTools = this.toolDefinitions.parseDynamicTools(tool_definitions);
+      let formattedTools: unknown[] | undefined;
+      if (dynamicTools) {
+        const models = this.config.get<WallyConfig['models']>('models') ?? {};
+        const modelConfig = models[model];
+        if (modelConfig) {
+          formattedTools = this.toolDefinitions.getDynamicToolsForProvider(
+            modelConfig.provider,
+            dynamicTools,
+          ) as unknown[];
+        }
+      }
+
       const response = await this.llm.sendToLLM({
         model,
         systemPrompt,
         messages,
         res,
+        tools: formattedTools,
       });
 
       // Emit tool_call events for each tool the LLM wants to use
       const toolUseBlocks = response.content.filter((b) => b.type === 'tool_use');
-      const allTools = this.toolDefinitions.getAllTools();
+      const toolSource = dynamicTools ?? this.toolDefinitions.getAllTools();
 
       for (const toolCall of toolUseBlocks) {
-        const toolDef = allTools.find((t) => t.name === toolCall.name);
+        const toolDef = toolSource.find((t) => t.name === toolCall.name);
         const requiresConfirmation = toolDef?.requires_confirmation ?? false;
 
         res.write(
