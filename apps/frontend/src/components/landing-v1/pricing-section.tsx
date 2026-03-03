@@ -2,8 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-import { AnimatedSection, StaggerContainer, StaggerItem } from './shared/animated-section';
-import { Container } from './shared/container';
+import { AnimatedSection, StaggerContainer, StaggerItem } from '../landing/shared/animated-section';
+import { Container } from '../landing/shared/container';
 import { Button } from '@/components/ui/button';
 import { useCountUp } from '@/lib/use-count-up';
 import { cn } from '@/lib/utils';
