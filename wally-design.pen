@@ -24473,6 +24473,2261 @@
             },
             {
               "type": "frame",
+              "id": "fcxBZ",
+              "name": "Section 8 - Use Cases",
+              "width": "fill_container",
+              "fill": "#F8F7FF",
+              "layout": "vertical",
+              "gap": 56,
+              "padding": [
+                96,
+                120
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qvP20",
+                  "name": "sectionHeader",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "TYXCZ",
+                      "name": "badge",
+                      "fill": "#8B5CF620",
+                      "cornerRadius": 100,
+                      "gap": 6,
+                      "padding": [
+                        8,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "mvQ03",
+                          "name": "badgeIcon",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "sparkles",
+                          "iconFontFamily": "lucide",
+                          "fill": "#8B5CF6"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Y4BZy",
+                          "name": "badgeText",
+                          "fill": "#8B5CF6",
+                          "content": "What You Can Do",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "WJh1t",
+                      "name": "h2",
+                      "fill": "#18181B",
+                      "textGrowth": "fixed-width",
+                      "width": 900,
+                      "content": "\"I didn't know I could do that just by asking.\"",
+                      "lineHeight": 1.15,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 40,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lSP93",
+                      "name": "subtext",
+                      "fill": "#71717A",
+                      "textGrowth": "fixed-width",
+                      "width": 620,
+                      "content": "Real tasks people hand off to Wally every day — in a single message.",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OyueR",
+                  "name": "bentoGrid",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "QHKq8",
+                      "name": "row1",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ui3uH",
+                          "name": "Card: Bulk Replace",
+                          "width": 780,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 20,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E4E4E7"
+                          },
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000008",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 24,
+                            "spread": -4
+                          },
+                          "layout": "vertical",
+                          "padding": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ILmgM",
+                              "name": "cardHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "WXBxb",
+                                  "name": "iconWrap",
+                                  "width": 52,
+                                  "height": 52,
+                                  "fill": "#F3F0FF",
+                                  "cornerRadius": 14,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "VlkzD",
+                                      "name": "lc1iwIcon",
+                                      "width": 24,
+                                      "height": 24,
+                                      "iconFontName": "search",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#8B5CF6"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "n6gFX",
+                                  "name": "cat",
+                                  "fill": "#F3F0FF",
+                                  "cornerRadius": 100,
+                                  "gap": 5,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "EBj5g",
+                                      "name": "lc1catIcon",
+                                      "width": 11,
+                                      "height": 11,
+                                      "iconFontName": "search",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#8B5CF6"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "lhcig",
+                                      "name": "lc1catText",
+                                      "fill": "#7C3AED",
+                                      "content": "Search & Replace",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "qYrz7",
+                              "name": "lc1title",
+                              "fill": "#18181B",
+                              "content": "Update every post in seconds",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Plus Jakarta Sans",
+                              "fontSize": 24,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Jz5f0",
+                              "name": "chatFrame1",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 14,
+                              "stroke": {
+                                "align": "outside",
+                                "thickness": 1,
+                                "fill": "#00000010"
+                              },
+                              "effect": {
+                                "type": "shadow",
+                                "shadowType": "outer",
+                                "color": "#00000010",
+                                "offset": {
+                                  "x": 0,
+                                  "y": 4
+                                },
+                                "blur": 16
+                              },
+                              "layout": "vertical",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "fWyJj",
+                                  "name": "hdr1",
+                                  "width": "fill_container",
+                                  "height": 38,
+                                  "stroke": {
+                                    "align": "inside",
+                                    "thickness": {
+                                      "bottom": 1
+                                    },
+                                    "fill": "#E4E4E7"
+                                  },
+                                  "padding": [
+                                    0,
+                                    14
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "UP5vG",
+                                      "name": "logo1",
+                                      "gap": 6,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "P6Zau",
+                                          "name": "logoDot1",
+                                          "width": 18,
+                                          "height": 18,
+                                          "fill": "#8B5CF6",
+                                          "cornerRadius": 5,
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "rITMj",
+                                              "name": "logoW1",
+                                              "fill": "#FFFFFF",
+                                              "content": "W",
+                                              "fontFamily": "Plus Jakarta Sans",
+                                              "fontSize": 9,
+                                              "fontWeight": "800"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "f4LK2",
+                                          "name": "logoName1",
+                                          "fill": "#18181B",
+                                          "content": "Wally",
+                                          "fontFamily": "Plus Jakarta Sans",
+                                          "fontSize": 11,
+                                          "fontWeight": "700"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "icon_font",
+                                      "id": "as4ag",
+                                      "name": "dots1",
+                                      "width": 14,
+                                      "height": 14,
+                                      "iconFontName": "ellipsis-vertical",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#A1A1AA"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "vguye",
+                                  "name": "chat",
+                                  "width": "fill_container",
+                                  "fill": "#F8F7FF",
+                                  "cornerRadius": [
+                                    0,
+                                    0,
+                                    14,
+                                    14
+                                  ],
+                                  "layout": "vertical",
+                                  "gap": 10,
+                                  "padding": [
+                                    12,
+                                    14,
+                                    14,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "IWEJz",
+                                      "name": "userRow",
+                                      "width": "fill_container",
+                                      "justifyContent": "end",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "lWsTA",
+                                          "name": "userBubble",
+                                          "fill": "#8B5CF6",
+                                          "cornerRadius": [
+                                            14,
+                                            14,
+                                            4,
+                                            14
+                                          ],
+                                          "layout": "vertical",
+                                          "padding": [
+                                            10,
+                                            16
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "j8OwC",
+                                              "name": "u1txt",
+                                              "fill": "#FFFFFF",
+                                              "textGrowth": "fixed-width",
+                                              "width": 480,
+                                              "content": "Replace 'Summer Sale' with 'Back to School Sale' across all published posts",
+                                              "lineHeight": 1.5,
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "vXbDL",
+                                      "name": "assistRow",
+                                      "width": "fill_container",
+                                      "gap": 10,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "stkjb",
+                                          "name": "av",
+                                          "width": 26,
+                                          "height": 26,
+                                          "fill": "#8B5CF6",
+                                          "cornerRadius": 100,
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "icon_font",
+                                              "id": "amUtz",
+                                              "name": "a1avIcon",
+                                              "width": 12,
+                                              "height": 12,
+                                              "iconFontName": "sparkles",
+                                              "iconFontFamily": "lucide",
+                                              "fill": "#FFFFFF"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "oHcYc",
+                                          "name": "assistWrap",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 8,
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "seTdU",
+                                              "name": "toolChip",
+                                              "width": "fill_container",
+                                              "fill": "#FFFFFF",
+                                              "cornerRadius": 8,
+                                              "stroke": {
+                                                "align": "inside",
+                                                "thickness": 1,
+                                                "fill": "#E4E4E7"
+                                              },
+                                              "gap": 8,
+                                              "padding": [
+                                                8,
+                                                12
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "YRrXM",
+                                                  "name": "tcIconBox",
+                                                  "width": 22,
+                                                  "height": 22,
+                                                  "fill": "#8B5CF615",
+                                                  "cornerRadius": 6,
+                                                  "justifyContent": "center",
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon_font",
+                                                      "id": "C3M5M",
+                                                      "name": "tc1icn",
+                                                      "width": 11,
+                                                      "height": 11,
+                                                      "iconFontName": "replace-all",
+                                                      "iconFontFamily": "lucide",
+                                                      "fill": "#8B5CF6"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "text",
+                                                  "id": "0QgKV",
+                                                  "name": "tc1lbl",
+                                                  "fill": "#52525B",
+                                                  "content": "replace_content — 203 posts updated",
+                                                  "fontFamily": "Inter",
+                                                  "fontSize": 12,
+                                                  "fontWeight": "500"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "3vlUn",
+                                              "name": "reply",
+                                              "width": "fill_container",
+                                              "fill": "#FFFFFF",
+                                              "cornerRadius": [
+                                                4,
+                                                12,
+                                                12,
+                                                12
+                                              ],
+                                              "stroke": {
+                                                "align": "inside",
+                                                "thickness": 1,
+                                                "fill": "#E4E4E7"
+                                              },
+                                              "layout": "vertical",
+                                              "padding": [
+                                                10,
+                                                14
+                                              ],
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "Hh7S1",
+                                                  "name": "a1replyTxt",
+                                                  "fill": "#3F3F46",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": 500,
+                                                  "content": "Done! 203 posts updated in 4 seconds. Every mention of 'Summer Sale' is now 'Back to School Sale'.",
+                                                  "lineHeight": 1.5,
+                                                  "fontFamily": "Inter",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "4fDaU",
+                                  "name": "inp1",
+                                  "width": "fill_container",
+                                  "height": 40,
+                                  "stroke": {
+                                    "align": "inside",
+                                    "thickness": {
+                                      "top": 1
+                                    },
+                                    "fill": "#E4E4E7"
+                                  },
+                                  "gap": 8,
+                                  "padding": [
+                                    0,
+                                    12
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "nKRWe",
+                                      "name": "inpTxt1",
+                                      "fill": "#A1A1AA",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Ask Wally anything...",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 10,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "aLxCV",
+                                      "name": "sendBtn1",
+                                      "width": 22,
+                                      "height": 22,
+                                      "fill": "#8B5CF6",
+                                      "cornerRadius": 100,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon_font",
+                                          "id": "U9Xuz",
+                                          "name": "sendIcon1",
+                                          "width": 12,
+                                          "height": 12,
+                                          "iconFontName": "arrow-up",
+                                          "iconFontFamily": "lucide",
+                                          "fill": "#FFFFFF"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "XQTG6",
+                              "name": "resultRow",
+                              "gap": 6,
+                              "padding": [
+                                20,
+                                0,
+                                0,
+                                0
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "QHTO0",
+                                  "name": "resultIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "circle-check-big",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#059669"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "J56Rk",
+                                  "name": "resultTxt",
+                                  "fill": "#059669",
+                                  "content": "203 posts · 4 seconds",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QEwhE",
+                          "name": "Card: Plugin Audit",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 20,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E4E4E7"
+                          },
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000008",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 24,
+                            "spread": -4
+                          },
+                          "layout": "vertical",
+                          "padding": 32,
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "pV6Wu",
+                              "name": "cardHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "Lenny",
+                                  "name": "iconWrap",
+                                  "width": 52,
+                                  "height": 52,
+                                  "fill": "#EFF6FF",
+                                  "cornerRadius": 14,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "l6NFP",
+                                      "name": "mc1icon",
+                                      "width": 24,
+                                      "height": 24,
+                                      "iconFontName": "shield-alert",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#3B82F6"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "48PXM",
+                                  "name": "cat",
+                                  "fill": "#EFF6FF",
+                                  "cornerRadius": 100,
+                                  "gap": 5,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "VCkhf",
+                                      "name": "mc1catIcon",
+                                      "width": 11,
+                                      "height": 11,
+                                      "iconFontName": "package",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#3B82F6"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "omUXK",
+                                      "name": "mc1catTxt",
+                                      "fill": "#1D4ED8",
+                                      "content": "Plugins",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "qJLJz",
+                              "name": "mc1title",
+                              "fill": "#18181B",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Find every outdated plugin in one ask",
+                              "lineHeight": 1.25,
+                              "fontFamily": "Plus Jakarta Sans",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Oe418",
+                              "name": "mc1desc",
+                              "fill": "#71717A",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "\"List all plugins that haven't been updated in over 6 months\"",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal",
+                              "fontStyle": "italic"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "yXhIy",
+                              "name": "result",
+                              "gap": 6,
+                              "padding": [
+                                20,
+                                0,
+                                0,
+                                0
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "7klAo",
+                                  "name": "mc1rIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "circle-check-big",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#3B82F6"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "rpACr",
+                                  "name": "mc1rTxt",
+                                  "fill": "#1D4ED8",
+                                  "content": "14 plugins flagged for review",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "8B81x",
+                      "name": "row2",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "BLkxW",
+                          "name": "Card: Orphaned Posts",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 20,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E4E4E7"
+                          },
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000008",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 24,
+                            "spread": -4
+                          },
+                          "layout": "vertical",
+                          "padding": 32,
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "BZ04N",
+                              "name": "cardHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "9vlUc",
+                                  "name": "iconWrap",
+                                  "width": 52,
+                                  "height": 52,
+                                  "fill": "#F0FDF4",
+                                  "cornerRadius": 14,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "tt3yu",
+                                      "name": "mc2icon",
+                                      "width": 24,
+                                      "height": 24,
+                                      "iconFontName": "user-x",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#22C55E"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "0yIl7",
+                                  "name": "cat",
+                                  "fill": "#F0FDF4",
+                                  "cornerRadius": 100,
+                                  "gap": 5,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "2hcW1",
+                                      "name": "mc2catIcon",
+                                      "width": 11,
+                                      "height": 11,
+                                      "iconFontName": "file-text",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#22C55E"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "khheu",
+                                      "name": "mc2catTxt",
+                                      "fill": "#15803D",
+                                      "content": "Content",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "QEZxn",
+                              "name": "mc2title",
+                              "fill": "#18181B",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Reclaim posts from departed authors",
+                              "lineHeight": 1.25,
+                              "fontFamily": "Plus Jakarta Sans",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "jsXCy",
+                              "name": "mc2desc",
+                              "fill": "#71717A",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "\"Find all posts by sarah@example.com and reassign them to me\"",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal",
+                              "fontStyle": "italic"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "uPDtV",
+                              "name": "result",
+                              "gap": 6,
+                              "padding": [
+                                20,
+                                0,
+                                0,
+                                0
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "tTU8r",
+                                  "name": "mc2rIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "circle-check-big",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#22C55E"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "iyPte",
+                                  "name": "mc2rTxt",
+                                  "fill": "#15803D",
+                                  "content": "47 posts reassigned",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ighPn",
+                          "name": "Card: WooCommerce",
+                          "width": 780,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 20,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E4E4E7"
+                          },
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000008",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 24,
+                            "spread": -4
+                          },
+                          "layout": "vertical",
+                          "padding": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "o7WVN",
+                              "name": "cardHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "4DXaE",
+                                  "name": "iconWrap",
+                                  "width": 52,
+                                  "height": 52,
+                                  "fill": "#EFF6FF",
+                                  "cornerRadius": 14,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "JV7ok",
+                                      "name": "lc2iwIcon",
+                                      "width": 24,
+                                      "height": 24,
+                                      "iconFontName": "shopping-cart",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#3B82F6"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "uSF8j",
+                                  "name": "cat",
+                                  "fill": "#EFF6FF",
+                                  "cornerRadius": 100,
+                                  "gap": 5,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "oHCAR",
+                                      "name": "lc2catIcon",
+                                      "width": 11,
+                                      "height": 11,
+                                      "iconFontName": "shopping-cart",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#3B82F6"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "SViOE",
+                                      "name": "lc2catTxt",
+                                      "fill": "#1D4ED8",
+                                      "content": "Plugins",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "yFMFc",
+                              "name": "lc2title",
+                              "fill": "#18181B",
+                              "content": "Set up WooCommerce in one message",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Plus Jakarta Sans",
+                              "fontSize": 24,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "vKAHm",
+                              "name": "chatFrame2",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 14,
+                              "stroke": {
+                                "align": "outside",
+                                "thickness": 1,
+                                "fill": "#00000010"
+                              },
+                              "effect": {
+                                "type": "shadow",
+                                "shadowType": "outer",
+                                "color": "#00000010",
+                                "offset": {
+                                  "x": 0,
+                                  "y": 4
+                                },
+                                "blur": 16
+                              },
+                              "layout": "vertical",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "DF1Gk",
+                                  "name": "hdr2",
+                                  "width": "fill_container",
+                                  "height": 38,
+                                  "stroke": {
+                                    "align": "inside",
+                                    "thickness": {
+                                      "bottom": 1
+                                    },
+                                    "fill": "#E4E4E7"
+                                  },
+                                  "padding": [
+                                    0,
+                                    14
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "mRIjD",
+                                      "name": "logo2",
+                                      "gap": 6,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "V2Iwf",
+                                          "name": "logoDot2",
+                                          "width": 18,
+                                          "height": 18,
+                                          "fill": "#8B5CF6",
+                                          "cornerRadius": 5,
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "3TpQ4",
+                                              "name": "logoW2",
+                                              "fill": "#FFFFFF",
+                                              "content": "W",
+                                              "fontFamily": "Plus Jakarta Sans",
+                                              "fontSize": 9,
+                                              "fontWeight": "800"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "eDrwc",
+                                          "name": "logoName2",
+                                          "fill": "#18181B",
+                                          "content": "Wally",
+                                          "fontFamily": "Plus Jakarta Sans",
+                                          "fontSize": 11,
+                                          "fontWeight": "700"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "icon_font",
+                                      "id": "FI3QY",
+                                      "name": "dots2",
+                                      "width": 14,
+                                      "height": 14,
+                                      "iconFontName": "ellipsis-vertical",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#A1A1AA"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "wqpov",
+                                  "name": "chat",
+                                  "width": "fill_container",
+                                  "fill": "#EFF6FF",
+                                  "cornerRadius": [
+                                    0,
+                                    0,
+                                    14,
+                                    14
+                                  ],
+                                  "layout": "vertical",
+                                  "gap": 10,
+                                  "padding": [
+                                    12,
+                                    14,
+                                    14,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "HHO2i",
+                                      "name": "userRow",
+                                      "width": "fill_container",
+                                      "justifyContent": "end",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "SSfly",
+                                          "name": "userBubble",
+                                          "fill": "#8B5CF6",
+                                          "cornerRadius": [
+                                            14,
+                                            14,
+                                            4,
+                                            14
+                                          ],
+                                          "layout": "vertical",
+                                          "padding": [
+                                            10,
+                                            16
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "nbM4a",
+                                              "name": "u2txt",
+                                              "fill": "#FFFFFF",
+                                              "textGrowth": "fixed-width",
+                                              "width": 380,
+                                              "content": "Install WooCommerce and create product categories for Electronics, Clothing, and Books",
+                                              "lineHeight": 1.5,
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "vmhf7",
+                                      "name": "assistRow",
+                                      "width": "fill_container",
+                                      "gap": 10,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "Km09H",
+                                          "name": "av",
+                                          "width": 26,
+                                          "height": 26,
+                                          "fill": "#8B5CF6",
+                                          "cornerRadius": 100,
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "icon_font",
+                                              "id": "OQRRH",
+                                              "name": "a2avIcon",
+                                              "width": 12,
+                                              "height": 12,
+                                              "iconFontName": "sparkles",
+                                              "iconFontFamily": "lucide",
+                                              "fill": "#FFFFFF"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "VWi4A",
+                                          "name": "assistWrap",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 8,
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "VWRCE",
+                                              "name": "stepsRow",
+                                              "width": "fill_container",
+                                              "gap": 8,
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "xxZHh",
+                                                  "name": "s1",
+                                                  "fill": "#FFFFFF",
+                                                  "cornerRadius": 8,
+                                                  "gap": 6,
+                                                  "padding": [
+                                                    7,
+                                                    10
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon_font",
+                                                      "id": "zmiKt",
+                                                      "name": "s1icon",
+                                                      "width": 11,
+                                                      "height": 11,
+                                                      "iconFontName": "download",
+                                                      "iconFontFamily": "lucide",
+                                                      "fill": "#3B82F6"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "YOH9E",
+                                                      "name": "s1txt",
+                                                      "fill": "#18181B",
+                                                      "content": "install_plugin",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "AKx5g",
+                                                  "name": "s2",
+                                                  "fill": "#FFFFFF",
+                                                  "cornerRadius": 8,
+                                                  "gap": 6,
+                                                  "padding": [
+                                                    7,
+                                                    10
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon_font",
+                                                      "id": "MKpxK",
+                                                      "name": "s2icon",
+                                                      "width": 11,
+                                                      "height": 11,
+                                                      "iconFontName": "power",
+                                                      "iconFontFamily": "lucide",
+                                                      "fill": "#22C55E"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "Esc57",
+                                                      "name": "s2txt",
+                                                      "fill": "#18181B",
+                                                      "content": "activate_plugin",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "9LOmN",
+                                                  "name": "s3",
+                                                  "fill": "#FFFFFF",
+                                                  "cornerRadius": 8,
+                                                  "gap": 6,
+                                                  "padding": [
+                                                    7,
+                                                    10
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon_font",
+                                                      "id": "0j8MB",
+                                                      "name": "s3icon",
+                                                      "width": 11,
+                                                      "height": 11,
+                                                      "iconFontName": "folder-plus",
+                                                      "iconFontFamily": "lucide",
+                                                      "fill": "#F97316"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "HiLcD",
+                                                      "name": "s3txt",
+                                                      "fill": "#18181B",
+                                                      "content": "create_category ×3",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "Nv5Fs",
+                                              "name": "reply",
+                                              "width": "fill_container",
+                                              "fill": "#FFFFFF",
+                                              "cornerRadius": [
+                                                4,
+                                                12,
+                                                12,
+                                                12
+                                              ],
+                                              "layout": "vertical",
+                                              "padding": [
+                                                10,
+                                                14
+                                              ],
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "5QihF",
+                                                  "name": "lc2replyTxt",
+                                                  "fill": "#3F3F46",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Done! WooCommerce is installed and activated. Your 3 product categories — Electronics, Clothing, and Books — are ready to go.",
+                                                  "lineHeight": 1.5,
+                                                  "fontFamily": "Inter",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "LOx4J",
+                                  "name": "inp2",
+                                  "width": "fill_container",
+                                  "height": 40,
+                                  "stroke": {
+                                    "align": "inside",
+                                    "thickness": {
+                                      "top": 1
+                                    },
+                                    "fill": "#E4E4E7"
+                                  },
+                                  "gap": 8,
+                                  "padding": [
+                                    0,
+                                    12
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "PBe9R",
+                                      "name": "inpTxt2",
+                                      "fill": "#A1A1AA",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Ask Wally anything...",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 10,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "dF2bB",
+                                      "name": "sendBtn2",
+                                      "width": 22,
+                                      "height": 22,
+                                      "fill": "#8B5CF6",
+                                      "cornerRadius": 100,
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon_font",
+                                          "id": "8nnjb",
+                                          "name": "sendIcon2",
+                                          "width": 12,
+                                          "height": 12,
+                                          "iconFontName": "arrow-up",
+                                          "iconFontFamily": "lucide",
+                                          "fill": "#FFFFFF"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "kptP5",
+                              "name": "result",
+                              "gap": 6,
+                              "padding": [
+                                20,
+                                0,
+                                0,
+                                0
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "oOEaN",
+                                  "name": "lc2rIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "circle-check-big",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#059669"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "mx6f6",
+                                  "name": "lc2rTxt",
+                                  "fill": "#059669",
+                                  "content": "4 actions · 1 message",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bNK9y",
+                      "name": "row3",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "DKvRE",
+                          "name": "Card: Elementor",
+                          "width": "fill_container",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 20,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E4E4E7"
+                          },
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000008",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 24,
+                            "spread": -4
+                          },
+                          "layout": "vertical",
+                          "padding": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "hO3Ix",
+                              "name": "cardHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "l6IDc",
+                                  "name": "iconWrap",
+                                  "width": 52,
+                                  "height": 52,
+                                  "fill": "#FDF4FF",
+                                  "cornerRadius": 14,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "rj4ef",
+                                      "name": "ec1icon",
+                                      "width": 24,
+                                      "height": 24,
+                                      "iconFontName": "paintbrush",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#D946EF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "if4yz",
+                                  "name": "cat",
+                                  "fill": "#FDF4FF",
+                                  "cornerRadius": 100,
+                                  "gap": 5,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "a50jE",
+                                      "name": "ec1catIcon",
+                                      "width": 11,
+                                      "height": 11,
+                                      "iconFontName": "layers",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#D946EF"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "GDlCG",
+                                      "name": "ec1catTxt",
+                                      "fill": "#A21CAF",
+                                      "content": "Elementor",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "hdixw",
+                              "name": "ec1title",
+                              "fill": "#18181B",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Fix broken styles in seconds",
+                              "lineHeight": 1.25,
+                              "fontFamily": "Plus Jakarta Sans",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "SIg6w",
+                              "name": "chatBubble",
+                              "width": "fill_container",
+                              "padding": [
+                                16,
+                                0,
+                                0,
+                                0
+                              ],
+                              "justifyContent": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "LgMO2",
+                                  "name": "bubble",
+                                  "fill": "#8B5CF6",
+                                  "cornerRadius": [
+                                    12,
+                                    12,
+                                    4,
+                                    12
+                                  ],
+                                  "layout": "vertical",
+                                  "padding": [
+                                    10,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "GsmPu",
+                                      "name": "bub1txt",
+                                      "fill": "#FFFFFF",
+                                      "textGrowth": "fixed-width",
+                                      "width": 200,
+                                      "content": "My Elementor styles look broken after the update, can you fix it?",
+                                      "lineHeight": 1.5,
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "4FIQp",
+                              "name": "ec1desc",
+                              "enabled": false,
+                              "fill": "#71717A",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "\"My Elementor styles look broken after the update, can you fix it?\"",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal",
+                              "fontStyle": "italic"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "tWjv6",
+                              "name": "result",
+                              "gap": 6,
+                              "padding": [
+                                20,
+                                0,
+                                0,
+                                0
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "GEYsr",
+                                  "name": "ec1rIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "circle-check-big",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#D946EF"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "zUwia",
+                                  "name": "ec1rTxt",
+                                  "fill": "#A21CAF",
+                                  "content": "CSS cache cleared · styles restored",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "2iMIZ",
+                          "name": "Card: ACF",
+                          "width": "fill_container",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 20,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E4E4E7"
+                          },
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000008",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 24,
+                            "spread": -4
+                          },
+                          "layout": "vertical",
+                          "padding": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "8BhDZ",
+                              "name": "cardHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "gzV2m",
+                                  "name": "iconWrap",
+                                  "width": 52,
+                                  "height": 52,
+                                  "fill": "#FFF7ED",
+                                  "cornerRadius": 14,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "zLc2R",
+                                      "name": "ec2icon",
+                                      "width": 24,
+                                      "height": 24,
+                                      "iconFontName": "database",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#F97316"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "XAVPs",
+                                  "name": "cat",
+                                  "fill": "#FFF7ED",
+                                  "cornerRadius": 100,
+                                  "gap": 5,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "obE1r",
+                                      "name": "ec2catIcon",
+                                      "width": 11,
+                                      "height": 11,
+                                      "iconFontName": "sliders-horizontal",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#F97316"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "PSWi8",
+                                      "name": "ec2catTxt",
+                                      "fill": "#C2410C",
+                                      "content": "ACF",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "kGSNi",
+                              "name": "ec2title",
+                              "fill": "#18181B",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Bulk-update custom fields at scale",
+                              "lineHeight": 1.25,
+                              "fontFamily": "Plus Jakarta Sans",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "aed7d",
+                              "name": "chatBubble",
+                              "width": "fill_container",
+                              "padding": [
+                                16,
+                                0,
+                                0,
+                                0
+                              ],
+                              "justifyContent": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "jq07X",
+                                  "name": "bubble",
+                                  "fill": "#8B5CF6",
+                                  "cornerRadius": [
+                                    12,
+                                    12,
+                                    4,
+                                    12
+                                  ],
+                                  "layout": "vertical",
+                                  "padding": [
+                                    10,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "3f0Qd",
+                                      "name": "bub2txt",
+                                      "fill": "#FFFFFF",
+                                      "textGrowth": "fixed-width",
+                                      "width": 190,
+                                      "content": "Set 'office_location' to 'Remote' on all Staff posts",
+                                      "lineHeight": 1.5,
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "NkrLL",
+                              "name": "ec2desc",
+                              "enabled": false,
+                              "fill": "#71717A",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "\"Set the 'office_location' ACF field to 'Remote' on all Staff posts\"",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal",
+                              "fontStyle": "italic"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "4XT11",
+                              "name": "result",
+                              "gap": 6,
+                              "padding": [
+                                20,
+                                0,
+                                0,
+                                0
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "DBXjc",
+                                  "name": "ec2rIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "circle-check-big",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#F97316"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "lvLA6",
+                                  "name": "ec2rTxt",
+                                  "fill": "#C2410C",
+                                  "content": "32 Staff posts updated",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JxNHs",
+                          "name": "Card: Site Health",
+                          "width": "fill_container",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 20,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E4E4E7"
+                          },
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000008",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 24,
+                            "spread": -4
+                          },
+                          "layout": "vertical",
+                          "padding": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "l7tCn",
+                              "name": "cardHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "pBuIa",
+                                  "name": "iconWrap",
+                                  "width": 52,
+                                  "height": 52,
+                                  "fill": "#FFFBEB",
+                                  "cornerRadius": 14,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "COs6y",
+                                      "name": "ec3icon",
+                                      "width": 24,
+                                      "height": 24,
+                                      "iconFontName": "activity",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#F59E0B"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "cp8UC",
+                                  "name": "cat",
+                                  "fill": "#FFFBEB",
+                                  "cornerRadius": 100,
+                                  "gap": 5,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "D9zwF",
+                                      "name": "ec3catIcon",
+                                      "width": 11,
+                                      "height": 11,
+                                      "iconFontName": "zap",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "#F59E0B"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "BQ3i5",
+                                      "name": "ec3catTxt",
+                                      "fill": "#B45309",
+                                      "content": "Site & Health",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "5Pk5B",
+                              "name": "ec3title",
+                              "fill": "#18181B",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Diagnose slow load times instantly",
+                              "lineHeight": 1.25,
+                              "fontFamily": "Plus Jakarta Sans",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "0WcG0",
+                              "name": "chatBubble",
+                              "width": "fill_container",
+                              "padding": [
+                                16,
+                                0,
+                                0,
+                                0
+                              ],
+                              "justifyContent": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "b7alM",
+                                  "name": "bubble",
+                                  "fill": "#8B5CF6",
+                                  "cornerRadius": [
+                                    12,
+                                    12,
+                                    4,
+                                    12
+                                  ],
+                                  "layout": "vertical",
+                                  "padding": [
+                                    10,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "9xoXf",
+                                      "name": "bub3txt",
+                                      "fill": "#FFFFFF",
+                                      "textGrowth": "fixed-width",
+                                      "width": 200,
+                                      "content": "My site feels slow lately. Can you check what's affecting performance?",
+                                      "lineHeight": 1.5,
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "GUxd4",
+                              "name": "ec3desc",
+                              "enabled": false,
+                              "fill": "#71717A",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "\"My site feels slow lately. Can you check what's affecting performance?\"",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal",
+                              "fontStyle": "italic"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "YjekO",
+                              "name": "result",
+                              "gap": 6,
+                              "padding": [
+                                20,
+                                0,
+                                0,
+                                0
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "5sSRz",
+                                  "name": "ec3rIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "circle-check-big",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#F59E0B"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "zBLAs",
+                                  "name": "ec3rTxt",
+                                  "fill": "#B45309",
+                                  "content": "6 performance issues found",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LXDmI",
+                  "name": "statStrip",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E4E4E7"
+                  },
+                  "padding": [
+                    24,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "xfyca",
+                      "name": "stat1",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        0,
+                        48
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "dHEoX",
+                          "name": "st1num",
+                          "fill": "#18181B",
+                          "content": "40+",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 32,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "yGX6G",
+                          "name": "st1lbl",
+                          "fill": "#71717A",
+                          "content": "WordPress tools",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GlcQm",
+                      "name": "div",
+                      "width": 1,
+                      "height": 44,
+                      "fill": "#E4E4E7"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "6FkZw",
+                      "name": "stat2",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        0,
+                        48
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pNiQb",
+                          "name": "st2num",
+                          "fill": "#18181B",
+                          "content": "7",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 32,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "18HRv",
+                          "name": "st2lbl",
+                          "fill": "#71717A",
+                          "content": "tool categories",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "0QmPQ",
+                      "name": "div2",
+                      "width": 1,
+                      "height": 44,
+                      "fill": "#E4E4E7"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uQCnQ",
+                      "name": "stat3",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        0,
+                        48
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "4oe7m",
+                          "name": "st3num",
+                          "fill": "#8B5CF6",
+                          "content": "5min",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 28,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "NPGSc",
+                          "name": "st3lbl",
+                          "fill": "#71717A",
+                          "content": "avg time saved per task",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "JnLiV",
               "name": "Section 9 - Trust",
               "width": "fill_container",
