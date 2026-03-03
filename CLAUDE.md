@@ -113,6 +113,110 @@ Copy `apps/backend/.env.example` to `apps/backend/.env.local` and fill in API ke
 - **Confirmation flow**: Destructive WordPress actions must go through `ConfirmAction.jsx` before execution
 - **Audit logging**: All executed actions are logged via `\Wally\AuditLog`
 
+## Adding New Tools
+
+The plugin is the **single source of truth** for all tools. The backend discovers them dynamically — no backend changes are needed when adding a new tool.
+
+### How It Works
+
+1. Each tool is a PHP class in `apps/wally/includes/tools/` implementing `Wally\Tools\ToolInterface`.
+2. On every request, `ToolExecutor::get_tool_definitions()` exports the registered tool schemas.
+3. `class-plugin.php` auto-discovers all `class-*-tools.php` files and registers eligible classes.
+4. The REST controller sends the schemas to the NestJS backend with each chat/tool-result payload.
+5. `ToolDefinitionsService.parseDynamicTools()` parses them; the controllers pass them to `LlmService`.
+6. The LLM receives the full live toolset from the plugin and can call any registered tool.
+
+### Creating a New Tool (one file only)
+
+Create `apps/wally/includes/tools/class-<feature>-tools.php`:
+
+```php
+<?php
+namespace Wally\Tools;
+
+class MyFeatureTools extends ToolInterface {
+
+    public function get_name(): string        { return 'my_tool_name'; }
+    public function get_description(): string { return 'What this tool does (be specific for the LLM).'; }
+    public function get_category(): string    { return 'content'; } // content | site | plugins | search | elementor | acf
+    public function get_action(): string      { return 'read'; } // read | create | update | delete | plugins | site
+
+    public function get_parameters_schema(): array {
+        return [
+            'type'       => 'object',
+            'properties' => [
+                'param_one' => [ 'type' => 'string', 'description' => 'Description for the LLM.' ],
+            ],
+            'required' => [ 'param_one' ],
+        ];
+    }
+
+    public function get_required_capability(): string { return 'edit_posts'; }
+
+    // Set to true for destructive actions (delete, reset, etc.)
+    public function requires_confirmation(): bool { return false; }
+
+    public function execute( array $params ): array {
+        // Do the WordPress work here.
+        // Return [ 'success' => true, 'data' => [...] ] or [ 'success' => false, 'error' => '...' ]
+        return [ 'success' => true, 'data' => [] ];
+    }
+}
+```
+
+That's it — no registration code, no backend changes. The tool is live on the next request.
+
+### Conditional Tools (plugin-dependent)
+
+If a tool only makes sense when a specific plugin is active (e.g. WooCommerce, Yoast), override `can_register()`:
+
+```php
+public static function can_register(): bool {
+    return class_exists( 'WooCommerce' ); // or is_plugin_active(...)
+}
+```
+
+The auto-discovery loop skips the class when `can_register()` returns `false`.
+
+Prefer `function_exists('acf_...')` over `class_exists(...)` for ACF checks — it targets the specific capability needed rather than just ACF being loaded.
+
+### Existing Tool Files
+
+| File | Tools covered |
+|------|--------------|
+| `class-content-tools.php` | list_posts, get_post, create_post, update_post, delete_post |
+| `class-taxonomy-tools.php` | list_categories, list_tags, create_category, create_tag |
+| `class-site-tools.php` | get_site_info, get_site_health, get_option, update_option |
+| `class-plugin-tools.php` | list_plugins, install_plugin, activate_plugin, deactivate_plugin, update_plugin, delete_plugin |
+| `class-search-tools.php` | search_content, replace_content |
+| `class-elementor-tools.php` | elementor_search_content, elementor_replace_content, elementor_get_page_structure, elementor_clear_css_cache |
+| `class-acf-tools.php` | Full ACF Free + Pro toolset: post types (CRUD), taxonomies (CRUD), field groups (CRUD), post/term/user field values (get + update), options page fields (list, get, update) |
+
+### Key Files
+
+| File | Role |
+|------|------|
+| `apps/wally/includes/tools/class-tool-interface.php` | Abstract base class all tools extend |
+| `apps/wally/includes/class-tool-executor.php` | Registry: registers, validates, executes, exports schemas |
+| `apps/wally/includes/class-plugin.php` | Auto-discovers tool classes on boot |
+| `apps/wally/includes/class-rest-controller.php` | Attaches `tool_definitions` to every backend payload |
+| `apps/backend/src/tools/tool-definitions.service.ts` | Parses dynamic schemas + formats for Anthropic/OpenAI |
+| `apps/backend/src/chat/chat.controller.ts` | Resolves & passes dynamic tools to LLM |
+| `apps/backend/src/chat/tool-result.controller.ts` | Same for the tool-result loop |
+
+### Capability Reference
+
+Common WordPress capabilities to use in `get_required_capability()`:
+
+| Capability | Who has it |
+|-----------|-----------|
+| `read` | Subscriber+ |
+| `edit_posts` | Contributor+ |
+| `publish_posts` | Author+ |
+| `edit_others_posts` | Editor+ |
+| `manage_options` | Administrator only |
+| `activate_plugins` | Administrator only |
+
 ## PRD Reference
 
 Full product specification is in `prd/PRD.md`. It defines:
