@@ -144,7 +144,7 @@
   - Conditional: TablePress plugin active
   - Tools: list_tables, get_table, update_table_cell
 
-- [ ] **4.8 Slider Tools** — `class-slider-tools.php`
+- [x] **4.8 Slider Tools** — `class-slider-tools.php`
   - Knowledge: `slider-plugins.md`
   - Conditional: RevSlider plugin active
   - Tools: list_sliders, get_slider, update_slider_status
