@@ -139,7 +139,7 @@
   - Tools: get_smush_stats, bulk_smush_status, get_ewww_stats
   - Read-only stats, no confirmation needed
 
-- [ ] **4.7 TablePress Tools** — `class-tablepress-tools.php`
+- [x] **4.7 TablePress Tools** — `class-tablepress-tools.php`
   - Knowledge: `content-plugins.md` (TablePress section)
   - Conditional: TablePress plugin active
   - Tools: list_tables, get_table, update_table_cell
