@@ -133,7 +133,7 @@
   - Tools: beaver_builder_search_content, beaver_builder_get_layout, divi_search_content, divi_get_layout
   - Read-only tools, no confirmation needed
 
-- [ ] **4.6 Image Optimization Tools** — `class-image-optimization-tools.php`
+- [x] **4.6 Image Optimization Tools** — `class-image-optimization-tools.php`
   - Knowledge: `image-optimization.md`
   - Conditional: Smush or EWWW active
   - Tools: get_smush_stats, bulk_smush_status, get_ewww_stats
