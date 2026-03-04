@@ -1,69 +1,172 @@
-# Ralph Fix Plan — Express → NestJS Migration
+# Fix Plan — WordPress Tool Files
 
-## Phase 1: Foundation (High Priority)
+## Tier 1: Core WordPress (No plugin dependency)
 
-- [x] **1.1 Set up ConfigModule** — Created `apps/backend/src/config/configuration.ts` with typed `WallyConfig` interface. Registered `ConfigModule.forRoot({ isGlobal: true })` in `AppModule`. Loads `.env.local` / `.env`.
-- [x] **1.2 Create LoggerService** — Created `apps/backend/src/common/logger/wally-logger.service.ts`. Implements NestJS `LoggerService` interface with structured JSON output and level filtering.
-- [x] **1.3 Create AuthGuard** — Created `apps/backend/src/common/guards/auth.guard.ts`. Reads `X-Site-ID` / `X-API-Key` headers or body. Attaches `siteId`/`apiKey` to request. Supports `SKIP_LICENSE_VALIDATION` dev mode.
-- [x] **1.4 Create RateLimiterGuard** — Created `apps/backend/src/common/guards/rate-limiter.guard.ts`. In-memory sliding-window rate limiter with per-minute and per-day limits. Evicts stale windows every hour.
+- [x] **1.1 User Tools** — `class-user-tools.php`
+  - Knowledge: `users.md`
+  - Tools: list_users, get_user, create_user, update_user, delete_user, update_user_role
+  - Confirmation: delete_user requires confirmation
 
-## Phase 2: Core Services (High Priority)
+- [x] **1.2 Menu Tools** — `class-menu-tools.php`
+  - Knowledge: `menus.md`
+  - Tools: list_menus, get_menu, create_menu, delete_menu, add_menu_item, update_menu_item, delete_menu_item
+  - Confirmation: delete operations require confirmation
 
-- [x] **2.1 Port ToolDefinitionsService** — Convert `backend/src/services/tool-definitions.js` to TypeScript. Define interfaces for tool schemas. Implement `getToolsForProvider('anthropic' | 'openai')` method. 30+ WordPress tool definitions with `requires_confirmation` flags.
-- [x] **2.2 Port IntentClassifierService** — Convert `backend/src/services/intent-classifier.js` to TypeScript. Regex-based intent classification returning intent keys. Conversation context awareness (last 2 messages). Max 4 intents cap.
-- [x] **2.3 Port KnowledgeLoaderService** — Converted to `apps/backend/src/knowledge/knowledge-loader.service.ts`. Copied all 63 `*.md` knowledge files to `apps/backend/src/knowledge/`. Loads at startup into memory cache. `getKnowledgeForIntents(intents)` method.
-- [x] **2.4 Port PromptBuilderService** — Converted to `apps/backend/src/knowledge/prompt-builder.service.ts`. Depends on IntentClassifier + KnowledgeLoader. Builds system prompt with: base instructions, intent-based knowledge, site context, custom instructions.
-- [x] **2.5 Port MessageBuilderService** — Converted to `apps/backend/src/common/message-builder.service.ts`. `buildToolResultMessages()` — constructs Anthropic-formatted message array with tool_use + tool_result blocks. Handle PHP empty-object-as-array normalization.
-- [x] **2.6 Port ResponseValidatorService** — Converted to `apps/backend/src/common/response-validator.service.ts`. Heuristic checks: contradictory pre-action/ask, unexpected trigger language, confirmation language on success, self-introduction.
+- [x] **1.3 Media Tools** — `class-media-tools.php`
+  - Knowledge: `media.md`
+  - Tools: list_media, get_media, update_media, delete_media
+  - Note: No upload tool — requires file handling not yet supported
+  - Confirmation: delete_media requires confirmation
 
-## Phase 3: LLM Integration (High Priority)
+- [x] **1.4 Comment Tools** — `class-comment-tools.php`
+  - Knowledge: `wp-comments.md`
+  - Tools: list_comments, get_comment, update_comment_status, delete_comment, reply_to_comment
+  - Confirmation: delete_comment requires confirmation
 
-- [x] **3.1 Port LLM Service — Anthropic provider** — Converted Anthropic streaming logic in `apps/backend/src/llm/llm.service.ts`. SSE streaming with `content_block_start`, `content_block_delta`, `content_block_stop` events. Extended thinking support (configurable). Uses `@anthropic-ai/sdk`.
-- [x] **3.2 Port LLM Service — OpenAI provider** — Converted OpenAI streaming logic in same file. Normalises OpenAI response format to Anthropic-like structure (text + tool_use blocks). Uses `openai` SDK.
-- [x] **3.3 Create unified LlmService** — `sendToLLM({ model, systemPrompt, messages, res })` dispatcher. Model → provider routing from config. Injects ToolDefinitionsService for tool schemas.
+## Tier 2: High-Value Plugins
 
-## Phase 4: Controllers (High Priority)
+- [x] **2.1 WooCommerce Tools** — `class-woocommerce-tools.php`
+  - Knowledge: `woocommerce.md`
+  - Conditional: WooCommerce plugin active
+  - Tools: list_products, get_product, create_product, update_product, delete_product, list_orders, get_order, update_order_status, list_coupons, get_coupon
+  - Confirmation: delete_product and update_order_status require confirmation
 
-- [x] **4.1 Create ChatController** — `POST /v1/chat` — Validates request body, sets up SSE headers. Calls PromptBuilder → LlmService → streams tool_call/usage/done events. Applies AuthGuard + RateLimiterGuard.
-- [x] **4.2 Create ToolResultController** — `POST /v1/tool-result` — Validates tool_results array. Rebuilds message history with MessageBuilder. Continues LLM tool-use loop. Streams SSE response.
-- [x] **4.3 Create LicenseController** — `POST /v1/license/validate` — Dev mode mock response. Production TODO placeholder.
-- [x] **4.4 Create UsageController** — `GET /v1/usage/:site_id` — In-memory usage tracking with `recordUsage()`. Site isolation (can only view own usage).
-- [x] **4.5 Create HealthController** — `GET /health` — Simple health check endpoint (no auth required).
+- [x] **2.2 Gravity Forms Tools** — `class-gravity-forms-tools.php`
+  - Knowledge: `gravity-forms.md`
+  - Conditional: Gravity Forms plugin active
+  - Tools: list_forms, get_form, list_entries, get_entry, delete_entry, update_entry_status
+  - Confirmation: delete_entry requires confirmation
 
-## Phase 5: Module Organization (Medium Priority)
+- [x] **2.3 Contact Form 7 Tools** — `class-contact-form-7-tools.php`
+  - Knowledge: `contact-form-7.md`
+  - Conditional: Contact Form 7 plugin active
+  - Tools: list_contact_forms, get_contact_form, update_contact_form
 
-- [x] **5.1 Create feature modules** — Organized into NestJS modules: `ChatModule`, `LicenseModule`, `UsageModule`, `LlmModule`, `KnowledgeModule`. Wired up dependencies via module imports/exports.
-- [x] **5.2 Configure main.ts** — Set global prefix `/api`, CORS config (dev origins only), JSON body limit, global ValidationPipe.
-- [x] **5.3 Add DTOs and validation** — Created `ChatRequestDto` and `ToolResultRequestDto` with `class-validator` decorators. `ValidationPipe` applied globally and per-controller.
+- [x] **2.4 Yoast SEO Tools** — `class-yoast-seo-tools.php`
+  - Knowledge: `yoast-seo.md`
+  - Conditional: Yoast SEO plugin active
+  - Tools: get_yoast_meta, update_yoast_meta, get_yoast_indexables
 
-## Phase 6: Testing (Medium Priority)
+- [x] **2.5 Rank Math Tools** — `class-rank-math-tools.php`
+  - Knowledge: `rank-math.md`
+  - Conditional: Rank Math plugin active
+  - Tools: get_rank_math_meta, update_rank_math_meta
 
-- [x] **6.1 Unit tests for services** — Tests for IntentClassifierService, MessageBuilderService, ResponseValidatorService in `apps/backend/src/`.
-- [ ] **6.2 Unit tests for guards** — Test AuthGuard and RateLimiterGuard with mock requests.
-- [ ] **6.3 Integration tests for controllers** — Test ChatController and ToolResultController with mocked LLM service. Verify SSE event format.
-- [ ] **6.4 E2e tests** — Add tests in `apps/backend-e2e/` for the full request lifecycle.
+- [x] **2.6 Redirection Tools** — `class-redirection-tools.php`
+  - Knowledge: `redirection.md`
+  - Conditional: Redirection plugin active
+  - Tools: list_redirects, create_redirect, update_redirect, delete_redirect, get_404_logs
+  - Confirmation: delete_redirect requires confirmation
 
-## Phase 7: Cleanup (Low Priority)
+## Tier 3: Forms & Other Plugins
 
-- [x] **7.1 Install NestJS dependencies** — `@nestjs/config`, `@anthropic-ai/sdk`, `openai`, `class-validator`, `class-transformer` all installed at workspace root.
-- [ ] **7.2 Update CLAUDE.md** — Verify architecture docs match the migrated NestJS structure.
-- [x] **7.3 Remove old Express backend** — MANUAL TASK: Owner will delete `backend/` directory after verifying `apps/backend/`. Do NOT use rm -rf.
-- [x] **7.4 Update .env.example** — Created `apps/backend/.env.example` with all required variables including `KNOWLEDGE_DIR`.
+- [x] **3.1 WPForms Tools** — `class-wpforms-tools.php`
+  - Knowledge: `forms-general.md` (WPForms section)
+  - Conditional: WPForms plugin active
+  - Tools: list_wpforms, get_wpform, list_wpform_entries
 
-## Completed
-- [x] Project enabled for Ralph
-- [x] NestJS scaffold created at `apps/backend/` via Nx
-- [x] Ralph documents updated for Express → NestJS migration
-- [x] Phase 1 Foundation: ConfigModule, WallyLoggerService, AuthGuard, RateLimiterGuard
-- [x] `@nestjs/config` installed at workspace root
-- [x] `main.ts` updated: CORS config, body parser, structured logging bootstrap
-- [x] `AppModule` updated: imports ConfigModule globally, provides logger + guards
-- [x] All 63 knowledge `.md` files present in `apps/backend/src/knowledge/`
-- [x] Build passes: `npx nx build backend` compiles successfully
+- [x] **3.2 Jetpack Tools** — `class-jetpack-tools.php`
+  - Knowledge: `jetpack.md`
+  - Conditional: Jetpack plugin active
+  - Tools: list_jetpack_modules, activate_jetpack_module, deactivate_jetpack_module, get_jetpack_stats
+  - Confirmation: module activation/deactivation requires confirmation
 
-## Notes
-- The global API prefix is `/api` (set in `main.ts`), so routes are `/api/v1/chat`, etc.
-- SSE streaming is critical — the WordPress plugin expects `text/event-stream` responses
-- Knowledge files (~63 .md files) are in `apps/backend/src/knowledge/` and copied to dist at build
-- The old Express backend at `backend/` is pending deletion (task 7.3)
-- Focus on correctness over optimization — match existing behavior first, refactor later
+- [x] **3.3 Events Calendar Tools** — `class-events-tools.php`
+  - Knowledge: `events-plugins.md`
+  - Conditional: The Events Calendar plugin active
+  - Tools: list_events, get_event, create_event, update_event, delete_event
+  - Confirmation: delete_event requires confirmation
+
+- [x] **3.4 Backup Tools** — `class-backup-tools.php`
+  - Knowledge: `backup-plugins.md`
+  - Conditional: UpdraftPlus plugin active
+  - Tools: list_updraftplus_backups, trigger_updraftplus_backup, get_updraftplus_settings
+  - Confirmation: trigger_backup requires confirmation
+
+- [x] **3.5 Caching Tools** — `class-caching-tools.php`
+  - Knowledge: `caching-plugins.md`
+  - Conditional: Detect active caching plugin (WP Rocket, W3 Total Cache, or core)
+  - Tools: clear_cache, get_cache_settings
+  - Confirmation: clear_cache requires confirmation
+
+- [x] **3.6 Security Plugin Tools** — `class-security-plugin-tools.php`
+  - Knowledge: `security-plugins.md`
+  - Conditional: Wordfence plugin active
+  - Tools: get_wordfence_scan_status, list_wordfence_blocked_ips, run_wordfence_scan
+  - Confirmation: run_scan requires confirmation
+
+- [x] **3.7 WooCommerce Extensions Tools** — `class-woocommerce-extensions-tools.php`
+  - Knowledge: `woocommerce-extensions.md`
+  - Conditional: WooCommerce Subscriptions plugin active
+  - Tools: list_subscriptions, get_subscription, update_subscription_status
+  - Confirmation: update_subscription_status requires confirmation
+
+## Tier 4: Additional Plugins
+
+- [x] **4.1 EDD & Membership Tools** — `class-ecommerce-tools.php`
+  - Knowledge: `ecommerce-plugins.md`
+  - Conditional: Per-tool (EDD, MemberPress, or LearnDash active)
+  - Tools: list_edd_downloads, get_edd_download, list_edd_payments, list_memberpress_memberships, list_learndash_courses
+  - Read-only tools, no confirmation needed
+
+- [x] **4.2 Analytics Tools** — `class-analytics-tools.php`
+  - Knowledge: `analytics-plugins.md`
+  - Conditional: Google Site Kit or MonsterInsights active
+  - Tools: get_site_kit_stats, get_monsterinsights_stats
+  - Read-only tools, no confirmation needed
+
+- [x] **4.3 Email Marketing Tools** — `class-email-marketing-tools.php`
+  - Knowledge: `email-marketing.md`
+  - Conditional: MC4WP or OptinMonster active
+  - Tools: list_mailchimp_lists, get_mailchimp_subscribers, list_optinmonster_campaigns
+  - Read-only tools, no confirmation needed
+
+- [x] **4.4 Multilingual Tools** — `class-multilingual-tools.php`
+  - Knowledge: `multilingual-plugins.md`
+  - Conditional: WPML or Polylang active
+  - Tools: list_wpml_languages, get_wpml_translation_status, list_polylang_languages
+  - Read-only tools, no confirmation needed
+
+- [x] **4.5 Page Builder Tools** — `class-page-builder-tools.php`
+  - Knowledge: `page-builders.md`
+  - Conditional: Beaver Builder or Divi active
+  - Tools: beaver_builder_search_content, beaver_builder_get_layout, divi_search_content, divi_get_layout
+  - Read-only tools, no confirmation needed
+
+- [ ] **4.6 Image Optimization Tools** — `class-image-optimization-tools.php`
+  - Knowledge: `image-optimization.md`
+  - Conditional: Smush or EWWW active
+  - Tools: get_smush_stats, bulk_smush_status, get_ewww_stats
+  - Read-only stats, no confirmation needed
+
+- [ ] **4.7 TablePress Tools** — `class-tablepress-tools.php`
+  - Knowledge: `content-plugins.md` (TablePress section)
+  - Conditional: TablePress plugin active
+  - Tools: list_tables, get_table, update_table_cell
+
+- [ ] **4.8 Slider Tools** — `class-slider-tools.php`
+  - Knowledge: `slider-plugins.md`
+  - Conditional: RevSlider plugin active
+  - Tools: list_sliders, get_slider, update_slider_status
+  - Confirmation: update_status requires confirmation
+
+- [ ] **4.9 Audit Log Tools** — `class-audit-log-tools.php`
+  - Knowledge: `audit-logging.md`
+  - Conditional: Simple History plugin active
+  - Tools: get_activity_log, get_activity_log_entry
+  - Read-only tools, no confirmation needed
+
+- [ ] **4.10 Social Plugin Tools** — `class-social-tools.php`
+  - Knowledge: `social-plugins.md`
+  - Conditional: Smash Balloon or similar social plugin active
+  - Tools: get_instagram_feed_settings, list_social_share_counts
+  - Read-only tools, no confirmation needed
+
+- [ ] **4.11 Media Plugin Tools** — `class-media-plugin-tools.php`
+  - Knowledge: `media-plugins.md`
+  - Conditional: Regenerate Thumbnails plugin active
+  - Tools: regenerate_thumbnails, get_regeneration_status
+  - Confirmation: regenerate requires confirmation
+
+## Discovered
+<!-- Ralph adds discovered tasks here -->
