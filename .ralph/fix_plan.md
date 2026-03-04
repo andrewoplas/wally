@@ -156,7 +156,7 @@
   - Tools: get_activity_log, get_activity_log_entry
   - Read-only tools, no confirmation needed
 
-- [ ] **4.10 Social Plugin Tools** — `class-social-tools.php`
+- [x] **4.10 Social Plugin Tools** — `class-social-tools.php`
   - Knowledge: `social-plugins.md`
   - Conditional: Smash Balloon or similar social plugin active
   - Tools: get_instagram_feed_settings, list_social_share_counts
