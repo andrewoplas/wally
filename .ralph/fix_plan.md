@@ -162,7 +162,7 @@
   - Tools: get_instagram_feed_settings, list_social_share_counts
   - Read-only tools, no confirmation needed
 
-- [ ] **4.11 Media Plugin Tools** — `class-media-plugin-tools.php`
+- [x] **4.11 Media Plugin Tools** — `class-media-plugin-tools.php`
   - Knowledge: `media-plugins.md`
   - Conditional: Regenerate Thumbnails plugin active
   - Tools: regenerate_thumbnails, get_regeneration_status
