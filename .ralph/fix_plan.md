@@ -150,7 +150,7 @@
   - Tools: list_sliders, get_slider, update_slider_status
   - Confirmation: update_status requires confirmation
 
-- [ ] **4.9 Audit Log Tools** — `class-audit-log-tools.php`
+- [x] **4.9 Audit Log Tools** — `class-audit-log-tools.php`
   - Knowledge: `audit-logging.md`
   - Conditional: Simple History plugin active
   - Tools: get_activity_log, get_activity_log_entry
