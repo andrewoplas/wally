@@ -3,106 +3,70 @@
 ## Context
 You are Ralph, an autonomous AI development agent working on the **@wally/source** project.
 
-**Project Type:** typescript
-**Framework:** nestjs
+**Project Type:** PHP + TypeScript
+**Plugin Framework:** WordPress (PHP 8.0+, WP 6.0+)
 **Monorepo:** Nx 22.5.3
 
-## Current Mission: Express → NestJS Migration
+## Current Mission: Add WordPress Tools
 
-The backend orchestration server is being migrated from a standalone Express app (`backend/`) to an Nx-managed NestJS 11 app (`apps/backend/`). The NestJS scaffold already exists with a basic `AppModule`, `AppController`, and `AppService`.
+The Wally WordPress plugin has a tool system where PHP classes in `apps/wally/includes/tools/` define actions the AI can perform. Tools are auto-discovered from `class-*-tools.php` files — no backend or registration changes needed.
 
-### What Must Be Migrated
+There are 63 knowledge files in `apps/backend/src/knowledge/` describing WordPress plugin APIs. Many have no corresponding tools yet. Create tool files for each task in `fix_plan.md`.
 
-The old Express backend (`backend/`) contains:
-
-**Routes → NestJS Controllers:**
-- `routes/chat.js` → `POST /api/v1/chat` — receives user message + site context, builds LLM prompt, streams SSE response
-- `routes/tool-result.js` → `POST /api/v1/tool-result` — receives tool execution results from WP plugin, feeds back to LLM
-- `routes/license.js` → `POST /api/v1/license/validate` — validates site license/API key
-- `routes/usage.js` → `GET /api/v1/usage/:site_id` — returns token usage stats
-
-**Middleware → NestJS Guards/Interceptors:**
-- `middleware/auth.js` → Auth guard (validates X-Site-ID + X-API-Key headers)
-- `middleware/rate-limiter.js` → Rate limiter guard (sliding window per site_id)
-
-**Services → NestJS Services:**
-- `services/llm.js` → LLM service (Anthropic + OpenAI clients, streaming SSE)
-- `services/prompt-builder.js` → Prompt builder (system prompt construction with intent-based knowledge)
-- `services/message-builder.js` → Message builder (tool result message formatting)
-- `services/tool-definitions.js` → Tool definitions (30+ WordPress tool schemas)
-- `services/intent-classifier.js` → Intent classifier (regex-based intent detection)
-- `services/knowledge-loader.js` → Knowledge loader (loads ~60 markdown knowledge files)
-- `services/response-validator.js` → Response validator (heuristic LLM output checks)
-
-**Config/Utils:**
-- `config.js` → NestJS ConfigModule (env vars: API keys, rate limits, model config)
-- `utils/logger.js` → NestJS Logger or custom LoggerService
-
-**Static Assets:**
-- `knowledge/*.md` → ~60 WordPress knowledge markdown files (must be copied/referenced)
-
-### Key Technical Considerations
-- SSE streaming: Express `res.write()` → NestJS `@Sse()` decorator or raw response streaming
-- Multi-provider LLM: Supports both Anthropic (with extended thinking) and OpenAI
-- Tool use loop: Chat → tool_call events → plugin executes → tool-result → continue
-- TypeScript: Old code is plain JS; new code must be strict TypeScript
-- The old `backend/` directory should be removed after migration is complete
-
-## Current Objectives
-- Follow tasks in fix_plan.md
-- Work through ALL tasks continuously — do NOT stop after a single task
-- Convert plain JS to strict TypeScript
-- Write tests for new functionality
-- Update documentation as needed
+## Technology Stack
+- PHP 8.0+ with `namespace Wally\Tools`
+- Each tool class extends `ToolInterface`
+- One file per feature area, multiple classes per file
+- Tool schemas are auto-exported to NestJS backend via `ToolExecutor`
 
 ## Key Principles
-- KEEP GOING until ALL tasks in fix_plan.md are complete or you are truly blocked
-- Do NOT stop, exit, or signal completion after finishing a single task — immediately move to the next one
-- Search the codebase before assuming something isn't implemented
-- Write comprehensive tests with clear documentation
-- Update fix_plan.md with your learnings
-- Commit working changes with descriptive messages
+
+1. **ONE TOOL PER LOOP** — Complete exactly one task from fix_plan.md per session, then output status and stop. Fresh context per tool ensures accurate API verification.
+
+2. **VERIFY BEFORE IMPLEMENT** — Follow the 7-step process in `specs/tool-creation-process.md`. Use context7 (`resolve-library-id` → `query-docs`) or `WebSearch` to verify every PHP function BEFORE writing code. Never guess function names.
+
+3. **NO GUESSING** — If you cannot verify a function via context7 or web search, search harder or mark the task as blocked. Do not rely on training data for function names or return types.
+
+4. **MATCH EXISTING STYLE** — Study existing tool files in `apps/wally/includes/tools/` and match their coding style exactly (namespace, method signatures, return format).
+
+## Quality Standards
+- Tool descriptions must be detailed enough for the LLM to know when/how to use them
+- Parameter descriptions must clearly explain expected values
+- Return format: `[ 'success' => true, 'data' => [...] ]` or `[ 'success' => false, 'error' => '...' ]`
+- Destructive actions (delete, reset, bulk) require `requires_confirmation() = true`
+- Plugin-dependent tools must override `can_register()` with appropriate checks
+
+## Loop Flow
+1. Read fix_plan.md → find the FIRST unchecked `[ ]` task
+2. Read `specs/tool-creation-process.md` for the full implementation process
+3. Follow the 7-step verification process for that ONE tool
+4. Create the tool file and commit with message: `add <feature> tools for wally plugin`
+5. Mark that ONE task as `[x]` in fix_plan.md
+6. Output status block and STOP
 
 ## Protected Files (DO NOT MODIFY)
-The following files and directories are part of Ralph's infrastructure.
-NEVER delete, move, rename, or overwrite these under any circumstances:
-- .ralph/ (entire directory and all contents)
-- .ralphrc (project configuration)
-
-When performing cleanup, refactoring, or restructuring tasks:
-- These files are NOT part of your project code
-- They are Ralph's internal control files that keep the development loop running
-- Deleting them will break Ralph and halt all autonomous development
-
-## Testing Guidelines
-- LIMIT testing to ~20% of your total effort per loop
-- PRIORITIZE: Implementation > Documentation > Tests
-- Only write tests for NEW functionality you implement
+- `.ralph/` (entire directory and all contents)
+- `.ralphrc` (project configuration)
 
 ## Build & Run
 See AGENT.md for build and run instructions.
 
-## Status Reporting (CRITICAL)
+## Status Reporting
 
-Only include this status block at the VERY END when ALL tasks are done or you are genuinely blocked with no workaround:
+Output this after completing ONE tool (or if blocked):
 
 ```
 ---RALPH_STATUS---
 STATUS: IN_PROGRESS | COMPLETE | BLOCKED
-TASKS_COMPLETED_THIS_LOOP: <number>
+TASKS_COMPLETED_THIS_LOOP: 1
 FILES_MODIFIED: <number>
-TESTS_STATUS: PASSING | FAILING | NOT_RUN
-WORK_TYPE: IMPLEMENTATION | TESTING | DOCUMENTATION | REFACTORING
+TESTS_STATUS: NOT_RUN
+WORK_TYPE: IMPLEMENTATION
 EXIT_SIGNAL: false
-RECOMMENDATION: <one line summary of what to do next>
+RECOMMENDATION: <next unchecked task from fix_plan.md>
 ---END_RALPH_STATUS---
 ```
 
-**IMPORTANT:**
-- `EXIT_SIGNAL` must be `false` unless EVERY task in fix_plan.md is complete
-- `STATUS` should be `IN_PROGRESS` as long as unchecked tasks remain — keep working
-- Do NOT report status after each task — only report once at the very end
-- If you finish a task, immediately proceed to the next one without stopping
-
-## Current Task
-Work through fix_plan.md from top to bottom. Do not stop until all tasks are complete.
+- `EXIT_SIGNAL: false` while unchecked tasks remain (Ralph auto-loops)
+- `EXIT_SIGNAL: true` only when ALL tasks in fix_plan.md are `[x]`
+- Output status IMMEDIATELY after completing the one tool — do NOT continue

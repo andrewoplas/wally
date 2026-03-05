@@ -1,6 +1,6 @@
 {
   "name": "wally",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "AI-powered chat assistant inside wp-admin",
   "scripts": {
     "build": "wp-scripts build src/index.js --output-path=admin/js/build",

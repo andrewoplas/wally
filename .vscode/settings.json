@@ -23,6 +23,26 @@
         "name": "$(sync) Generate API",
         "color": "#4FC3F7",
         "command": "npm run generate:api"
+      },
+      {
+        "name": "$(tag) Patch",
+        "color": "#FFB74D",
+        "command": "npx nx version wally --bump=patch"
+      },
+      {
+        "name": "$(tag) Minor",
+        "color": "#FFB74D",
+        "command": "npx nx version wally --bump=minor"
+      },
+      {
+        "name": "$(tag) Major",
+        "color": "#FFB74D",
+        "command": "npx nx version wally --bump=major"
+      },
+      {
+        "name": "$(package) Package",
+        "color": "#CE93D8",
+        "command": "npx nx package wally"
       }
     ]
   }

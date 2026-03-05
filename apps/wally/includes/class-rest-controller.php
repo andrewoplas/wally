@@ -354,6 +354,15 @@ class RestController {
 				];
 			}
 
+			// Notify frontend that tools finished executing.
+			$this->send_sse_event([
+				'type'    => 'tool_end',
+				'results' => array_map( fn( $tr ) => [
+					'tool_name' => $tr['tool_name'],
+					'is_error'  => $tr['is_error'],
+				], $tool_results ),
+			]);
+
 			// Send tool results back to backend and stream its response.
 			$result = $this->stream_backend_sse(
 				$backend_url . '/tool-result',

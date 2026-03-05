@@ -3,7 +3,7 @@
  * Plugin Name: Wally
  * Plugin URI:  https://www.wallychat.com
  * Description: AI-powered chat assistant inside wp-admin. Manage your site with natural language.
- * Version:     0.1.3
+ * Version:     0.1.4
  * Author:      Andrew Oplas
  * Author URI:  https://andrewoplas.com
  * License:     GPL-2.0-or-later
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WALLY_VERSION', '0.1.3' );
+define( 'WALLY_VERSION', '0.1.4' );
 define( 'WALLY_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WALLY_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WALLY_PLUGIN_FILE', __FILE__ );

@@ -442,6 +442,24 @@ const ChatSidebar = () => {
                 return u;
               });
               break;
+            case 'tool_end':
+              setMessages(prev => {
+                const u = [...prev];
+                const l = u[u.length - 1];
+                if (l?.streaming) {
+                  const results = (data.results || []).map(r => ({
+                    status: r.is_error ? 'error' : 'success',
+                    toolName: (r.tool_name || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+                  }));
+                  u[u.length - 1] = {
+                    ...l,
+                    toolsRunning: null,
+                    toolResults: [...(l.toolResults || []), ...results]
+                  };
+                }
+                return u;
+              });
+              break;
             case 'error':
               {
                 const fields = buildErrorFields(data.message || 'An error occurred', null);

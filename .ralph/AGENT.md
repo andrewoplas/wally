@@ -3,12 +3,16 @@
 ## Prerequisites
 - Node.js v22.22.0 (see `.nvmrc`)
 - npm (lockfile: `package-lock.json`)
+- PHP 8.0+ (WordPress plugin code)
 
 ## Build Instructions
 
 ```bash
 # Install dependencies (from repo root)
 npm install
+
+# Build the WordPress plugin JS (from apps/wally/)
+cd apps/wally && npm run build && cd ../..
 
 # Build the backend
 npx nx build backend
@@ -23,21 +27,8 @@ npx nx run-many -t build
 # Run backend unit tests
 npx nx test backend
 
-# Run backend e2e tests
-npx nx e2e backend-e2e
-
 # Run all tests
 npx nx run-many -t test
-```
-
-## Run Instructions
-
-```bash
-# Start backend in dev mode (with hot reload)
-npx nx serve backend
-
-# Start in production mode
-npx nx serve backend --configuration=production
 ```
 
 ## Lint Instructions
@@ -51,48 +42,64 @@ npx nx lint backend
 
 ```
 apps/
-  backend/           # NestJS 11 orchestration API (migration target)
+  wally/                    # WordPress plugin (PRIMARY TARGET)
+    includes/
+      tools/                # Tool PHP classes (one file per feature)
+        class-tool-interface.php   # Abstract base class
+        class-content-tools.php    # Posts CRUD
+        class-taxonomy-tools.php   # Categories, tags
+        class-site-tools.php       # Site info, options
+        class-plugin-tools.php     # Plugin management
+        class-search-tools.php     # Search & replace
+        class-elementor-tools.php  # Elementor tools
+        class-acf-tools.php        # ACF tools
+      class-tool-executor.php      # Registry: registers, validates, executes
+      class-plugin.php             # Auto-discovers tool classes
+      class-rest-controller.php    # Sends schemas to backend
+    wally.php                      # Plugin entry point
+  backend/                  # NestJS 11 orchestration API
     src/
-      app/            # App module, controller, service
-      main.ts         # Bootstrap entry point
-  backend-e2e/       # Jest e2e tests for backend
-  wally/             # WordPress plugin (React + PHP)
-  frontend/          # Next.js marketing site (not yet created)
-
-backend/             # OLD Express backend (migration source — to be removed)
-  src/
-    routes/          # Express route handlers
-    services/        # Business logic (LLM, prompts, tools, knowledge)
-    middleware/      # Auth + rate limiting
-    knowledge/       # ~60 WordPress knowledge .md files
-    utils/           # Logger
-    config.js        # Environment config
+      knowledge/            # 63 WordPress knowledge .md files
+      tools/                # ToolDefinitionsService (parses dynamic schemas)
+      chat/                 # Chat + ToolResult controllers
+  frontend/                 # Next.js marketing site
 ```
 
-## NestJS Conventions
+## WordPress Plugin Conventions
 
-- Controllers handle HTTP routing (`@Controller`, `@Post`, `@Get`)
-- Services contain business logic (`@Injectable`)
-- Guards replace Express middleware for auth (`@UseGuards`)
-- Interceptors for cross-cutting concerns (logging, rate limiting)
-- ConfigModule for environment variables (replaces `dotenv/config.js`)
-- All code in strict TypeScript (no plain JS)
-- Global prefix `/api` is set in `main.ts`
+- All tool classes use `namespace Wally\Tools;`
+- Each class extends `ToolInterface`
+- File naming: `class-<feature>-tools.php` (kebab-case)
+- Class naming: `<Feature>Tools` or `<FeatureAction>` (PascalCase)
+- Multiple tool classes per file (grouped by feature)
+- Return format: `[ 'success' => true, 'data' => [...] ]` or `[ 'success' => false, 'error' => '...' ]`
+- Conditional registration via `can_register()` static method
+- `requires_confirmation()` = true for destructive actions
 
-## Environment Variables
+## Tool Categories
 
-Required (create `.env` in repo root or `apps/backend/`):
-```
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-PORT=3000
-SKIP_LICENSE_VALIDATION=true
-RATE_LIMIT_PER_SITE_PER_MINUTE=30
-RATE_LIMIT_PER_SITE_PER_DAY=1000
-```
+| Category | Description |
+|----------|-------------|
+| `content` | Posts, pages, media, comments |
+| `site` | Site info, options, settings |
+| `plugins` | Plugin management |
+| `search` | Search and replace |
+| `elementor` | Elementor page builder |
+| `acf` | Advanced Custom Fields |
+| `ecommerce` | WooCommerce, EDD |
+| `forms` | Gravity Forms, CF7, WPForms |
+| `seo` | Yoast, Rank Math |
+
+## API Verification
+
+**CRITICAL**: Before using any PHP function in a tool, verify it:
+1. Search the plugin's official docs or source code
+2. Confirm the function name, parameters, and return type
+3. Check if it's Free vs Pro only
+4. Use `function_exists()` or `class_exists()` in `can_register()`
 
 ## Notes
-- All commands run from the repo root using Nx
-- The backend serves on port 3000 with `/api` global prefix
-- SSE streaming is used for chat responses (not WebSockets)
+- All Nx commands run from the repo root
+- Tool files are PHP — no build step needed (WordPress loads them directly)
+- The backend auto-discovers tool schemas from the plugin, so no backend changes are needed
 - Update this file when build process changes
