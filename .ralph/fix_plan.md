@@ -90,7 +90,7 @@
   - Add `wp_wally_snapshots` table creation to the Database class (id, conversation_id, snapshot_type, object_id, object_key, previous_value, created_at)
   - Read existing Database class first, add new table in the same pattern
 
-- [ ] **6.2 Snapshot Helper Class** — `class-snapshot.php` (NEW FILE)
+- [x] **6.2 Snapshot Helper Class** — `class-snapshot.php` (NEW FILE)
   - Create `Wally\Snapshot` class with static methods: `save()`, `get_latest()`, `list_for_conversation()`, `delete()`, `cleanup_old()`
   - Uses `$wpdb` for all queries
   - `cleanup_old()` deletes snapshots older than 24 hours
