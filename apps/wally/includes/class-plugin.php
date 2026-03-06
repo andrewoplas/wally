@@ -48,7 +48,10 @@ class Plugin {
         if ( ! wp_next_scheduled( 'wally_daily_site_scan' ) ) {
             wp_schedule_event( time(), 'daily', 'wally_daily_site_scan' );
         }
-        add_action( 'wally_daily_site_scan', [ SiteScanner::class, 'scan' ] );
+        add_action( 'wally_daily_site_scan', function() {
+            SiteScanner::scan();
+            Snapshot::cleanup_old();
+        } );
 
         // Daily conversation auto-prune cron (default 90 days, 0 = disabled)
         if ( ! wp_next_scheduled( 'wally_auto_prune' ) ) {

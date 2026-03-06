@@ -106,7 +106,7 @@
   - Read each file first, add snapshot save calls at the top of relevant `execute()` methods
   - Pass `$conversation_id` through — check how ToolExecutor passes it
 
-- [ ] **6.5 Snapshot Cleanup Cron** — `class-plugin.php`
+- [x] **6.5 Snapshot Cleanup Cron** — `class-plugin.php`
   - Add `Snapshot::cleanup_old()` call to the existing `wally_daily_site_scan` cron handler
   - Read existing file first, add one line to the cron callback
 
