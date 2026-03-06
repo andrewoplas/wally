@@ -34,6 +34,16 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\bvibe\s*cod/i,
     ],
   },
+  {
+    key: 'page-templates',
+    patterns: [
+      /\b(?:build|create|design|make)\s+(?:a\s+|me\s+(?:a\s+)?)?(?:landing\s*page|home\s*page|about\s*page|contact\s*page|service\s*page|portfolio|restaurant\s*(?:site|page|website)?|coming\s*soon\s*(?:page)?)/i,
+      /\b(?:use\s+(?:a\s+)?|apply\s+(?:a\s+)?)?(?:page\s+)?template\b/i,
+      /\b(?:restaurant|portfolio|business\s*(?:site|page|website)|service\s*page|coming\s*soon|about\s*page|contact\s*page)\b/i,
+      /\bfull[\s-]?page\b/i,
+      /\b(?:build|create|design|make)\s+(?:a\s+|my\s+)?(?:full\s+)?(?:website|site)\b/i,
+    ],
+  },
 
   // ── Core Content & Structure ──────────────────────────────────────────────
   {

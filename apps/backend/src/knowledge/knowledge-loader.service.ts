@@ -97,6 +97,10 @@ const KNOWLEDGE_FILES: string[] = [
   // Gutenberg block addons
   'gutenberg-addons',
 
+  // Page building templates
+  'gutenberg-blocks',
+  'page-templates',
+
   // Theme extensions
   'theme-extensions',
 
