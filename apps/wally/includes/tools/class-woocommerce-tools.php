@@ -5,7 +5,8 @@ namespace Wally\Tools;
  * WooCommerce management tools.
  *
  * Tools: list_products, get_product, create_product, update_product, delete_product,
- *        list_orders, get_order, update_order_status, list_coupons, get_coupon.
+ *        list_orders, get_order, update_order_status, list_coupons, get_coupon,
+ *        create_coupon, get_revenue_summary, manage_stock, list_product_categories.
  *
  * All tools require WooCommerce to be active (class_exists('WooCommerce')).
  */
@@ -1058,6 +1059,454 @@ class GetCoupon extends ToolInterface {
 			'product_ids'           => $coupon->get_product_ids(),
 			'excluded_product_ids'  => $coupon->get_excluded_product_ids(),
 			'email_restrictions'    => $coupon->get_email_restrictions(),
+		];
+	}
+}
+
+/**
+ * Create a new WooCommerce discount coupon.
+ */
+class CreateCoupon extends ToolInterface {
+
+	public static function can_register(): bool {
+		return class_exists( 'WooCommerce' );
+	}
+
+	public function get_name(): string {
+		return 'create_coupon';
+	}
+
+	public function get_description(): string {
+		return 'Create a new WooCommerce discount coupon with a code, discount type, and amount. Discount types: "percent" (percentage off), "fixed_cart" (fixed amount off the cart), "fixed_product" (fixed amount off each product). Optionally set expiry date, usage limits, and free shipping.';
+	}
+
+	public function get_category(): string {
+		return 'ecommerce';
+	}
+
+	public function get_action(): string {
+		return 'create';
+	}
+
+	public function get_parameters_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'code'             => [
+					'type'        => 'string',
+					'description' => 'The coupon code customers enter at checkout (e.g., "SUMMER20").',
+				],
+				'discount_type'    => [
+					'type'        => 'string',
+					'description' => 'Discount type: "percent" for percentage off, "fixed_cart" for fixed cart discount, "fixed_product" for fixed product discount.',
+					'enum'        => [ 'percent', 'fixed_cart', 'fixed_product' ],
+				],
+				'amount'           => [
+					'type'        => 'string',
+					'description' => 'Discount amount. For "percent" type, this is the percentage (e.g., "20" for 20% off). For fixed types, this is the currency amount (e.g., "10.00").',
+				],
+				'description'      => [
+					'type'        => 'string',
+					'description' => 'Optional internal description for the coupon.',
+				],
+				'expiry_date'      => [
+					'type'        => 'string',
+					'description' => 'Optional expiry date in YYYY-MM-DD format.',
+				],
+				'usage_limit'      => [
+					'type'        => 'integer',
+					'description' => 'Maximum number of times this coupon can be used in total. Leave empty for unlimited.',
+				],
+				'usage_limit_per_user' => [
+					'type'        => 'integer',
+					'description' => 'Maximum number of times each customer can use this coupon.',
+				],
+				'individual_use'   => [
+					'type'        => 'boolean',
+					'description' => 'If true, the coupon cannot be used with other coupons.',
+					'default'     => false,
+				],
+				'free_shipping'    => [
+					'type'        => 'boolean',
+					'description' => 'If true, the coupon grants free shipping.',
+					'default'     => false,
+				],
+				'minimum_amount'   => [
+					'type'        => 'string',
+					'description' => 'Minimum order amount required to use this coupon.',
+				],
+			],
+			'required'   => [ 'code', 'discount_type', 'amount' ],
+		];
+	}
+
+	public function get_required_capability(): string {
+		return 'manage_woocommerce';
+	}
+
+	public function execute( array $input ): array {
+		$code = sanitize_text_field( strtolower( $input['code'] ) );
+
+		// Check if code already exists.
+		$existing = new \WC_Coupon( $code );
+		if ( $existing->get_id() ) {
+			return [ 'success' => false, 'error' => "A coupon with code \"{$code}\" already exists." ];
+		}
+
+		$coupon = new \WC_Coupon();
+		$coupon->set_code( $code );
+		$coupon->set_discount_type( sanitize_key( $input['discount_type'] ) );
+		$coupon->set_amount( wc_format_decimal( $input['amount'] ) );
+
+		if ( ! empty( $input['description'] ) ) {
+			$coupon->set_description( sanitize_textarea_field( $input['description'] ) );
+		}
+		if ( ! empty( $input['expiry_date'] ) ) {
+			$coupon->set_date_expires( sanitize_text_field( $input['expiry_date'] ) );
+		}
+		if ( ! empty( $input['usage_limit'] ) ) {
+			$coupon->set_usage_limit( absint( $input['usage_limit'] ) );
+		}
+		if ( ! empty( $input['usage_limit_per_user'] ) ) {
+			$coupon->set_usage_limit_per_user( absint( $input['usage_limit_per_user'] ) );
+		}
+		if ( ! empty( $input['individual_use'] ) ) {
+			$coupon->set_individual_use( true );
+		}
+		if ( ! empty( $input['free_shipping'] ) ) {
+			$coupon->set_free_shipping( true );
+		}
+		if ( ! empty( $input['minimum_amount'] ) ) {
+			$coupon->set_minimum_amount( wc_format_decimal( $input['minimum_amount'] ) );
+		}
+
+		$coupon_id = $coupon->save();
+
+		if ( ! $coupon_id ) {
+			return [ 'success' => false, 'error' => 'Failed to create coupon.' ];
+		}
+
+		$expires = $coupon->get_date_expires();
+
+		return [
+			'success' => true,
+			'data'    => [
+				'coupon_id'     => $coupon_id,
+				'code'          => $coupon->get_code(),
+				'discount_type' => $coupon->get_discount_type(),
+				'amount'        => $coupon->get_amount(),
+				'expires'       => $expires ? $expires->date( 'Y-m-d' ) : null,
+				'message'       => "Coupon \"{$code}\" created successfully.",
+			],
+		];
+	}
+}
+
+/**
+ * Get a revenue summary for a date range.
+ */
+class GetRevenueSummary extends ToolInterface {
+
+	public static function can_register(): bool {
+		return class_exists( 'WooCommerce' );
+	}
+
+	public function get_name(): string {
+		return 'get_revenue_summary';
+	}
+
+	public function get_description(): string {
+		return 'Get a revenue summary for a date range: total revenue, order count, and average order value. Useful when the user asks "how much did I make last month", "what\'s my revenue for this year", or wants a business overview. Counts only completed and processing orders.';
+	}
+
+	public function get_category(): string {
+		return 'ecommerce';
+	}
+
+	public function get_action(): string {
+		return 'read';
+	}
+
+	public function get_parameters_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'date_from' => [
+					'type'        => 'string',
+					'description' => 'Start date for the summary period (YYYY-MM-DD). Defaults to 30 days ago.',
+				],
+				'date_to'   => [
+					'type'        => 'string',
+					'description' => 'End date for the summary period (YYYY-MM-DD). Defaults to today.',
+				],
+			],
+			'required'   => [],
+		];
+	}
+
+	public function get_required_capability(): string {
+		return 'manage_woocommerce';
+	}
+
+	public function execute( array $input ): array {
+		$date_from = ! empty( $input['date_from'] )
+			? sanitize_text_field( $input['date_from'] )
+			: date( 'Y-m-d', strtotime( '-30 days' ) );
+
+		$date_to = ! empty( $input['date_to'] )
+			? sanitize_text_field( $input['date_to'] )
+			: date( 'Y-m-d' );
+
+		// Fetch completed + processing orders in range.
+		$orders = wc_get_orders( [
+			'status'       => [ 'wc-completed', 'wc-processing' ],
+			'date_created' => $date_from . '...' . $date_to . ' 23:59:59',
+			'limit'        => -1,
+			'return'       => 'objects',
+		] );
+
+		$total_revenue = 0.0;
+		$order_count   = count( $orders );
+		$product_sales = [];
+
+		foreach ( $orders as $order ) {
+			$total_revenue += (float) $order->get_total();
+
+			foreach ( $order->get_items() as $item ) {
+				$name = $item->get_name();
+				if ( ! isset( $product_sales[ $name ] ) ) {
+					$product_sales[ $name ] = [ 'name' => $name, 'quantity' => 0, 'revenue' => 0.0 ];
+				}
+				$product_sales[ $name ]['quantity'] += (int) $item->get_quantity();
+				$product_sales[ $name ]['revenue']  += (float) $item->get_total();
+			}
+		}
+
+		// Sort by revenue desc, take top 5.
+		usort( $product_sales, fn( $a, $b ) => $b['revenue'] <=> $a['revenue'] );
+		$top_products = array_slice( array_values( $product_sales ), 0, 5 );
+
+		// Round revenue values.
+		foreach ( $top_products as &$p ) {
+			$p['revenue'] = round( $p['revenue'], 2 );
+		}
+		unset( $p );
+
+		$avg_order_value = $order_count > 0 ? round( $total_revenue / $order_count, 2 ) : 0;
+
+		return [
+			'success' => true,
+			'data'    => [
+				'period'             => [ 'from' => $date_from, 'to' => $date_to ],
+				'total_revenue'      => round( $total_revenue, 2 ),
+				'order_count'        => $order_count,
+				'average_order_value' => $avg_order_value,
+				'top_products'       => $top_products,
+				'currency'           => get_woocommerce_currency(),
+			],
+		];
+	}
+}
+
+/**
+ * Bulk update stock quantity and status for multiple products. Requires confirmation.
+ */
+class ManageStock extends ToolInterface {
+
+	public static function can_register(): bool {
+		return class_exists( 'WooCommerce' );
+	}
+
+	public function get_name(): string {
+		return 'manage_stock';
+	}
+
+	public function get_description(): string {
+		return 'Bulk update stock quantity and/or stock status for one or more WooCommerce products by product ID. Use this when the user wants to restock, set items as out of stock, or update inventory for multiple products at once. Requires confirmation.';
+	}
+
+	public function get_category(): string {
+		return 'ecommerce';
+	}
+
+	public function get_action(): string {
+		return 'update';
+	}
+
+	public function get_parameters_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'updates' => [
+					'type'        => 'array',
+					'description' => 'Array of stock updates. Each item specifies a product_id and at least one of stock_quantity or stock_status.',
+					'items'       => [
+						'type'       => 'object',
+						'properties' => [
+							'product_id'     => [
+								'type'        => 'integer',
+								'description' => 'The product ID to update.',
+							],
+							'stock_quantity' => [
+								'type'        => 'integer',
+								'description' => 'New stock quantity. Enables stock management if not already enabled.',
+							],
+							'stock_status'   => [
+								'type'        => 'string',
+								'description' => 'New stock status: "instock", "outofstock", or "onbackorder".',
+								'enum'        => [ 'instock', 'outofstock', 'onbackorder' ],
+							],
+						],
+						'required'   => [ 'product_id' ],
+					],
+				],
+			],
+			'required'   => [ 'updates' ],
+		];
+	}
+
+	public function get_required_capability(): string {
+		return 'manage_woocommerce';
+	}
+
+	public function requires_confirmation(): bool {
+		return true;
+	}
+
+	public function execute( array $input ): array {
+		$updates = $input['updates'] ?? [];
+
+		if ( empty( $updates ) || ! is_array( $updates ) ) {
+			return [ 'success' => false, 'error' => 'No updates provided.' ];
+		}
+
+		$results  = [];
+		$errors   = [];
+
+		foreach ( $updates as $update ) {
+			$product_id = absint( $update['product_id'] ?? 0 );
+			if ( ! $product_id ) {
+				$errors[] = 'Invalid product_id in updates.';
+				continue;
+			}
+
+			$product = wc_get_product( $product_id );
+			if ( ! $product ) {
+				$errors[] = "Product not found: {$product_id}";
+				continue;
+			}
+
+			$changed = [];
+
+			if ( isset( $update['stock_quantity'] ) ) {
+				$qty = (int) $update['stock_quantity'];
+				$product->set_manage_stock( true );
+				$product->set_stock_quantity( $qty );
+				$changed['stock_quantity'] = $qty;
+			}
+
+			if ( isset( $update['stock_status'] ) ) {
+				$status = sanitize_key( $update['stock_status'] );
+				$product->set_stock_status( $status );
+				$changed['stock_status'] = $status;
+			}
+
+			if ( empty( $changed ) ) {
+				$errors[] = "No valid fields for product {$product_id}.";
+				continue;
+			}
+
+			$product->save();
+			$results[] = [
+				'product_id' => $product_id,
+				'name'       => $product->get_name(),
+				'updated'    => $changed,
+			];
+		}
+
+		return [
+			'success' => true,
+			'data'    => [
+				'updated' => $results,
+				'errors'  => $errors,
+				'message' => sprintf( '%d product(s) updated.', count( $results ) ),
+			],
+		];
+	}
+}
+
+/**
+ * List WooCommerce product categories.
+ */
+class ListProductCategories extends ToolInterface {
+
+	public static function can_register(): bool {
+		return class_exists( 'WooCommerce' );
+	}
+
+	public function get_name(): string {
+		return 'list_product_categories';
+	}
+
+	public function get_description(): string {
+		return 'List all WooCommerce product categories with their ID, name, slug, parent ID, and product count. Use this to discover available categories when creating products or filtering by category.';
+	}
+
+	public function get_category(): string {
+		return 'ecommerce';
+	}
+
+	public function get_action(): string {
+		return 'read';
+	}
+
+	public function get_parameters_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'hide_empty' => [
+					'type'        => 'boolean',
+					'description' => 'If true, only return categories that have at least one product.',
+					'default'     => false,
+				],
+			],
+		];
+	}
+
+	public function get_required_capability(): string {
+		return 'manage_woocommerce';
+	}
+
+	public function execute( array $input ): array {
+		$terms = get_terms( [
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => ! empty( $input['hide_empty'] ),
+			'orderby'    => 'name',
+			'order'      => 'ASC',
+		] );
+
+		if ( is_wp_error( $terms ) ) {
+			return [ 'success' => false, 'error' => $terms->get_error_message() ];
+		}
+
+		$categories = [];
+		foreach ( $terms as $term ) {
+			$categories[] = [
+				'id'            => $term->term_id,
+				'name'          => $term->name,
+				'slug'          => $term->slug,
+				'parent_id'     => $term->parent,
+				'product_count' => $term->count,
+				'description'   => $term->description,
+			];
+		}
+
+		return [
+			'success' => true,
+			'data'    => [
+				'categories' => $categories,
+				'total'      => count( $categories ),
+			],
 		];
 	}
 }
