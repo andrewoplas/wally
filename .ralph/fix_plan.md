@@ -79,7 +79,7 @@
   - Each with trigger phrases, step-by-step instructions, and what tools to use at each step
   - Written as instructions for the LLM, not for the user
 
-- [ ] **5.2 Wizard Intent Patterns** — `intent-classifier.service.ts`
+- [x] **5.2 Wizard Intent Patterns** — `intent-classifier.service.ts`
   - Add new intent key `guided-wizards` with patterns: "set up my site", "just installed wordpress", "get started", "migrate from squarespace/wix", "ready to launch", "pre-launch check", "launch checklist"
   - Read existing file first, add new pattern block
 

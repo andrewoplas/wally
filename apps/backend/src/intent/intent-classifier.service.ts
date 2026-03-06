@@ -45,6 +45,30 @@ const INTENT_PATTERNS: IntentPattern[] = [
     ],
   },
 
+  {
+    key: 'guided-wizards',
+    patterns: [
+      /\b(?:just\s+)?installed\s+wordpress\b/i,
+      /\bset\s+up\s+my\s+(?:new\s+)?(?:site|wordpress|blog)\b/i,
+      /\bhelp\s+me\s+get\s+started\b/i,
+      /\bjust\s+got\s+(?:a\s+)?wordpress\b/i,
+      /\bnew\s+wordpress\s+(?:site|install)\b/i,
+      /\bstart\s+from\s+scratch\b/i,
+      /\bmoving\s+from\s+(?:squarespace|wix|weebly|blogger)\b/i,
+      /\bmigrat(?:e|ing)\s+(?:my\s+)?(?:site|from)\b/i,
+      /\b(?:import|switch)\s+from\s+(?:squarespace|wix|weebly)\b/i,
+      /\bswitch\s+to\s+wordpress\b/i,
+      /\bis\s+my\s+site\s+ready\s+to\s+launch\b/i,
+      /\bpre[\s-]?launch\s+check/i,
+      /\bready\s+to\s+(?:go\s+)?live\b/i,
+      /\blaunch\s+checklist\b/i,
+      /\bgoing\s+live\s+(?:soon|today)\b/i,
+      /\bcheck\s+(?:before|my\s+site\s+before)\s+launch\b/i,
+      /\bsite\s+launch\b/i,
+      /\bget\s+started\s+(?:with\s+)?(?:wordpress|wally|my\s+site)\b/i,
+    ],
+  },
+
   // ── Core Content & Structure ──────────────────────────────────────────────
   {
     key: 'elementor',
