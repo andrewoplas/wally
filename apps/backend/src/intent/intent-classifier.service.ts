@@ -23,6 +23,18 @@ interface IntentPattern {
 // ─── Pattern Definitions ──────────────────────────────────────────────────────
 
 const INTENT_PATTERNS: IntentPattern[] = [
+  // ── High-Level Workflows ──────────────────────────────────────────────────
+  {
+    key: 'gutenberg-blocks',
+    patterns: [
+      /\b(?:build|create|design|make)\s+(?:a\s+|me\s+(?:a\s+)?)?(?:landing\s*page|home\s*page|about\s*page|contact\s*page|page|website)/i,
+      /\b(?:build|create|design|make)\s+(?:a\s+)?(?:hero|banner|section|layout|header|footer|cta|call\s*to\s*action)/i,
+      /\bpage\s*(?:layout|design|structure|template|builder)/i,
+      /\b(?:add|insert|put)\s+(?:a\s+)?(?:section|hero|banner|columns|grid|features?|testimonials?|pricing|faq)/i,
+      /\bvibe\s*cod/i,
+    ],
+  },
+
   // ── Core Content & Structure ──────────────────────────────────────────────
   {
     key: 'elementor',
@@ -806,7 +818,7 @@ const INTENT_PATTERNS: IntentPattern[] = [
 ];
 
 /** Maximum number of intents returned per classification (controls token budget). */
-const MAX_INTENTS = 4;
+const MAX_INTENTS = 8;
 
 /** Number of recent conversation messages to check for context continuity. */
 const CONTEXT_WINDOW = 2;

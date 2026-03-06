@@ -11,10 +11,10 @@ class RestController {
 	private $namespace = 'wally/v1';
 
 	/** Max messages to include in conversation history sent to LLM. */
-	private const HISTORY_LIMIT = 20;
+	private const HISTORY_LIMIT = 40;
 
 	/** HTTP timeout for backend API calls (seconds). */
-	private const BACKEND_TIMEOUT = 60;
+	private const BACKEND_TIMEOUT = 120;
 
 	public function register_routes() {
 		register_rest_route( $this->namespace, '/chat', [
@@ -311,7 +311,7 @@ class RestController {
 		// 7. Tool execution loop (up to 5 iterations).
 		$executor     = ToolExecutor::instance();
 		$confirmation = null;
-		$max_loops    = 5;
+		$max_loops    = 10;
 
 		for ( $loop = 0; $loop < $max_loops && ! empty( $tool_calls ); $loop++ ) {
 			$this->send_sse_event([
@@ -548,7 +548,7 @@ class RestController {
 	): array {
 		$executor          = ToolExecutor::instance();
 		$confirmation      = null;
-		$max_loops         = 5;
+		$max_loops         = 10;
 		$total_token_count = 0;
 
 		for ( $loop = 0; $loop < $max_loops; $loop++ ) {
