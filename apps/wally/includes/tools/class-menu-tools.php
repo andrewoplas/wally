@@ -4,7 +4,7 @@ namespace Wally\Tools;
 /**
  * Navigation menu management tools for WordPress.
  *
- * Tools: list_menus, get_menu, create_menu, delete_menu, add_menu_item, update_menu_item, delete_menu_item.
+ * Tools: list_menus, get_menu, create_menu, delete_menu, add_menu_item, update_menu_item, delete_menu_item, set_menu_location.
  * Uses WordPress core nav menu functions; requires edit_theme_options capability.
  */
 
@@ -596,6 +596,86 @@ class DeleteMenuItem extends ToolInterface {
 			'item_id' => $item_id,
 			'title'   => $title,
 			'message' => "Menu item \"{$title}\" deleted successfully.",
+		];
+	}
+}
+
+/**
+ * Assign a navigation menu to a registered theme location. Requires confirmation.
+ */
+class SetMenuLocation extends ToolInterface {
+
+	public function get_name(): string {
+		return 'set_menu_location';
+	}
+
+	public function get_description(): string {
+		return 'Assign an existing WordPress navigation menu to a registered theme location (e.g., primary, secondary, footer). Use list_menus to get menu IDs and available locations. This overwrites any menu currently assigned to that location. Requires confirmation.';
+	}
+
+	public function get_category(): string {
+		return 'site';
+	}
+
+	public function get_action(): string {
+		return 'update';
+	}
+
+	public function get_parameters_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'menu_id'  => [
+					'type'        => 'integer',
+					'description' => 'The ID of the menu to assign. Use list_menus to get menu IDs.',
+				],
+				'location' => [
+					'type'        => 'string',
+					'description' => 'The theme location slug to assign the menu to (e.g., "primary", "footer", "secondary"). Use list_menus to see all registered locations.',
+				],
+			],
+			'required'   => [ 'menu_id', 'location' ],
+		];
+	}
+
+	public function get_required_capability(): string {
+		return 'edit_theme_options';
+	}
+
+	public function requires_confirmation(): bool {
+		return true;
+	}
+
+	public function execute( array $input ): array {
+		$menu_id  = absint( $input['menu_id'] );
+		$location = sanitize_key( $input['location'] );
+
+		$menu = wp_get_nav_menu_object( $menu_id );
+		if ( ! $menu ) {
+			return [ 'success' => false, 'error' => "Menu not found: {$menu_id}" ];
+		}
+
+		$registered_locations = get_registered_nav_menus();
+		if ( ! array_key_exists( $location, $registered_locations ) ) {
+			$available = implode( ', ', array_keys( $registered_locations ) );
+			return [ 'success' => false, 'error' => "Theme location \"{$location}\" is not registered. Available locations: {$available}" ];
+		}
+
+		$locations             = get_nav_menu_locations();
+		$previous_menu_id      = $locations[ $location ] ?? 0;
+		$locations[ $location ] = $menu_id;
+		set_theme_mod( 'nav_menu_locations', $locations );
+
+		return [
+			'success' => true,
+			'data'    => [
+				'menu_id'          => $menu_id,
+				'menu_name'        => $menu->name,
+				'location'         => $location,
+				'location_label'   => $registered_locations[ $location ],
+				'previous_menu_id' => $previous_menu_id,
+				'message'          => "Menu \"{$menu->name}\" assigned to location \"{$location}\".",
+			],
 		];
 	}
 }
