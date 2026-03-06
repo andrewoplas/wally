@@ -99,7 +99,7 @@
   - Tools: `undo_last_action` (restore from latest snapshot, requires confirmation), `list_recent_changes` (show snapshots for current conversation)
   - Uses the Snapshot helper class
 
-- [ ] **6.4 Add Snapshot Calls to Existing Tools**
+- [x] **6.4 Add Snapshot Calls to Existing Tools**
   - Modify `class-content-tools.php`: before `update_post` and `delete_post`, save snapshot of current post state
   - Modify `class-site-tools.php`: before `update_option`, save snapshot of current option value
   - Modify `class-menu-tools.php`: before `delete_menu`, `update_menu_item`, `delete_menu_item`, save snapshot

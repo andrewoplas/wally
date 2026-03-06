@@ -1,6 +1,8 @@
 <?php
 namespace Wally\Tools;
 
+use Wally\Snapshot;
+
 /**
  * Navigation menu management tools for WordPress.
  *
@@ -251,9 +253,13 @@ class DeleteMenu extends ToolInterface {
 		return [
 			'type'       => 'object',
 			'properties' => [
-				'menu_id' => [
+				'menu_id'         => [
 					'type'        => 'integer',
 					'description' => 'The ID of the menu to delete.',
+				],
+				'conversation_id' => [
+					'type'        => 'integer',
+					'description' => 'Current conversation ID. When provided, the menu items are snapshotted before deletion for undo support.',
 				],
 			],
 			'required'   => [ 'menu_id' ],
@@ -274,6 +280,12 @@ class DeleteMenu extends ToolInterface {
 
 		if ( ! $menu ) {
 			return [ 'error' => "Menu not found: {$menu_id}" ];
+		}
+
+		// Save snapshot of current menu items before deleting.
+		if ( ! empty( $input['conversation_id'] ) ) {
+			$items = wp_get_nav_menu_items( $menu_id ) ?: [];
+			Snapshot::save( absint( $input['conversation_id'] ), 'menu', $menu_id, 'items', $items );
 		}
 
 		$menu_name = $menu->name;
@@ -463,10 +475,14 @@ class UpdateMenuItem extends ToolInterface {
 					'type'        => 'integer',
 					'description' => 'New position/order within the menu.',
 				],
-				'target'    => [
+				'target'          => [
 					'type'        => 'string',
 					'description' => 'Link target: "" for same window, "_blank" for new tab.',
 					'enum'        => [ '', '_blank' ],
+				],
+				'conversation_id' => [
+					'type'        => 'integer',
+					'description' => 'Current conversation ID. When provided, the current item state is snapshotted before updating for undo support.',
 				],
 			],
 			'required'   => [ 'menu_id', 'item_id' ],
@@ -489,6 +505,22 @@ class UpdateMenuItem extends ToolInterface {
 		$item = get_post( $item_id );
 		if ( ! $item || $item->post_type !== 'nav_menu_item' ) {
 			return [ 'error' => "Menu item not found: {$item_id}" ];
+		}
+
+		// Save snapshot for undo support before updating.
+		if ( ! empty( $input['conversation_id'] ) ) {
+			$snapshot_data = [
+				'ID'                          => $item_id,
+				'menu-item-title'             => get_post_meta( $item_id, '_menu_item_title', true ) ?: $item->post_title,
+				'menu-item-url'               => get_post_meta( $item_id, '_menu_item_url', true ),
+				'menu-item-type'              => get_post_meta( $item_id, '_menu_item_type', true ),
+				'menu-item-object'            => get_post_meta( $item_id, '_menu_item_object', true ),
+				'menu-item-object-id'         => (int) get_post_meta( $item_id, '_menu_item_object_id', true ),
+				'menu-item-parent-id'         => (int) get_post_meta( $item_id, '_menu_item_menu_item_parent', true ),
+				'menu-item-position'          => (int) $item->menu_order,
+				'menu-item-target'            => get_post_meta( $item_id, '_menu_item_target', true ),
+			];
+			Snapshot::save( absint( $input['conversation_id'] ), 'menu', $menu_id, "item:{$item_id}", $snapshot_data );
 		}
 
 		// Build update data from existing meta + overrides.
@@ -560,9 +592,13 @@ class DeleteMenuItem extends ToolInterface {
 		return [
 			'type'       => 'object',
 			'properties' => [
-				'item_id' => [
+				'item_id'         => [
 					'type'        => 'integer',
 					'description' => 'The ID of the menu item to delete.',
+				],
+				'conversation_id' => [
+					'type'        => 'integer',
+					'description' => 'Current conversation ID. When provided, the item is snapshotted before deletion for undo support.',
 				],
 			],
 			'required'   => [ 'item_id' ],
@@ -583,6 +619,24 @@ class DeleteMenuItem extends ToolInterface {
 
 		if ( ! $item || $item->post_type !== 'nav_menu_item' ) {
 			return [ 'error' => "Menu item not found: {$item_id}" ];
+		}
+
+		// Save snapshot for undo support before deleting.
+		if ( ! empty( $input['conversation_id'] ) ) {
+			$snapshot_data = [
+				'ID'                  => $item_id,
+				'menu-item-title'     => get_post_meta( $item_id, '_menu_item_title', true ) ?: $item->post_title,
+				'menu-item-url'       => get_post_meta( $item_id, '_menu_item_url', true ),
+				'menu-item-type'      => get_post_meta( $item_id, '_menu_item_type', true ),
+				'menu-item-object'    => get_post_meta( $item_id, '_menu_item_object', true ),
+				'menu-item-object-id' => (int) get_post_meta( $item_id, '_menu_item_object_id', true ),
+				'menu-item-parent-id' => (int) get_post_meta( $item_id, '_menu_item_menu_item_parent', true ),
+				'menu-item-position'  => (int) $item->menu_order,
+				'menu-item-target'    => get_post_meta( $item_id, '_menu_item_target', true ),
+			];
+			$menu_ids = wp_get_object_terms( $item_id, 'nav_menu', [ 'fields' => 'ids' ] );
+			$snap_menu_id = ! is_wp_error( $menu_ids ) && ! empty( $menu_ids ) ? (int) $menu_ids[0] : 0;
+			Snapshot::save( absint( $input['conversation_id'] ), 'menu', $snap_menu_id, "item:{$item_id}", $snapshot_data );
 		}
 
 		$title  = $item->post_title;

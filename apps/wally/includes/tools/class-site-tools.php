@@ -1,6 +1,8 @@
 <?php
 namespace Wally\Tools;
 
+use Wally\Snapshot;
+
 /**
  * Site tools for reading and updating WordPress site information and options.
  *
@@ -294,13 +296,17 @@ class UpdateOption extends ToolInterface {
 		return [
 			'type'       => 'object',
 			'properties' => [
-				'option_name' => [
+				'option_name'     => [
 					'type'        => 'string',
 					'description' => 'The option key to update.',
 				],
-				'value'       => [
+				'value'           => [
 					'type'        => 'string',
 					'description' => 'The new value for the option.',
+				],
+				'conversation_id' => [
+					'type'        => 'integer',
+					'description' => 'Current conversation ID. When provided, the previous option value is snapshotted for undo support.',
 				],
 			],
 			'required'   => [ 'option_name', 'value' ],
@@ -323,6 +329,12 @@ class UpdateOption extends ToolInterface {
 		}
 
 		$old_value = get_option( $option_name );
+
+		// Save snapshot for undo support before updating.
+		if ( ! empty( $input['conversation_id'] ) ) {
+			Snapshot::save( absint( $input['conversation_id'] ), 'option', 0, $option_name, $old_value );
+		}
+
 		$new_value = $input['value'];
 
 		$updated = update_option( $option_name, $new_value );

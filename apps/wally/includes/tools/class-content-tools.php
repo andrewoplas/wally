@@ -1,6 +1,8 @@
 <?php
 namespace Wally\Tools;
 
+use Wally\Snapshot;
+
 /**
  * Content tools for managing WordPress posts and pages.
  *
@@ -417,6 +419,10 @@ class UpdatePost extends ToolInterface {
 					'type'        => 'array',
 					'description' => 'Array of tag IDs to replace existing tags.',
 				],
+				'conversation_id' => [
+					'type'        => 'integer',
+					'description' => 'Current conversation ID. When provided, the previous post state is snapshotted for undo support.',
+				],
 			],
 			'required'   => [ 'post_id' ],
 		];
@@ -432,6 +438,11 @@ class UpdatePost extends ToolInterface {
 
 		if ( ! $post ) {
 			return [ 'error' => "Post not found: {$post_id}" ];
+		}
+
+		// Save snapshot for undo support before making changes.
+		if ( ! empty( $input['conversation_id'] ) ) {
+			Snapshot::save( absint( $input['conversation_id'] ), 'post', $post_id, '', $post );
 		}
 
 		$post_data = [ 'ID' => $post_id ];
@@ -523,6 +534,10 @@ class DeletePost extends ToolInterface {
 					'type'        => 'integer',
 					'description' => 'The ID of the post to trash.',
 				],
+				'conversation_id' => [
+					'type'        => 'integer',
+					'description' => 'Current conversation ID. When provided, the post state is snapshotted before trashing for undo support.',
+				],
 			],
 			'required'   => [ 'post_id' ],
 		];
@@ -542,6 +557,11 @@ class DeletePost extends ToolInterface {
 
 		if ( ! $post ) {
 			return [ 'error' => "Post not found: {$post_id}" ];
+		}
+
+		// Save snapshot for undo support before trashing.
+		if ( ! empty( $input['conversation_id'] ) ) {
+			Snapshot::save( absint( $input['conversation_id'] ), 'post', $post_id, '', $post );
 		}
 
 		$title  = $post->post_title;
