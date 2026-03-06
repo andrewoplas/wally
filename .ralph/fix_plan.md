@@ -85,7 +85,7 @@
 
 ## Tier 6: Rollback / Undo System (Phase 4)
 
-- [ ] **6.1 Snapshot Database Table** — `class-database.php`
+- [x] **6.1 Snapshot Database Table** — `class-database.php`
   - Spec: `docs/phase-4-advanced-features.md` section 1
   - Add `wp_wally_snapshots` table creation to the Database class (id, conversation_id, snapshot_type, object_id, object_key, previous_value, created_at)
   - Read existing Database class first, add new table in the same pattern

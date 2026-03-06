@@ -9,6 +9,7 @@ class Database {
         $conversations = $wpdb->prefix . 'wally_conversations';
         $messages      = $wpdb->prefix . 'wally_messages';
         $actions       = $wpdb->prefix . 'wally_actions';
+        $snapshots     = $wpdb->prefix . 'wally_snapshots';
 
         $sql = "
             CREATE TABLE {$conversations} (
@@ -45,6 +46,19 @@ class Database {
                 PRIMARY KEY (id),
                 KEY conversation_id (conversation_id),
                 KEY user_id (user_id)
+            ) {$charset};
+
+            CREATE TABLE {$snapshots} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                conversation_id bigint(20) unsigned NOT NULL,
+                snapshot_type varchar(50) NOT NULL,
+                object_id bigint(20) unsigned DEFAULT NULL,
+                object_key varchar(255) DEFAULT NULL,
+                previous_value longtext,
+                created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY conversation_id (conversation_id),
+                KEY created_at (created_at)
             ) {$charset};
         ";
 
