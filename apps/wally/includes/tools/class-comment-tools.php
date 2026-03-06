@@ -4,7 +4,7 @@ namespace Wally\Tools;
 /**
  * Comment management tools for WordPress.
  *
- * Tools: list_comments, get_comment, update_comment_status, delete_comment, reply_to_comment.
+ * Tools: list_comments, get_comment, update_comment_status, delete_comment, reply_to_comment, bulk_moderate_comments.
  * Uses WordPress core comment functions with proper capability checks.
  */
 
@@ -435,6 +435,101 @@ class ReplyToComment extends ToolInterface {
 			'author'         => $current_user->display_name,
 			'content'        => $input['content'],
 			'message'        => 'Reply posted successfully.',
+		];
+	}
+}
+
+/**
+ * Bulk approve, spam, hold, or trash multiple comments at once. Requires confirmation.
+ */
+class BulkModerateComments extends ToolInterface {
+
+	public function get_name(): string {
+		return 'bulk_moderate_comments';
+	}
+
+	public function get_description(): string {
+		return 'Apply a moderation action (approve, spam, hold/pending, or trash) to multiple comments at once by passing an array of comment IDs. Use this when the user wants to "approve all pending comments", "mark all spam comments", or "clean up comments". Requires confirmation as it modifies multiple comments.';
+	}
+
+	public function get_category(): string {
+		return 'content';
+	}
+
+	public function get_action(): string {
+		return 'update';
+	}
+
+	public function get_parameters_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'comment_ids' => [
+					'type'        => 'array',
+					'description' => 'Array of comment IDs to moderate. Use list_comments to find IDs.',
+					'items'       => [
+						'type' => 'integer',
+					],
+				],
+				'action'      => [
+					'type'        => 'string',
+					'description' => 'Moderation action to apply: "approve" to make comments visible, "hold" to set as pending, "spam" to mark as spam, "trash" to move to trash.',
+					'enum'        => [ 'approve', 'hold', 'spam', 'trash' ],
+				],
+			],
+			'required'   => [ 'comment_ids', 'action' ],
+		];
+	}
+
+	public function get_required_capability(): string {
+		return 'moderate_comments';
+	}
+
+	public function requires_confirmation(): bool {
+		return true;
+	}
+
+	public function execute( array $input ): array {
+		$comment_ids = array_map( 'absint', (array) ( $input['comment_ids'] ?? [] ) );
+		$comment_ids = array_filter( $comment_ids );
+		$action      = sanitize_key( $input['action'] ?? '' );
+
+		$allowed_actions = [ 'approve', 'hold', 'spam', 'trash' ];
+		if ( ! in_array( $action, $allowed_actions, true ) ) {
+			return [ 'success' => false, 'error' => "Invalid action \"{$action}\". Use: approve, hold, spam, or trash." ];
+		}
+
+		if ( empty( $comment_ids ) ) {
+			return [ 'success' => false, 'error' => 'No comment IDs provided.' ];
+		}
+
+		$updated = [];
+		$errors  = [];
+
+		foreach ( $comment_ids as $comment_id ) {
+			$comment = get_comment( $comment_id );
+			if ( ! $comment ) {
+				$errors[] = "Comment not found: {$comment_id}";
+				continue;
+			}
+
+			$result = wp_set_comment_status( $comment_id, $action );
+			if ( $result ) {
+				$updated[] = $comment_id;
+			} else {
+				$errors[] = "Failed to {$action} comment: {$comment_id}";
+			}
+		}
+
+		return [
+			'success' => true,
+			'data'    => [
+				'action'         => $action,
+				'updated_count'  => count( $updated ),
+				'updated_ids'    => $updated,
+				'errors'         => $errors,
+				'message'        => sprintf( '%d comment(s) set to "%s".', count( $updated ), $action ),
+			],
 		];
 	}
 }
