@@ -73,7 +73,7 @@
 
 ## Tier 5: Guided Wizards (Phase 4)
 
-- [ ] **5.1 Guided Wizards Knowledge File** — `apps/backend/src/knowledge/guided-wizards.md` (NEW FILE)
+- [x] **5.1 Guided Wizards Knowledge File** — `apps/backend/src/knowledge/guided-wizards.md` (NEW FILE)
   - Spec: `docs/phase-4-advanced-features.md` section 4
   - Three wizard flows: New Site Setup, Migration Helper, Launch Checklist
   - Each with trigger phrases, step-by-step instructions, and what tools to use at each step

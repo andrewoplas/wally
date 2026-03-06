@@ -101,6 +101,9 @@ const KNOWLEDGE_FILES: string[] = [
   'gutenberg-blocks',
   'page-templates',
 
+  // Guided multi-step wizards
+  'guided-wizards',
+
   // Theme extensions
   'theme-extensions',
 
