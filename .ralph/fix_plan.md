@@ -95,7 +95,7 @@
   - Uses `$wpdb` for all queries
   - `cleanup_old()` deletes snapshots older than 24 hours
 
-- [ ] **6.3 Undo Tools** — `class-undo-tools.php` (NEW FILE)
+- [x] **6.3 Undo Tools** — `class-undo-tools.php` (NEW FILE)
   - Tools: `undo_last_action` (restore from latest snapshot, requires confirmation), `list_recent_changes` (show snapshots for current conversation)
   - Uses the Snapshot helper class
 
