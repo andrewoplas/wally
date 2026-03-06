@@ -62,6 +62,11 @@ export interface PluginInfo {
   active: boolean;
 }
 
+export interface RecentPostSample {
+  title: string;
+  excerpt: string;
+}
+
 export interface SiteProfile {
   wp_version?: string;
   php_version?: string;
@@ -77,6 +82,7 @@ export interface SiteProfile {
   posts_page?: PageInfo;
   active_plugins_summary?: string;
   plugins?: PluginInfo[];
+  recent_posts_sample?: RecentPostSample[];
 }
 
 export type ConversationMessage =
@@ -311,6 +317,18 @@ export class PromptBuilderService {
         if (activePlugins) {
           parts.push(`Active plugins: ${activePlugins}`);
         }
+      }
+    }
+
+    // --- Content style reference ---
+    if (
+      siteProfile?.recent_posts_sample &&
+      siteProfile.recent_posts_sample.length > 0
+    ) {
+      parts.push('', '--- Content Style Reference ---');
+      parts.push('Sample of recent posts (use to match the site\'s writing style and tone):');
+      for (const post of siteProfile.recent_posts_sample) {
+        parts.push(`"${post.title}": ${post.excerpt}`);
       }
     }
 

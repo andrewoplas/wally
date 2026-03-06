@@ -1,172 +1,114 @@
-# Fix Plan — WordPress Tool Files
+# Fix Plan — Wally Intelligence Upgrade (Phases 2-4)
 
-## Tier 1: Core WordPress (No plugin dependency)
+## Tier 1: New Strategic Tools (Phase 2)
 
-- [x] **1.1 User Tools** — `class-user-tools.php`
-  - Knowledge: `users.md`
-  - Tools: list_users, get_user, create_user, update_user, delete_user, update_user_role
-  - Confirmation: delete_user requires confirmation
+- [x] **1.1 Debug Tools** — `class-debug-tools.php` (NEW FILE)
+  - Spec: `docs/phase-2-strategic-tools.md` section 2
+  - Tools: `get_error_log` (read last N lines of WP_CONTENT_DIR/debug.log), `get_site_health_tests` (run WP Site Health direct tests)
+  - Both require `manage_options` capability
+  - No confirmation needed (read-only)
 
-- [x] **1.2 Menu Tools** — `class-menu-tools.php`
-  - Knowledge: `menus.md`
-  - Tools: list_menus, get_menu, create_menu, delete_menu, add_menu_item, update_menu_item, delete_menu_item
-  - Confirmation: delete operations require confirmation
+- [x] **1.2 Media Upload Tools** — `class-media-tools.php` (ADD TO EXISTING)
+  - Spec: `docs/phase-2-strategic-tools.md` section 3
+  - Add `upload_media_from_url` tool: downloads image from URL via `download_url()` + `media_handle_sideload()`, sets alt text
+  - Add `set_featured_image` tool: calls `set_post_thumbnail($post_id, $attachment_id)`
+  - Read existing file first, add new classes matching the existing style
 
-- [x] **1.3 Media Tools** — `class-media-tools.php`
-  - Knowledge: `media.md`
-  - Tools: list_media, get_media, update_media, delete_media
-  - Note: No upload tool — requires file handling not yet supported
-  - Confirmation: delete_media requires confirmation
+- [x] **1.3 Customizer Tools** — `class-customizer-tools.php` (NEW FILE)
+  - Spec: `docs/phase-2-strategic-tools.md` section 4
+  - Tools: `get_theme_mods` (read all theme mods via `get_theme_mods()`), `update_theme_mod` (set via `set_theme_mod()`, requires confirmation)
+  - Capability: `edit_theme_options`
 
-- [x] **1.4 Comment Tools** — `class-comment-tools.php`
-  - Knowledge: `wp-comments.md`
-  - Tools: list_comments, get_comment, update_comment_status, delete_comment, reply_to_comment
-  - Confirmation: delete_comment requires confirmation
+- [x] **1.4 Widget Tools** — `class-widget-tools.php` (NEW FILE)
+  - Spec: `docs/phase-2-strategic-tools.md` section 5
+  - Tools: `list_widget_areas` (registered sidebars), `list_widgets` (active widgets per area), `add_widget`, `remove_widget`
+  - `can_register()` should return `!wp_is_block_theme()` (classic themes only)
+  - Capability: `edit_theme_options`
 
-## Tier 2: High-Value Plugins
+- [x] **1.5 Menu Location Tool** — `class-menu-tools.php` (ADD TO EXISTING)
+  - Add `set_menu_location` tool: assigns a menu to a theme location via `set_theme_mod('nav_menu_locations', [...])`
+  - Read existing file first, add new class matching the existing style
+  - Requires confirmation, capability: `edit_theme_options`
 
-- [x] **2.1 WooCommerce Tools** — `class-woocommerce-tools.php`
-  - Knowledge: `woocommerce.md`
-  - Conditional: WooCommerce plugin active
-  - Tools: list_products, get_product, create_product, update_product, delete_product, list_orders, get_order, update_order_status, list_coupons, get_coupon
-  - Confirmation: delete_product and update_order_status require confirmation
+## Tier 2: Tool Expansions (Phase 2-3)
 
-- [x] **2.2 Gravity Forms Tools** — `class-gravity-forms-tools.php`
-  - Knowledge: `gravity-forms.md`
-  - Conditional: Gravity Forms plugin active
-  - Tools: list_forms, get_form, list_entries, get_entry, delete_entry, update_entry_status
-  - Confirmation: delete_entry requires confirmation
+- [x] **2.1 WooCommerce Expansions** — `class-woocommerce-tools.php` (ADD TO EXISTING)
+  - Spec: `docs/phase-3-plugin-expansions.md` section 1
+  - Add: `create_coupon` (create WC_Coupon with code, type, amount), `get_revenue_summary` (query revenue/orders for date range), `manage_stock` (bulk update product stock), `list_product_categories` (woo product categories)
+  - Read existing file first, add new classes at the end
 
-- [x] **2.3 Contact Form 7 Tools** — `class-contact-form-7-tools.php`
-  - Knowledge: `contact-form-7.md`
-  - Conditional: Contact Form 7 plugin active
-  - Tools: list_contact_forms, get_contact_form, update_contact_form
+- [x] **2.2 Yoast SEO Expansion** — `class-yoast-seo-tools.php` (ADD TO EXISTING)
+  - Spec: `docs/phase-3-plugin-expansions.md` section 2
+  - Add: `list_yoast_seo_issues` (query posts with missing/poor SEO meta using WP_Query + post meta)
+  - Read existing file first, add new class
 
-- [x] **2.4 Yoast SEO Tools** — `class-yoast-seo-tools.php`
-  - Knowledge: `yoast-seo.md`
-  - Conditional: Yoast SEO plugin active
-  - Tools: get_yoast_meta, update_yoast_meta, get_yoast_indexables
+- [x] **2.3 Comment Expansions** — `class-comment-tools.php` (ADD TO EXISTING)
+  - Spec: `docs/phase-2-strategic-tools.md` section 7
+  - Add: `bulk_moderate_comments` (approve/spam/trash multiple comments by ID array, requires confirmation)
+  - Read existing file first, add new class
 
-- [x] **2.5 Rank Math Tools** — `class-rank-math-tools.php`
-  - Knowledge: `rank-math.md`
-  - Conditional: Rank Math plugin active
-  - Tools: get_rank_math_meta, update_rank_math_meta
+## Tier 3: Page Template Library (Phase 4)
 
-- [x] **2.6 Redirection Tools** — `class-redirection-tools.php`
-  - Knowledge: `redirection.md`
-  - Conditional: Redirection plugin active
-  - Tools: list_redirects, create_redirect, update_redirect, delete_redirect, get_404_logs
-  - Confirmation: delete_redirect requires confirmation
+- [x] **3.1 Page Templates Knowledge File** — `apps/backend/src/knowledge/page-templates.md` (NEW FILE)
+  - Spec: `docs/phase-4-advanced-features.md` section 2
+  - Create complete, tested Gutenberg block markup templates for: Business Landing Page, Restaurant, Portfolio, About Page, Contact Page, Service Page, Coming Soon
+  - Each template should have all sections with full block markup ready to customize
+  - Read `apps/backend/src/knowledge/gutenberg-blocks.md` first for block syntax reference
 
-## Tier 3: Forms & Other Plugins
+- [x] **3.2 Page Templates Intent Pattern** — `intent-classifier.service.ts`
+  - Ensure `gutenberg-blocks` intent also loads `page-templates` knowledge
+  - Update `KnowledgeLoaderService` or intent classifier so page-building intents inject both `gutenberg-blocks` and `page-templates`
 
-- [x] **3.1 WPForms Tools** — `class-wpforms-tools.php`
-  - Knowledge: `forms-general.md` (WPForms section)
-  - Conditional: WPForms plugin active
-  - Tools: list_wpforms, get_wpform, list_wpform_entries
+## Tier 4: Content Style Matching (Phase 4)
 
-- [x] **3.2 Jetpack Tools** — `class-jetpack-tools.php`
-  - Knowledge: `jetpack.md`
-  - Conditional: Jetpack plugin active
-  - Tools: list_jetpack_modules, activate_jetpack_module, deactivate_jetpack_module, get_jetpack_stats
-  - Confirmation: module activation/deactivation requires confirmation
+- [x] **4.1 SiteScanner: Add Recent Posts Sample** — `class-site-scanner.php`
+  - Spec: `docs/phase-4-advanced-features.md` section 3
+  - Add `recent_posts_sample` field to site profile: 3 recent published posts with title + 40-word excerpt
+  - Read existing file first, add to the `scan()` method output
 
-- [x] **3.3 Events Calendar Tools** — `class-events-tools.php`
-  - Knowledge: `events-plugins.md`
-  - Conditional: The Events Calendar plugin active
-  - Tools: list_events, get_event, create_event, update_event, delete_event
-  - Confirmation: delete_event requires confirmation
+- [x] **4.2 PromptBuilder: Inject Content Style** — `prompt-builder.service.ts`
+  - Add `recent_posts_sample` to `SiteProfile` interface
+  - When present, append a "Content Style Reference" section to the system prompt with the post excerpts
+  - Read existing file first, add after the Site Context section
 
-- [x] **3.4 Backup Tools** — `class-backup-tools.php`
-  - Knowledge: `backup-plugins.md`
-  - Conditional: UpdraftPlus plugin active
-  - Tools: list_updraftplus_backups, trigger_updraftplus_backup, get_updraftplus_settings
-  - Confirmation: trigger_backup requires confirmation
+## Tier 5: Guided Wizards (Phase 4)
 
-- [x] **3.5 Caching Tools** — `class-caching-tools.php`
-  - Knowledge: `caching-plugins.md`
-  - Conditional: Detect active caching plugin (WP Rocket, W3 Total Cache, or core)
-  - Tools: clear_cache, get_cache_settings
-  - Confirmation: clear_cache requires confirmation
+- [ ] **5.1 Guided Wizards Knowledge File** — `apps/backend/src/knowledge/guided-wizards.md` (NEW FILE)
+  - Spec: `docs/phase-4-advanced-features.md` section 4
+  - Three wizard flows: New Site Setup, Migration Helper, Launch Checklist
+  - Each with trigger phrases, step-by-step instructions, and what tools to use at each step
+  - Written as instructions for the LLM, not for the user
 
-- [x] **3.6 Security Plugin Tools** — `class-security-plugin-tools.php`
-  - Knowledge: `security-plugins.md`
-  - Conditional: Wordfence plugin active
-  - Tools: get_wordfence_scan_status, list_wordfence_blocked_ips, run_wordfence_scan
-  - Confirmation: run_scan requires confirmation
+- [ ] **5.2 Wizard Intent Patterns** — `intent-classifier.service.ts`
+  - Add new intent key `guided-wizards` with patterns: "set up my site", "just installed wordpress", "get started", "migrate from squarespace/wix", "ready to launch", "pre-launch check", "launch checklist"
+  - Read existing file first, add new pattern block
 
-- [x] **3.7 WooCommerce Extensions Tools** — `class-woocommerce-extensions-tools.php`
-  - Knowledge: `woocommerce-extensions.md`
-  - Conditional: WooCommerce Subscriptions plugin active
-  - Tools: list_subscriptions, get_subscription, update_subscription_status
-  - Confirmation: update_subscription_status requires confirmation
+## Tier 6: Rollback / Undo System (Phase 4)
 
-## Tier 4: Additional Plugins
+- [ ] **6.1 Snapshot Database Table** — `class-database.php`
+  - Spec: `docs/phase-4-advanced-features.md` section 1
+  - Add `wp_wally_snapshots` table creation to the Database class (id, conversation_id, snapshot_type, object_id, object_key, previous_value, created_at)
+  - Read existing Database class first, add new table in the same pattern
 
-- [x] **4.1 EDD & Membership Tools** — `class-ecommerce-tools.php`
-  - Knowledge: `ecommerce-plugins.md`
-  - Conditional: Per-tool (EDD, MemberPress, or LearnDash active)
-  - Tools: list_edd_downloads, get_edd_download, list_edd_payments, list_memberpress_memberships, list_learndash_courses
-  - Read-only tools, no confirmation needed
+- [ ] **6.2 Snapshot Helper Class** — `class-snapshot.php` (NEW FILE)
+  - Create `Wally\Snapshot` class with static methods: `save()`, `get_latest()`, `list_for_conversation()`, `delete()`, `cleanup_old()`
+  - Uses `$wpdb` for all queries
+  - `cleanup_old()` deletes snapshots older than 24 hours
 
-- [x] **4.2 Analytics Tools** — `class-analytics-tools.php`
-  - Knowledge: `analytics-plugins.md`
-  - Conditional: Google Site Kit or MonsterInsights active
-  - Tools: get_site_kit_stats, get_monsterinsights_stats
-  - Read-only tools, no confirmation needed
+- [ ] **6.3 Undo Tools** — `class-undo-tools.php` (NEW FILE)
+  - Tools: `undo_last_action` (restore from latest snapshot, requires confirmation), `list_recent_changes` (show snapshots for current conversation)
+  - Uses the Snapshot helper class
 
-- [x] **4.3 Email Marketing Tools** — `class-email-marketing-tools.php`
-  - Knowledge: `email-marketing.md`
-  - Conditional: MC4WP or OptinMonster active
-  - Tools: list_mailchimp_lists, get_mailchimp_subscribers, list_optinmonster_campaigns
-  - Read-only tools, no confirmation needed
+- [ ] **6.4 Add Snapshot Calls to Existing Tools**
+  - Modify `class-content-tools.php`: before `update_post` and `delete_post`, save snapshot of current post state
+  - Modify `class-site-tools.php`: before `update_option`, save snapshot of current option value
+  - Modify `class-menu-tools.php`: before `delete_menu`, `update_menu_item`, `delete_menu_item`, save snapshot
+  - Read each file first, add snapshot save calls at the top of relevant `execute()` methods
+  - Pass `$conversation_id` through — check how ToolExecutor passes it
 
-- [x] **4.4 Multilingual Tools** — `class-multilingual-tools.php`
-  - Knowledge: `multilingual-plugins.md`
-  - Conditional: WPML or Polylang active
-  - Tools: list_wpml_languages, get_wpml_translation_status, list_polylang_languages
-  - Read-only tools, no confirmation needed
-
-- [x] **4.5 Page Builder Tools** — `class-page-builder-tools.php`
-  - Knowledge: `page-builders.md`
-  - Conditional: Beaver Builder or Divi active
-  - Tools: beaver_builder_search_content, beaver_builder_get_layout, divi_search_content, divi_get_layout
-  - Read-only tools, no confirmation needed
-
-- [x] **4.6 Image Optimization Tools** — `class-image-optimization-tools.php`
-  - Knowledge: `image-optimization.md`
-  - Conditional: Smush or EWWW active
-  - Tools: get_smush_stats, bulk_smush_status, get_ewww_stats
-  - Read-only stats, no confirmation needed
-
-- [x] **4.7 TablePress Tools** — `class-tablepress-tools.php`
-  - Knowledge: `content-plugins.md` (TablePress section)
-  - Conditional: TablePress plugin active
-  - Tools: list_tables, get_table, update_table_cell
-
-- [x] **4.8 Slider Tools** — `class-slider-tools.php`
-  - Knowledge: `slider-plugins.md`
-  - Conditional: RevSlider plugin active
-  - Tools: list_sliders, get_slider, update_slider_status
-  - Confirmation: update_status requires confirmation
-
-- [x] **4.9 Audit Log Tools** — `class-audit-log-tools.php`
-  - Knowledge: `audit-logging.md`
-  - Conditional: Simple History plugin active
-  - Tools: get_activity_log, get_activity_log_entry
-  - Read-only tools, no confirmation needed
-
-- [x] **4.10 Social Plugin Tools** — `class-social-tools.php`
-  - Knowledge: `social-plugins.md`
-  - Conditional: Smash Balloon or similar social plugin active
-  - Tools: get_instagram_feed_settings, list_social_share_counts
-  - Read-only tools, no confirmation needed
-
-- [x] **4.11 Media Plugin Tools** — `class-media-plugin-tools.php`
-  - Knowledge: `media-plugins.md`
-  - Conditional: Regenerate Thumbnails plugin active
-  - Tools: regenerate_thumbnails, get_regeneration_status
-  - Confirmation: regenerate requires confirmation
+- [ ] **6.5 Snapshot Cleanup Cron** — `class-plugin.php`
+  - Add `Snapshot::cleanup_old()` call to the existing `wally_daily_site_scan` cron handler
+  - Read existing file first, add one line to the cron callback
 
 ## Discovered
 <!-- Ralph adds discovered tasks here -->

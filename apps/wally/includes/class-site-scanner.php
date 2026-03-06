@@ -24,6 +24,7 @@ class SiteScanner {
             'multisite'      => is_multisite(),
             'user_roles'     => self::get_user_role_counts(),
             'active_plugins_summary' => self::get_active_plugins_summary(),
+            'recent_posts_sample' => self::get_recent_posts_sample(),
             'scanned_at'     => current_time( 'mysql' ),
         ];
 
@@ -293,5 +294,34 @@ class SiteScanner {
     private static function get_user_role_counts() {
         $counts = count_users();
         return $counts['avail_roles'];
+    }
+
+    /**
+     * Get a sample of the 3 most recent published posts for content style reference.
+     * Returns title + a ~40-word excerpt for each.
+     */
+    private static function get_recent_posts_sample() {
+        $posts = get_posts( [
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'numberposts'    => 3,
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+        ] );
+
+        if ( empty( $posts ) ) {
+            return [];
+        }
+
+        $result = [];
+        foreach ( $posts as $post ) {
+            $raw_excerpt = has_excerpt( $post ) ? $post->post_excerpt : wp_trim_words( $post->post_content, 40, '...' );
+            $result[] = [
+                'title'   => $post->post_title,
+                'excerpt' => wp_strip_all_tags( $raw_excerpt ),
+            ];
+        }
+
+        return $result;
     }
 }
