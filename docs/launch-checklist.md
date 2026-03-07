@@ -42,9 +42,13 @@
 - [ ] Set up funnel: Landing → Register → First license activated
 
 ### Sentry (Error Monitoring)
-- [ ] Create Next.js project at sentry.io
-- [ ] Add `NEXT_PUBLIC_SENTRY_DSN` to production env vars
-- [ ] Install `@sentry/nextjs` and run wizard (code change)
+- [x] Create Sentry projects (wally-frontend + wally-backend)
+- [x] Install `@sentry/nextjs` and configure (client, server, edge, global-error, instrumentation)
+- [x] Install `@sentry/nestjs` and configure (instrument.ts, SentryModule, SentryGlobalFilter)
+- [x] Add `NEXT_PUBLIC_SENTRY_DSN` to frontend local env vars
+- [x] Add `SENTRY_DSN` to backend local env vars
+- [ ] Add `NEXT_PUBLIC_SENTRY_DSN` to frontend production env vars
+- [ ] Add `SENTRY_DSN` to backend production env vars
 
 ### Uptime Monitoring
 - [ ] Set up monitor at betteruptime.com or uptimerobot.com

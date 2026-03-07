@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { SentryModule } from '@sentry/nestjs/setup';
+import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import configuration from '../config/configuration.js';
 import { SupabaseModule } from '../supabase/supabase.module.js';
 import { ChatModule } from '../chat/chat.module.js';
@@ -11,6 +14,7 @@ import { FeedbackModule } from '../feedback/feedback.module.js';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
@@ -23,6 +27,12 @@ import { FeedbackModule } from '../feedback/feedback.module.js';
     HealthModule,
     UserModule,
     FeedbackModule,
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
   ],
 })
 export class AppModule {}
