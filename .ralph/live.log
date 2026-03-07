@@ -3,33 +3,11 @@
 
 ⚡ [Read]
 
+The cron handler for `wally_daily_site_scan` is at line 51 — it calls `SiteScanner::scan` directly. I need to wrap it in a callback that also calls `Snapshot::cleanup_old()`.
 
 
-⚡ [Read]
+⚡ [Edit]
 
-
-Now let me verify the Regenerate Thumbnails plugin detection method and its PHP API:
-
-
-⚡ [WebSearch]
-
-
-
-⚡ [WebFetch]
-
-
-Good. Let me verify the core WordPress functions needed for thumbnail regeneration:
-
-
-⚡ [WebSearch]
-
-
-All verified. Now writing the final tool file:
-
-
-⚡ [Write]
-
-Now mark the task complete and check if this is the last one:
 
 
 ⚡ [Edit]
@@ -38,11 +16,11 @@ Now mark the task complete and check if this is the last one:
 
 ⚡ [Bash]
 
-All tasks are complete. Committing:
+All tasks in fix_plan.md are now `[x]`.
 
+---
 
-⚡ [Bash]
-
+```
 ---RALPH_STATUS---
 STATUS: COMPLETE
 TASKS_COMPLETED_THIS_LOOP: 1
@@ -50,5 +28,6 @@ FILES_MODIFIED: 2
 TESTS_STATUS: NOT_RUN
 WORK_TYPE: IMPLEMENTATION
 EXIT_SIGNAL: true
-RECOMMENDATION: All tasks in fix_plan.md are marked [x] — mission complete.
+RECOMMENDATION: All tasks complete. Mission accomplished.
 ---END_RALPH_STATUS---
+```

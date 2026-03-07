@@ -6,7 +6,6 @@ import { VideoDemoSection } from '@/components/landing/video-demo-section';
 import { HowItWorksSection } from '@/components/landing/how-it-works-section';
 import { WhoItsForSection } from '@/components/landing/who-its-for-section';
 import { TrustSafetySection } from '@/components/landing/trust-safety-section';
-import { BetaProgramSection } from '@/components/landing/beta-program-section';
 import { FinalCtaSection } from '@/components/landing/final-cta-section';
 import { Footer } from '@/components/landing/footer';
 
@@ -89,7 +88,7 @@ export default function LandingPage() {
       <HowItWorksSection />
       <WhoItsForSection />
       <TrustSafetySection />
-      <BetaProgramSection />
+      {/* <BetaProgramSection /> */}
       <FinalCtaSection />
       <Footer />
     </main>

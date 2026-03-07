@@ -7,6 +7,7 @@ import { LicenseModule } from '../license/license.module.js';
 import { UsageModule } from '../usage/usage.module.js';
 import { HealthModule } from '../health/health.module.js';
 import { UserModule } from '../user/user.module.js';
+import { FeedbackModule } from '../feedback/feedback.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UserModule } from '../user/user.module.js';
     UsageModule,
     HealthModule,
     UserModule,
+    FeedbackModule,
   ],
 })
 export class AppModule {}

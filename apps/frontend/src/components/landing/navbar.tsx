@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
-  { label: 'Beta Program', href: '#beta-program' },
+  { label: 'Demo', href: '#demo' },
   { label: 'Blog', href: '/blog' },
 ];
 
@@ -20,7 +20,7 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
   const isDark = variant === 'dark';
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+
   const [user, setUser] = useState<{
     initials: string;
     email: string;
@@ -44,9 +44,6 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
-      const docHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -54,25 +51,22 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
 
   return (
     <>
-      {/* Scroll progress bar */}
-      <div className="fixed top-0 left-0 z-[60] h-[3px] w-full">
-        <div
-          className="h-full bg-primary transition-[width] duration-150"
-          style={{ width: `${scrollProgress}%` }}
-        />
-      </div>
-
       <nav
         className={cn(
-          'fixed top-[3px] left-0 z-50 w-full transition-all duration-200',
-          scrolled
-            ? isDark
-              ? 'bg-[#0C0A1A]/95 shadow-sm shadow-black/20 backdrop-blur-md'
-              : 'bg-white/95 shadow-sm backdrop-blur-md'
-            : 'bg-transparent'
+          'fixed left-0 z-50 w-full px-4 transition-all duration-500 ease-in-out',
+          scrolled ? 'top-4' : 'top-0'
         )}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-20">
+        <div
+          className={cn(
+            'mx-auto flex max-w-7xl items-center justify-between rounded-full transition-all duration-500 ease-in-out',
+            scrolled
+              ? isDark
+                ? 'max-w-5xl border border-white/10 bg-[#0C0A1A]/60 px-5 py-2.5 shadow-lg shadow-black/20 backdrop-blur-xl'
+                : 'max-w-5xl border border-white/20 bg-white/60 px-5 py-2.5 shadow-lg shadow-black/5 backdrop-blur-xl'
+              : 'border border-transparent bg-transparent px-6 py-4 lg:px-16'
+          )}
+        >
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
             <MessageCircle
@@ -161,10 +155,12 @@ export function Navbar({ variant = 'default' }: NavbarProps) {
         {mobileOpen && (
           <div
             className={cn(
-              'border-t px-6 py-4 md:hidden',
-              scrolled && !isDark
-                ? 'border-border bg-white'
-                : 'border-white/10 bg-lp-hero-dark/95 backdrop-blur-md'
+              'px-6 py-4 md:hidden',
+              scrolled
+                ? isDark
+                  ? 'mx-auto mt-2 max-w-5xl rounded-2xl border border-white/10 bg-[#0C0A1A]/60 backdrop-blur-xl'
+                  : 'mx-auto mt-2 max-w-5xl rounded-2xl border border-white/20 bg-white/60 backdrop-blur-xl'
+                : 'border-t border-white/10 bg-lp-hero-dark/95 backdrop-blur-md'
             )}
           >
             <div className="flex flex-col gap-4">

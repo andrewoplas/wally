@@ -21,9 +21,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MessageInput__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./MessageInput */ "./src/components/MessageInput.jsx");
 /* harmony import */ var _ConversationList__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./ConversationList */ "./src/components/ConversationList.jsx");
 /* harmony import */ var _SettingsPanel__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./SettingsPanel */ "./src/components/SettingsPanel.jsx");
-/* harmony import */ var _PanelHeader__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./PanelHeader */ "./src/components/PanelHeader.jsx");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var _FeedbackForm__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./FeedbackForm */ "./src/components/FeedbackForm.jsx");
+/* harmony import */ var _PanelHeader__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./PanelHeader */ "./src/components/PanelHeader.jsx");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__);
+
 
 
 
@@ -48,6 +50,7 @@ const ChatSidebar = () => {
   const [conversationId, setConversationId] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const [showMenu, setShowMenu] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [inputText, setInputText] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+  const [feedbackMap, setFeedbackMap] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)({});
   const abortRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const userStoppedRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
 
@@ -169,6 +172,7 @@ const ChatSidebar = () => {
         }
       }
       setMessages(msgs);
+      setFeedbackMap({});
     } catch {
       setMessages([{
         role: 'assistant',
@@ -182,6 +186,7 @@ const ChatSidebar = () => {
     setConversationId(null);
     setMessages([]);
     setInputText('');
+    setFeedbackMap({});
   }, []);
   const handleStop = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
     if (abortRef.current) {
@@ -255,8 +260,8 @@ const ChatSidebar = () => {
     } else if (status === 403 && message.toLowerCase().includes('license')) {
       errorTitle = 'License Not Activated';
       errorMessage = 'No license key is configured for this site.';
-      errorExplanation = settingsUrl ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
-        children: ["Please ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("a", {
+      errorExplanation = settingsUrl ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.Fragment, {
+        children: ["Please ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("a", {
           href: settingsUrl,
           style: {
             color: 'inherit',
@@ -632,10 +637,34 @@ const ChatSidebar = () => {
   const handleDismissError = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(index => {
     setMessages(prev => prev.filter((_, i) => i !== index));
   }, []);
+  const handleFeedback = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)((messageIndex, rating, message) => {
+    setFeedbackMap(prev => ({
+      ...prev,
+      [messageIndex]: {
+        rating,
+        message,
+        submitted: true
+      }
+    }));
+    _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
+      path: 'wally/v1/feedback/rating',
+      method: 'POST',
+      data: {
+        message_id: String(messageIndex),
+        conversation_id: String(conversationId || ''),
+        rating,
+        ...(message && {
+          message
+        })
+      }
+    }).catch(err => {
+      console.error('[Wally] feedback submission failed:', err);
+    });
+  }, [conversationId]);
   if (!isOpen) return null;
   const conversationTitle = conversationId ? messages[0]?.content?.slice(0, 40) || 'Conversation' : 'New Conversation';
   const menuItemCls = 'flex items-center gap-3 w-full px-4 py-2.5 border-0 bg-transparent text-sm text-wpaia-text hover:bg-wpaia-bg cursor-pointer text-left font-sans';
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("div", {
     className: "fixed flex flex-col bg-wpaia-panel rounded-wpaia-panel font-sans overflow-hidden",
     role: "complementary",
     "aria-label": "AI Assistant",
@@ -648,134 +677,147 @@ const ChatSidebar = () => {
       boxShadow: '0 25px 60px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.06)',
       transition: 'width 0.2s ease'
     },
-    children: [view !== 'history' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(_PanelHeader__WEBPACK_IMPORTED_MODULE_7__["default"], {
-      title: view === 'settings' ? 'Settings' : conversationTitle,
-      onBack: view === 'settings' ? () => setView('chat') : () => setView('history'),
+    children: [view !== 'history' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)(_PanelHeader__WEBPACK_IMPORTED_MODULE_8__["default"], {
+      title: view === 'settings' ? 'Settings' : view === 'feedback' ? 'Send Feedback' : conversationTitle,
+      onBack: view === 'settings' || view === 'feedback' ? () => setView('chat') : () => setView('history'),
       onDragStart: handleDragStart,
       borderBottom: true,
-      children: [view === 'chat' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("button", {
-          className: _PanelHeader__WEBPACK_IMPORTED_MODULE_7__["default"].circleBtn,
+      children: [view === 'chat' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.Fragment, {
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("button", {
+          className: _PanelHeader__WEBPACK_IMPORTED_MODULE_8__["default"].circleBtn,
           onClick: toggleExpanded,
           "aria-label": isExpanded ? 'Collapse panel' : 'Expand panel',
-          children: isExpanded ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuMinimize2, {
+          children: isExpanded ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuMinimize2, {
             size: 18
-          }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuMaximize2, {
+          }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuMaximize2, {
             size: 18
           })
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("button", {
-          className: _PanelHeader__WEBPACK_IMPORTED_MODULE_7__["default"].circleBtn,
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("button", {
+          className: _PanelHeader__WEBPACK_IMPORTED_MODULE_8__["default"].circleBtn,
           onClick: () => setShowMenu(prev => !prev),
           "aria-label": "Open menu",
           "aria-expanded": showMenu,
           "aria-haspopup": "true",
-          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuEllipsisVertical, {
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuEllipsisVertical, {
             size: 18
           })
         })]
-      }), view === 'settings' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("button", {
-        className: _PanelHeader__WEBPACK_IMPORTED_MODULE_7__["default"].circleBtn,
+      }), (view === 'settings' || view === 'feedback') && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("button", {
+        className: _PanelHeader__WEBPACK_IMPORTED_MODULE_8__["default"].circleBtn,
         onClick: () => setIsOpen(false),
         "aria-label": "Close AI Assistant",
-        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuX, {
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuX, {
           size: 16
         })
-      }), showMenu && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
+      }), showMenu && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.Fragment, {
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
           className: "fixed inset-0",
           style: {
             zIndex: 1
           },
           onClick: () => setShowMenu(false),
           "aria-hidden": "true"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("div", {
           className: "absolute right-5 top-16 bg-wpaia-panel rounded-wpaia-card border border-solid border-wpaia-border py-1.5 min-w-[200px]",
           style: {
             zIndex: 2,
             boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
           },
           role: "menu",
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("button", {
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
             className: menuItemCls,
             role: "menuitem",
             onClick: () => {
               startNewConversation();
               setShowMenu(false);
             },
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("span", {
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
               className: "text-wpaia-muted",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuPlus, {
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuPlus, {
                 size: 15
               })
             }), "New conversation"]
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("button", {
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
             className: menuItemCls,
             role: "menuitem",
             onClick: () => {
               setMessages([]);
               setShowMenu(false);
             },
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("span", {
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
               className: "text-wpaia-muted",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuTrash2, {
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuTrash2, {
                 size: 15
               })
             }), "Clear conversation"]
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("button", {
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
             className: menuItemCls,
             role: "menuitem",
             onClick: () => {
               exportChat();
               setShowMenu(false);
             },
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("span", {
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
               className: "text-wpaia-muted",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuDownload, {
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuDownload, {
                 size: 15
               })
             }), "Export chat"]
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
             className: "my-1.5 border-0 border-t border-solid border-wpaia-border"
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("button", {
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
             className: menuItemCls,
             role: "menuitem",
             onClick: () => {
               setView('settings');
               setShowMenu(false);
             },
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("span", {
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
               className: "text-wpaia-muted",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuSettings, {
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuSettings, {
                 size: 15
               })
             }), "Settings"]
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("button", {
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
+            className: menuItemCls,
+            role: "menuitem",
+            onClick: () => {
+              setView('feedback');
+              setShowMenu(false);
+            },
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
+              className: "text-wpaia-muted",
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuMessageSquare, {
+                size: 15
+              })
+            }), "Send feedback"]
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
             className: menuItemCls,
             role: "menuitem",
             onClick: () => setShowMenu(false),
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("span", {
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
               className: "text-wpaia-muted",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuCircleHelp, {
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuCircleHelp, {
                 size: 15
               })
             }), "Help & shortcuts"]
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("button", {
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
             className: menuItemCls,
             role: "menuitem",
             onClick: () => {
               setIsOpen(false);
               setShowMenu(false);
             },
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("span", {
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
               className: "text-wpaia-muted",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuX, {
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuX, {
                 size: 15
               })
             }), "Close"]
           })]
         })]
       })]
-    }), view === 'history' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_ConversationList__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    }), view === 'history' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_ConversationList__WEBPACK_IMPORTED_MODULE_5__["default"], {
       currentId: conversationId,
       onSelect: id => {
         loadConversation(id);
@@ -788,31 +830,36 @@ const ChatSidebar = () => {
       onClose: () => setIsOpen(false),
       onDragStart: handleDragStart,
       fullView: true
-    }), view === 'settings' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_SettingsPanel__WEBPACK_IMPORTED_MODULE_6__["default"], {
+    }), view === 'settings' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_SettingsPanel__WEBPACK_IMPORTED_MODULE_6__["default"], {
       onBack: () => setView('chat')
-    }), view === 'chat' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_MessageList__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    }), view === 'feedback' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_FeedbackForm__WEBPACK_IMPORTED_MODULE_7__["default"], {
+      conversationId: conversationId,
+      onBack: () => setView('chat')
+    }), view === 'chat' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.Fragment, {
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_MessageList__WEBPACK_IMPORTED_MODULE_3__["default"], {
         messages: messages,
         loading: loading,
         onConfirm: handleConfirm,
         onReject: handleReject,
         onRetry: handleRetry,
         onDismissError: handleDismissError,
-        onChipSelect: chipText => setInputText(chipText)
-      }), !hasLicense && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
+        onChipSelect: chipText => setInputText(chipText),
+        feedbackMap: feedbackMap,
+        onFeedback: handleFeedback
+      }), !hasLicense && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
         className: "mx-4 mb-3 rounded-xl border border-solid border-amber-200 bg-amber-50 p-3.5 text-[13px] text-amber-900",
-        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("div", {
           className: "flex items-start gap-2.5",
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuTriangleAlert, {
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuTriangleAlert, {
             size: 15,
             className: "flex-shrink-0 mt-0.5"
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("p", {
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("div", {
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("p", {
               className: "m-0 font-semibold",
               children: "License key required"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("p", {
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("p", {
               className: "m-0 mt-1",
-              children: ["To start using Wally, add your license key in", ' ', /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("a", {
+              children: ["To start using Wally, add your license key in", ' ', /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("a", {
                 href: settingsUrl,
                 className: "underline font-semibold",
                 style: {
@@ -823,7 +870,7 @@ const ChatSidebar = () => {
             })]
           })]
         })
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_MessageInput__WEBPACK_IMPORTED_MODULE_4__["default"], {
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_MessageInput__WEBPACK_IMPORTED_MODULE_4__["default"], {
         onSend: sendMessage,
         disabled: loading || !hasLicense || messages.some(m => m.confirmations?.some(c => c.status === 'pending')),
         value: inputText,
@@ -1270,6 +1317,170 @@ const ConversationList = ({
 
 /***/ },
 
+/***/ "./src/components/FeedbackForm.jsx"
+/*!*****************************************!*\
+  !*** ./src/components/FeedbackForm.jsx ***!
+  \*****************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/element */ "@wordpress/element");
+/* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/api-fetch */ "@wordpress/api-fetch");
+/* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var react_icons_lu__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-icons/lu */ "../../node_modules/react-icons/lu/index.mjs");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__);
+
+
+
+
+const CATEGORIES = [{
+  value: 'bug',
+  label: 'Bug Report',
+  icon: react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuBug
+}, {
+  value: 'feature',
+  label: 'Feature Request',
+  icon: react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuLightbulb
+}, {
+  value: 'general',
+  label: 'General Feedback',
+  icon: react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuMessageCircle
+}];
+const FeedbackForm = ({
+  conversationId,
+  onBack
+}) => {
+  const [category, setCategory] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('general');
+  const [message, setMessage] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+  const [email, setEmail] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+  const [submitting, setSubmitting] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [submitted, setSubmitted] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [error, setError] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+  const handleSubmit = async () => {
+    if (!message.trim()) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
+        path: 'wally/v1/feedback/general',
+        method: 'POST',
+        data: {
+          message: message.trim(),
+          category,
+          ...(conversationId && {
+            conversation_id: String(conversationId)
+          })
+        }
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setError(err?.message || 'Failed to submit feedback. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  if (submitted) {
+    return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+      className: "flex flex-col flex-1 items-center justify-center px-8 text-center gap-4",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+        className: "flex items-center justify-center w-14 h-14 rounded-full bg-[#D1FAE5]",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_2__.LuCheck, {
+          size: 28,
+          className: "text-[#059669]"
+        })
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+        className: "text-lg font-bold text-wpaia-text m-0 font-heading",
+        children: "Thank you!"
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
+        className: "text-sm text-wpaia-muted m-0",
+        children: "Your feedback has been submitted. We appreciate you helping us improve Wally."
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
+        className: "mt-2 px-5 py-2.5 text-sm font-semibold text-wpaia-primary bg-wpaia-primary-light border-0 rounded-full cursor-pointer hover:bg-wpaia-primary hover:text-white transition-colors",
+        onClick: onBack,
+        type: "button",
+        children: "Back to chat"
+      })]
+    });
+  }
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+    className: "flex flex-col flex-1 overflow-hidden",
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+      className: "flex-1 overflow-y-auto px-4 py-4 wpaia-scrollbar",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+        className: "mb-5",
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("label", {
+          className: "block text-xs font-semibold text-wpaia-muted uppercase tracking-wider mb-2",
+          children: "Category"
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+          className: "flex flex-col gap-1.5",
+          children: CATEGORIES.map(({
+            value,
+            label,
+            icon: Icon
+          }) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("button", {
+            className: `flex items-center gap-3 w-full px-3.5 py-3 rounded-xl border border-solid cursor-pointer text-left font-sans transition-colors text-sm ${category === value ? 'border-wpaia-primary bg-wpaia-primary-light text-wpaia-primary font-semibold' : 'border-wpaia-border bg-transparent text-wpaia-text hover:bg-wpaia-bg'}`,
+            onClick: () => setCategory(value),
+            type: "button",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(Icon, {
+              size: 16
+            }), label]
+          }, value))
+        })]
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+        className: "mb-5",
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("label", {
+          className: "block text-xs font-semibold text-wpaia-muted uppercase tracking-wider mb-2",
+          children: ["Message ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+            className: "text-[#EF4444]",
+            children: "*"
+          })]
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("textarea", {
+          className: "w-full p-3 text-sm text-wpaia-text bg-wpaia-bg border border-solid border-wpaia-border rounded-xl resize-none font-sans outline-none focus:border-wpaia-primary transition-colors",
+          rows: 5,
+          placeholder: "Tell us what's on your mind...",
+          value: message,
+          onChange: e => setMessage(e.target.value)
+        })]
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+        className: "mb-5",
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("label", {
+          className: "block text-xs font-semibold text-wpaia-muted uppercase tracking-wider mb-2",
+          children: "Email (optional)"
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
+          type: "email",
+          className: "w-full h-10 px-3 text-sm text-wpaia-text bg-wpaia-bg border border-solid border-wpaia-border rounded-xl font-sans outline-none focus:border-wpaia-primary transition-colors",
+          placeholder: "your@email.com",
+          value: email,
+          onChange: e => setEmail(e.target.value)
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
+          className: "text-[11px] text-wpaia-hint mt-1 m-0",
+          children: "If you'd like us to follow up with you."
+        })]
+      }), error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
+        className: "text-sm text-[#EF4444] m-0 mb-3",
+        children: error
+      })]
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+      className: "flex-shrink-0 px-4 py-3 border-t border-wpaia-border",
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
+        className: "w-full h-10 text-sm font-semibold text-white bg-wpaia-primary border-0 rounded-full cursor-pointer hover:bg-wpaia-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+        onClick: handleSubmit,
+        disabled: !message.trim() || submitting,
+        type: "button",
+        children: submitting ? 'Submitting...' : 'Submit Feedback'
+      })
+    })]
+  });
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (FeedbackForm);
+
+/***/ },
+
 /***/ "./src/components/MarkdownContent.jsx"
 /*!********************************************!*\
   !*** ./src/components/MarkdownContent.jsx ***!
@@ -1482,6 +1693,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 const formatTimestamp = dateStr => {
   if (!dateStr) return null;
   const date = new Date(dateStr);
@@ -1634,6 +1846,96 @@ const ErrorCard = ({
     })]
   })]
 });
+const FeedbackButtons = ({
+  messageIndex,
+  feedback,
+  onFeedback
+}) => {
+  const [showTextarea, setShowTextarea] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [feedbackText, setFeedbackText] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+  const [showThanks, setShowThanks] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  if (feedback?.submitted) {
+    return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {
+      className: "mt-1.5 flex items-center gap-1.5",
+      children: feedback.rating === 'thumbs_up' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("span", {
+        className: "flex items-center justify-center w-7 h-7 rounded-full bg-wpaia-primary text-white",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_1__.LuThumbsUp, {
+          size: 13
+        })
+      }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("span", {
+        className: "flex items-center justify-center w-7 h-7 rounded-full bg-[#EF4444] text-white",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_1__.LuThumbsDown, {
+          size: 13
+        })
+      })
+    });
+  }
+  const handleThumbsUp = () => {
+    onFeedback(messageIndex, 'thumbs_up', null);
+    setShowThanks(true);
+    setTimeout(() => setShowThanks(false), 2000);
+  };
+  const handleThumbsDown = () => {
+    setShowTextarea(true);
+  };
+  const handleSubmitNegative = () => {
+    onFeedback(messageIndex, 'thumbs_down', feedbackText || null);
+    setShowTextarea(false);
+    setShowThanks(true);
+    setTimeout(() => setShowThanks(false), 2000);
+  };
+  if (showThanks) {
+    return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("p", {
+      className: "mt-1.5 text-xs text-wpaia-muted m-0",
+      children: "Thanks for your feedback"
+    });
+  }
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
+    className: "mt-1.5",
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
+      className: "flex items-center gap-1",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("button", {
+        className: "flex items-center justify-center w-7 h-7 rounded-full border-0 bg-transparent text-wpaia-hint hover:bg-wpaia-bg hover:text-wpaia-primary cursor-pointer transition-colors",
+        onClick: handleThumbsUp,
+        "aria-label": "Thumbs up",
+        type: "button",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_1__.LuThumbsUp, {
+          size: 13
+        })
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("button", {
+        className: "flex items-center justify-center w-7 h-7 rounded-full border-0 bg-transparent text-wpaia-hint hover:bg-wpaia-bg hover:text-[#EF4444] cursor-pointer transition-colors",
+        onClick: handleThumbsDown,
+        "aria-label": "Thumbs down",
+        type: "button",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_1__.LuThumbsDown, {
+          size: 13
+        })
+      })]
+    }), showTextarea && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
+      className: "mt-2 flex flex-col gap-2",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("textarea", {
+        className: "w-full p-2.5 text-[13px] text-wpaia-text bg-wpaia-bg border border-solid border-wpaia-border rounded-xl resize-none font-sans outline-none focus:border-wpaia-primary",
+        rows: 3,
+        placeholder: "What went wrong?",
+        value: feedbackText,
+        onChange: e => setFeedbackText(e.target.value)
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
+        className: "flex gap-2",
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("button", {
+          className: "px-3 py-1.5 text-xs font-semibold text-white bg-wpaia-primary border-0 rounded-full cursor-pointer hover:bg-wpaia-primary-hover transition-colors",
+          onClick: handleSubmitNegative,
+          type: "button",
+          children: "Submit"
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("button", {
+          className: "px-3 py-1.5 text-xs font-semibold text-wpaia-muted bg-wpaia-bg border-0 rounded-full cursor-pointer hover:bg-wpaia-border transition-colors",
+          onClick: () => setShowTextarea(false),
+          type: "button",
+          children: "Cancel"
+        })]
+      })]
+    })]
+  });
+};
 const MessageList = ({
   messages,
   loading,
@@ -1641,7 +1943,9 @@ const MessageList = ({
   onReject,
   onRetry,
   onDismissError,
-  onChipSelect
+  onChipSelect,
+  feedbackMap,
+  onFeedback
 }) => {
   const endRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
@@ -1834,6 +2138,10 @@ const MessageList = ({
           }, confirmation.action_id)), msg.createdAt && !msg.streaming && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("span", {
             className: "text-[10px] text-wpaia-hint mt-1 block",
             children: formatTimestamp(msg.createdAt)
+          }), !msg.streaming && !msg.isError && msg.content && onFeedback && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(FeedbackButtons, {
+            messageIndex: i,
+            feedback: feedbackMap?.[i],
+            onFeedback: onFeedback
           })]
         })]
       })

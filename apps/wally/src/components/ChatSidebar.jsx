@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
-import { LuPlus, LuTrash2, LuDownload, LuSettings, LuCircleHelp, LuX, LuEllipsisVertical, LuMaximize2, LuMinimize2, LuTriangleAlert } from 'react-icons/lu';
+import { LuPlus, LuTrash2, LuDownload, LuSettings, LuCircleHelp, LuX, LuEllipsisVertical, LuMaximize2, LuMinimize2, LuTriangleAlert, LuMessageSquare } from 'react-icons/lu';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import ConversationList from './ConversationList';
 import SettingsPanel from './SettingsPanel';
+import FeedbackForm from './FeedbackForm';
 import PanelHeader from './PanelHeader';
 
 const DEFAULT_WIDTH = 420;
@@ -24,6 +25,7 @@ const ChatSidebar = () => {
     const [conversationId, setConversationId] = useState(null);
     const [showMenu, setShowMenu] = useState(false);
     const [inputText, setInputText] = useState('');
+    const [feedbackMap, setFeedbackMap] = useState({});
     const abortRef = useRef(null);
     const userStoppedRef = useRef(false);
 
@@ -143,6 +145,7 @@ const ChatSidebar = () => {
             }
 
             setMessages(msgs);
+            setFeedbackMap({});
         } catch {
             setMessages([{ role: 'assistant', content: 'Could not load conversation.' }]);
         } finally {
@@ -154,6 +157,7 @@ const ChatSidebar = () => {
         setConversationId(null);
         setMessages([]);
         setInputText('');
+        setFeedbackMap({});
     }, []);
 
     const handleStop = useCallback(() => {
@@ -414,6 +418,26 @@ const ChatSidebar = () => {
         setMessages(prev => prev.filter((_, i) => i !== index));
     }, []);
 
+    const handleFeedback = useCallback((messageIndex, rating, message) => {
+        setFeedbackMap(prev => ({
+            ...prev,
+            [messageIndex]: { rating, message, submitted: true },
+        }));
+
+        apiFetch({
+            path: 'wally/v1/feedback/rating',
+            method: 'POST',
+            data: {
+                message_id: String(messageIndex),
+                conversation_id: String(conversationId || ''),
+                rating,
+                ...(message && { message }),
+            },
+        }).catch((err) => {
+            console.error('[Wally] feedback submission failed:', err);
+        });
+    }, [conversationId]);
+
     if (!isOpen) return null;
 
     const conversationTitle = conversationId
@@ -438,8 +462,8 @@ const ChatSidebar = () => {
             {/* ── Header / drag handle (hidden in history view — ConversationList has its own) ── */}
             {view !== 'history' && (
                 <PanelHeader
-                    title={view === 'settings' ? 'Settings' : conversationTitle}
-                    onBack={view === 'settings' ? () => setView('chat') : () => setView('history')}
+                    title={view === 'settings' ? 'Settings' : view === 'feedback' ? 'Send Feedback' : conversationTitle}
+                    onBack={view === 'settings' || view === 'feedback' ? () => setView('chat') : () => setView('history')}
                     onDragStart={handleDragStart}
                     borderBottom
                 >
@@ -453,7 +477,7 @@ const ChatSidebar = () => {
                             </button>
                         </>
                     )}
-                    {view === 'settings' && (
+                    {(view === 'settings' || view === 'feedback') && (
                         <button className={PanelHeader.circleBtn} onClick={() => setIsOpen(false)} aria-label="Close AI Assistant"><LuX size={16} /></button>
                     )}
                     {showMenu && (
@@ -465,6 +489,7 @@ const ChatSidebar = () => {
                                 <button className={menuItemCls} role="menuitem" onClick={() => { exportChat(); setShowMenu(false); }}><span className="text-wpaia-muted"><LuDownload size={15} /></span>Export chat</button>
                                 <div className="my-1.5 border-0 border-t border-solid border-wpaia-border" />
                                 <button className={menuItemCls} role="menuitem" onClick={() => { setView('settings'); setShowMenu(false); }}><span className="text-wpaia-muted"><LuSettings size={15} /></span>Settings</button>
+                                <button className={menuItemCls} role="menuitem" onClick={() => { setView('feedback'); setShowMenu(false); }}><span className="text-wpaia-muted"><LuMessageSquare size={15} /></span>Send feedback</button>
                                 <button className={menuItemCls} role="menuitem" onClick={() => setShowMenu(false)}><span className="text-wpaia-muted"><LuCircleHelp size={15} /></span>Help &amp; shortcuts</button>
                                 <button className={menuItemCls} role="menuitem" onClick={() => { setIsOpen(false); setShowMenu(false); }}><span className="text-wpaia-muted"><LuX size={15} /></span>Close</button>
                             </div>
@@ -477,9 +502,10 @@ const ChatSidebar = () => {
                 <ConversationList currentId={conversationId} onSelect={(id) => { loadConversation(id); setView('chat'); }} onNew={() => { startNewConversation(); setView('chat'); }} onClose={() => setIsOpen(false)} onDragStart={handleDragStart} fullView />
             )}
             {view === 'settings' && <SettingsPanel onBack={() => setView('chat')} />}
+            {view === 'feedback' && <FeedbackForm conversationId={conversationId} onBack={() => setView('chat')} />}
             {view === 'chat' && (
                 <>
-                    <MessageList messages={messages} loading={loading} onConfirm={handleConfirm} onReject={handleReject} onRetry={handleRetry} onDismissError={handleDismissError} onChipSelect={(chipText) => setInputText(chipText)} />
+                    <MessageList messages={messages} loading={loading} onConfirm={handleConfirm} onReject={handleReject} onRetry={handleRetry} onDismissError={handleDismissError} onChipSelect={(chipText) => setInputText(chipText)} feedbackMap={feedbackMap} onFeedback={handleFeedback} />
                     {!hasLicense && (
                         <div className="mx-4 mb-3 rounded-xl border border-solid border-amber-200 bg-amber-50 p-3.5 text-[13px] text-amber-900">
                             <div className="flex items-start gap-2.5">

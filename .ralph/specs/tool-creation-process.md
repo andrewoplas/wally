@@ -1,73 +1,107 @@
-# Tool Creation Process Specification
+# Tool & Feature Implementation Process
 
-## Overview
+## For PHP Tool Tasks
 
-Each WordPress tool file follows a strict verification-then-implement process. This exists because we discovered a critical bug where ACF tools used `acf_get_post_types()` (returns slug strings) instead of `acf_get_acf_post_types()` (returns config arrays), causing all post type tools to return empty data.
+### Step 1: Read the spec
+Check the relevant phase doc for the tool schema, WordPress APIs, and implementation snippets:
+- `docs/phase-2-strategic-tools.md`
+- `docs/phase-3-plugin-expansions.md`
+- `docs/phase-4-advanced-features.md`
 
-## Step-by-Step Process
+### Step 2: Read an existing tool file
+Match the exact style. Good reference files:
+- `class-content-tools.php` — Basic CRUD, WP_Query, multi-tool file pattern
+- `class-site-tools.php` — Reading site info, options API
+- `class-woocommerce-tools.php` — Plugin-dependent, conditional registration
+- If adding to an existing file, read THAT file first
 
-### Step 1: Read the knowledge file
-Read the corresponding `.md` file in `apps/backend/src/knowledge/` to understand the plugin's capabilities.
-
-### Step 2: Resolve the library in context7
-Use `mcp__plugin_context7_context7__resolve-library-id` to find the plugin's documentation:
-- WordPress core: search "wordpress"
-- WooCommerce: search "woocommerce"
-- Gravity Forms: search "gravity forms"
-- etc.
-
-### Step 3: Query API docs via context7
-Use `mcp__plugin_context7_context7__query-docs` with the resolved library ID. Query specific topics:
-- "list products API" for WooCommerce
-- "get_users function" for WordPress users
-- "GFAPI class methods" for Gravity Forms
-- "nav menu functions" for WordPress menus
-
-**Verify for each function:**
-- Exact function name (spelling, underscores, camelCase)
+### Step 3: Verify WordPress APIs
+Use context7 (`resolve-library-id` → `query-docs`) or `WebSearch` to confirm:
+- Exact function name (spelling, underscores)
 - Parameters (required vs optional, types)
-- Return type (array of objects? strings? WP_Post objects? custom class?)
+- Return type (array? WP_Post? custom class?)
 - Free vs Pro availability
-- Minimum version requirements
 
-### Step 4: Cross-check with web search if context7 is insufficient
-Use `WebSearch` to find:
-- Official developer documentation
-- WordPress Developer Reference (developer.wordpress.org)
-- Plugin GitHub source code for function signatures
+**NEVER guess function names. NEVER assume return types without verification.**
 
-Example searches:
-- `"wc_get_products" site:woocommerce.com OR site:github.com/woocommerce`
-- `"GFAPI::get_forms" site:docs.gravityforms.com`
-- `"wp_get_nav_menus" site:developer.wordpress.org`
+### Step 4: Implement
+Create or extend the tool file. Each class needs:
+- `namespace Wally\Tools;`
+- `extends ToolInterface`
+- Complete `get_name()`, `get_description()`, `get_category()`, `get_action()`, `get_parameters_schema()`, `get_required_capability()`
+- `requires_confirmation()` for destructive actions
+- `can_register()` for conditional tools
+- Full `execute()` with error handling
 
-### Step 5: Verify `can_register()` check
-- Prefer `function_exists('specific_function_you_will_call')`
-- Fall back to `class_exists('PluginMainClass')` when no single function to check
-- Core WordPress functions (users, menus, media, comments): skip override — always available
+### Step 5: Commit
+`git add` and commit with descriptive message.
 
-### Step 6: Create the tool file
-Write the PHP code using ONLY verified function names, parameters, and return types.
+## For Knowledge File Tasks
 
-### Step 7: Self-review
-Re-read the file and verify:
-- Every function call matches Steps 3-4 verification
-- Return value handling matches actual return type
-- Error handling covers `false`, `null`, or `WP_Error` returns
+1. Read the spec in `docs/phase-4-advanced-features.md`
+2. Read existing knowledge files to match format (`gutenberg-blocks.md`, `general.md`)
+3. Write concise, example-rich content directly useful as LLM context
+4. Commit with descriptive message
 
-## Rules
-- **NEVER** guess function names from memory — always verify first
-- **NEVER** assume return types without confirmation
-- **NEVER** skip the context7/web search step — even for "obvious" functions
-- **NEVER** copy function names from knowledge `.md` files without verification
+## For Backend Code Tasks (TypeScript)
 
-## Tool File Structure
+1. Read the spec and the existing file
+2. Make minimal changes — add interfaces, patterns, or methods without refactoring
+3. Commit with descriptive message
 
+## For Cross-Cutting Tasks (Rollback/Undo)
+
+1. Read all related files first — Database class, ToolExecutor, existing tool files
+2. Implement in order — DB table → helper class → tools → integration
+3. Trace the flow mentally: tool execute → snapshot save → undo tool → snapshot restore
+
+## Patterns & Conventions
+
+### Return Format
+```php
+// Success
+return [ 'success' => true, 'data' => [ 'key' => 'value' ] ];
+// Error
+return [ 'success' => false, 'error' => 'Human-readable error message.' ];
+```
+
+### Conditional Registration
+```php
+public static function can_register(): bool {
+    return class_exists( 'WooCommerce' );       // Class check
+    return defined( 'WPSEO_VERSION' );           // Constant check
+    return function_exists( 'wpforms' );         // Function check
+    return ! wp_is_block_theme();                // Theme check
+}
+```
+
+### Confirmation
+```php
+public function requires_confirmation(): bool {
+    return true; // delete, bulk update, reset operations
+}
+```
+
+### Capability Reference
+| Capability | Who has it |
+|-----------|-----------|
+| `read` | Subscriber+ |
+| `edit_posts` | Contributor+ |
+| `publish_posts` | Author+ |
+| `edit_others_posts` | Editor+ |
+| `manage_options` | Administrator only |
+| `activate_plugins` | Administrator only |
+| `edit_theme_options` | Administrator only |
+| `upload_files` | Author+ |
+| `moderate_comments` | Editor+ |
+| `list_users` | Administrator only |
+
+### Tool File Structure
 ```php
 <?php
 namespace Wally\Tools;
 
-class MyFeatureTools extends ToolInterface {
+class MyToolName extends ToolInterface {
     public function get_name(): string        { return 'my_tool_name'; }
     public function get_description(): string { return 'Detailed description for the LLM.'; }
     public function get_category(): string    { return 'content'; }
@@ -77,7 +111,7 @@ class MyFeatureTools extends ToolInterface {
         return [
             'type'       => 'object',
             'properties' => [
-                'param_one' => [ 'type' => 'string', 'description' => 'Description for the LLM.' ],
+                'param_one' => [ 'type' => 'string', 'description' => 'Description for LLM.' ],
             ],
             'required' => [ 'param_one' ],
         ];
@@ -91,41 +125,3 @@ class MyFeatureTools extends ToolInterface {
     }
 }
 ```
-
-## Conditional Registration
-
-```php
-public static function can_register(): bool {
-    return function_exists( 'specific_plugin_function' );
-}
-```
-
-## Confirmation Rules
-- `requires_confirmation()` = `true` for: delete, reset, bulk operations
-- `requires_confirmation()` = `false` for: read-only, safe create/update
-
-## Capability Reference
-
-| Capability | Who has it |
-|-----------|-----------|
-| `read` | Subscriber+ |
-| `edit_posts` | Contributor+ |
-| `publish_posts` | Author+ |
-| `edit_others_posts` | Editor+ |
-| `manage_options` | Administrator only |
-| `activate_plugins` | Administrator only |
-
-## Return Format
-Always return: `[ 'success' => true, 'data' => [...] ]` or `[ 'success' => false, 'error' => '...' ]`
-
-## Reference Files
-Study these existing tools for patterns:
-
-| File | Good reference for |
-|------|-------------------|
-| `class-content-tools.php` | Basic CRUD, WP_Query |
-| `class-taxonomy-tools.php` | Simple CRUD, parameter schemas |
-| `class-site-tools.php` | Reading site info, options API |
-| `class-plugin-tools.php` | Plugin management, confirmation |
-| `class-acf-tools.php` | Plugin-dependent, conditional registration, complex schemas |
-| `class-elementor-tools.php` | Third-party page builder, JSON data |

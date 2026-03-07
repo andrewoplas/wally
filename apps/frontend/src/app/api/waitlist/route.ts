@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const email = (body.email ?? '').trim().toLowerCase();
     const source = (body.source ?? 'landing').trim();
+    const challenges: string[] = Array.isArray(body.challenges) ? body.challenges : [];
 
     if (!email || !isValidEmail(email)) {
       return NextResponse.json(
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
         email,
         source,
         userGroup: 'waitlist',
+        ...(challenges.length > 0 && { challenges: challenges.join(', ') }),
       }),
     });
 

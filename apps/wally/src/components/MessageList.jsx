@@ -1,5 +1,6 @@
 import { useEffect, useRef } from '@wordpress/element';
-import { LuPlug, LuFileText, LuSearch, LuShield, LuSparkles, LuCheck, LuRefreshCw, LuX, LuCircleAlert } from 'react-icons/lu';
+import { useState } from '@wordpress/element';
+import { LuPlug, LuFileText, LuSearch, LuShield, LuSparkles, LuCheck, LuRefreshCw, LuX, LuCircleAlert, LuThumbsUp, LuThumbsDown } from 'react-icons/lu';
 import ConfirmAction from './ConfirmAction';
 import MarkdownContent from './MarkdownContent';
 import ThinkingBlock from './ThinkingBlock';
@@ -103,7 +104,96 @@ const ErrorCard = ({ errorTitle, errorDetail, errorMessage }) => (
     </div>
 );
 
-const MessageList = ({ messages, loading, onConfirm, onReject, onRetry, onDismissError, onChipSelect }) => {
+const FeedbackButtons = ({ messageIndex, feedback, onFeedback }) => {
+    const [showTextarea, setShowTextarea] = useState(false);
+    const [feedbackText, setFeedbackText] = useState('');
+    const [showThanks, setShowThanks] = useState(false);
+
+    if (feedback?.submitted) {
+        return (
+            <div className="mt-1.5 flex items-center gap-1.5">
+                {feedback.rating === 'thumbs_up' ? (
+                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-wpaia-primary text-white"><LuThumbsUp size={13} /></span>
+                ) : (
+                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#EF4444] text-white"><LuThumbsDown size={13} /></span>
+                )}
+            </div>
+        );
+    }
+
+    const handleThumbsUp = () => {
+        onFeedback(messageIndex, 'thumbs_up', null);
+        setShowThanks(true);
+        setTimeout(() => setShowThanks(false), 2000);
+    };
+
+    const handleThumbsDown = () => {
+        setShowTextarea(true);
+    };
+
+    const handleSubmitNegative = () => {
+        onFeedback(messageIndex, 'thumbs_down', feedbackText || null);
+        setShowTextarea(false);
+        setShowThanks(true);
+        setTimeout(() => setShowThanks(false), 2000);
+    };
+
+    if (showThanks) {
+        return <p className="mt-1.5 text-xs text-wpaia-muted m-0">Thanks for your feedback</p>;
+    }
+
+    return (
+        <div className="mt-1.5">
+            <div className="flex items-center gap-1">
+                <button
+                    className="flex items-center justify-center w-7 h-7 rounded-full border-0 bg-transparent text-wpaia-hint hover:bg-wpaia-bg hover:text-wpaia-primary cursor-pointer transition-colors"
+                    onClick={handleThumbsUp}
+                    aria-label="Thumbs up"
+                    type="button"
+                >
+                    <LuThumbsUp size={13} />
+                </button>
+                <button
+                    className="flex items-center justify-center w-7 h-7 rounded-full border-0 bg-transparent text-wpaia-hint hover:bg-wpaia-bg hover:text-[#EF4444] cursor-pointer transition-colors"
+                    onClick={handleThumbsDown}
+                    aria-label="Thumbs down"
+                    type="button"
+                >
+                    <LuThumbsDown size={13} />
+                </button>
+            </div>
+            {showTextarea && (
+                <div className="mt-2 flex flex-col gap-2">
+                    <textarea
+                        className="w-full p-2.5 text-[13px] text-wpaia-text bg-wpaia-bg border border-solid border-wpaia-border rounded-xl resize-none font-sans outline-none focus:border-wpaia-primary"
+                        rows={3}
+                        placeholder="What went wrong?"
+                        value={feedbackText}
+                        onChange={(e) => setFeedbackText(e.target.value)}
+                    />
+                    <div className="flex gap-2">
+                        <button
+                            className="px-3 py-1.5 text-xs font-semibold text-white bg-wpaia-primary border-0 rounded-full cursor-pointer hover:bg-wpaia-primary-hover transition-colors"
+                            onClick={handleSubmitNegative}
+                            type="button"
+                        >
+                            Submit
+                        </button>
+                        <button
+                            className="px-3 py-1.5 text-xs font-semibold text-wpaia-muted bg-wpaia-bg border-0 rounded-full cursor-pointer hover:bg-wpaia-border transition-colors"
+                            onClick={() => setShowTextarea(false)}
+                            type="button"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const MessageList = ({ messages, loading, onConfirm, onReject, onRetry, onDismissError, onChipSelect, feedbackMap, onFeedback }) => {
     const endRef = useRef(null);
 
     useEffect(() => {
@@ -250,6 +340,9 @@ const MessageList = ({ messages, loading, onConfirm, onReject, onRetry, onDismis
                                 {msg.confirmations?.map((confirmation) => <ConfirmAction key={confirmation.action_id} confirmation={confirmation} onConfirm={onConfirm} onReject={onReject} />)}
                                 {msg.createdAt && !msg.streaming && (
                                     <span className="text-[10px] text-wpaia-hint mt-1 block">{formatTimestamp(msg.createdAt)}</span>
+                                )}
+                                {!msg.streaming && !msg.isError && msg.content && onFeedback && (
+                                    <FeedbackButtons messageIndex={i} feedback={feedbackMap?.[i]} onFeedback={onFeedback} />
                                 )}
                             </div>
                         </>

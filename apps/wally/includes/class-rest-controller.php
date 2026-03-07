@@ -102,6 +102,29 @@ class RestController {
 			],
 		]);
 
+		register_rest_route( $this->namespace, '/feedback/rating', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'submit_feedback_rating' ],
+			'permission_callback' => [ $this, 'check_permission' ],
+			'args'                => [
+				'message_id'      => [ 'required' => true, 'type' => 'string' ],
+				'conversation_id' => [ 'required' => true, 'type' => 'string' ],
+				'rating'          => [ 'required' => true, 'type' => 'string' ],
+				'message'         => [ 'required' => false, 'type' => 'string' ],
+			],
+		]);
+
+		register_rest_route( $this->namespace, '/feedback/general', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'submit_feedback_general' ],
+			'permission_callback' => [ $this, 'check_permission' ],
+			'args'                => [
+				'message'         => [ 'required' => true, 'type' => 'string' ],
+				'category'        => [ 'required' => false, 'type' => 'string' ],
+				'conversation_id' => [ 'required' => false, 'type' => 'string' ],
+			],
+		]);
+
 		register_rest_route( $this->namespace, '/settings', [
 			[
 				'methods'             => 'GET',
@@ -1092,6 +1115,63 @@ class RestController {
 		}
 
 		return new \WP_REST_Response( $result, $status_code );
+	}
+
+	/**
+	 * Submit a per-message rating to the backend.
+	 */
+	public function submit_feedback_rating( $request ) {
+		$payload = [
+			'message_id'      => $request->get_param( 'message_id' ),
+			'conversation_id' => $request->get_param( 'conversation_id' ),
+			'rating'          => $request->get_param( 'rating' ),
+		];
+
+		$message = $request->get_param( 'message' );
+		if ( $message ) {
+			$payload['message'] = sanitize_textarea_field( $message );
+		}
+
+		return $this->proxy_feedback( '/feedback/rating', $payload );
+	}
+
+	/**
+	 * Submit general feedback to the backend.
+	 */
+	public function submit_feedback_general( $request ) {
+		$payload = [
+			'message' => sanitize_textarea_field( $request->get_param( 'message' ) ),
+		];
+
+		$category = $request->get_param( 'category' );
+		if ( $category ) {
+			$payload['category'] = sanitize_text_field( $category );
+		}
+
+		$conversation_id = $request->get_param( 'conversation_id' );
+		if ( $conversation_id ) {
+			$payload['conversation_id'] = sanitize_text_field( $conversation_id );
+		}
+
+		return $this->proxy_feedback( '/feedback/general', $payload );
+	}
+
+	/**
+	 * Forward a feedback request to the backend API.
+	 */
+	private function proxy_feedback( string $endpoint, array $payload ) {
+		$backend_url     = rtrim( WALLY_DEFAULT_BACKEND_URL, '/' );
+		$license_key_enc = get_option( 'wally_license_key', '' );
+		$license_key     = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
+
+		$response = $this->backend_request_buffered( $backend_url . $endpoint, $payload, $license_key );
+
+		if ( is_wp_error( $response ) ) {
+			return new \WP_Error( 'feedback_failed', $response->get_error_message(), [ 'status' => 500 ] );
+		}
+
+		$decoded = json_decode( $response, true );
+		return rest_ensure_response( $decoded ?: [ 'success' => true ] );
 	}
 
 	/**

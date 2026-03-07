@@ -591,6 +591,10 @@
   margin-bottom: 1rem;
 }
 
+#wpaia-chat-root :is(.mb-5) {
+  margin-bottom: 1.25rem;
+}
+
 #wpaia-chat-root :is(.mb-6) {
   margin-bottom: 1.5rem;
 }
@@ -605,6 +609,10 @@
 
 #wpaia-chat-root :is(.mt-1) {
   margin-top: 0.25rem;
+}
+
+#wpaia-chat-root :is(.mt-1\.5) {
+  margin-top: 0.375rem;
 }
 
 #wpaia-chat-root :is(.mt-2) {
@@ -645,6 +653,10 @@
 
 #wpaia-chat-root :is(.h-12) {
   height: 3rem;
+}
+
+#wpaia-chat-root :is(.h-14) {
+  height: 3.5rem;
 }
 
 #wpaia-chat-root :is(.h-3) {
@@ -693,6 +705,10 @@
 
 #wpaia-chat-root :is(.w-12) {
   width: 3rem;
+}
+
+#wpaia-chat-root :is(.w-14) {
+  width: 3.5rem;
 }
 
 #wpaia-chat-root :is(.w-3) {
@@ -939,9 +955,24 @@
   border-color: rgb(228 228 231 / var(--tw-border-opacity));
 }
 
+#wpaia-chat-root :is(.border-wpaia-primary) {
+  --tw-border-opacity: 1;
+  border-color: rgb(139 92 246 / var(--tw-border-opacity));
+}
+
 #wpaia-chat-root :is(.bg-\[\#14B8A6\]) {
   --tw-bg-opacity: 1;
   background-color: rgb(20 184 166 / var(--tw-bg-opacity));
+}
+
+#wpaia-chat-root :is(.bg-\[\#D1FAE5\]) {
+  --tw-bg-opacity: 1;
+  background-color: rgb(209 250 229 / var(--tw-bg-opacity));
+}
+
+#wpaia-chat-root :is(.bg-\[\#EF4444\]) {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity));
 }
 
 #wpaia-chat-root :is(.bg-\[\#FECACA\]) {
@@ -1074,6 +1105,11 @@
 #wpaia-chat-root :is(.px-6) {
   padding-left: 1.5rem;
   padding-right: 1.5rem;
+}
+
+#wpaia-chat-root :is(.px-8) {
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
 #wpaia-chat-root :is(.px-\[18px\]) {
@@ -1228,6 +1264,11 @@
   font-size: 28px;
 }
 
+#wpaia-chat-root :is(.text-lg) {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
 #wpaia-chat-root :is(.text-sm) {
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -1278,6 +1319,11 @@
   letter-spacing: 0.05em;
 }
 
+#wpaia-chat-root :is(.text-\[\#059669\]) {
+  --tw-text-opacity: 1;
+  color: rgb(5 150 105 / var(--tw-text-opacity));
+}
+
 #wpaia-chat-root :is(.text-\[\#18181B\]) {
   --tw-text-opacity: 1;
   color: rgb(24 24 27 / var(--tw-text-opacity));
@@ -1291,6 +1337,11 @@
 #wpaia-chat-root :is(.text-\[\#991B1B\]) {
   --tw-text-opacity: 1;
   color: rgb(153 27 27 / var(--tw-text-opacity));
+}
+
+#wpaia-chat-root :is(.text-\[\#EF4444\]) {
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity));
 }
 
 #wpaia-chat-root :is(.text-amber-900) {
@@ -1349,6 +1400,11 @@
   --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+#wpaia-chat-root :is(.outline-none) {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
 #wpaia-chat-root :is(.filter) {
@@ -1470,14 +1526,34 @@
   background-color: rgb(228 228 231 / var(--tw-bg-opacity));
 }
 
+#wpaia-chat-root :is(.hover\:bg-wpaia-primary:hover) {
+  --tw-bg-opacity: 1;
+  background-color: rgb(139 92 246 / var(--tw-bg-opacity));
+}
+
 #wpaia-chat-root :is(.hover\:bg-wpaia-primary-hover:hover) {
   --tw-bg-opacity: 1;
   background-color: rgb(124 58 237 / var(--tw-bg-opacity));
 }
 
+#wpaia-chat-root :is(.hover\:text-\[\#EF4444\]:hover) {
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity));
+}
+
+#wpaia-chat-root :is(.hover\:text-white:hover) {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity));
+}
+
 #wpaia-chat-root :is(.hover\:text-wpaia-error-text:hover) {
   --tw-text-opacity: 1;
   color: rgb(220 38 38 / var(--tw-text-opacity));
+}
+
+#wpaia-chat-root :is(.hover\:text-wpaia-primary:hover) {
+  --tw-text-opacity: 1;
+  color: rgb(139 92 246 / var(--tw-text-opacity));
 }
 
 #wpaia-chat-root :is(.hover\:text-wpaia-text:hover) {
@@ -1487,6 +1563,11 @@
 
 #wpaia-chat-root :is(.hover\:opacity-90:hover) {
   opacity: 0.9;
+}
+
+#wpaia-chat-root :is(.focus\:border-wpaia-primary:focus) {
+  --tw-border-opacity: 1;
+  border-color: rgb(139 92 246 / var(--tw-border-opacity));
 }
 
 #wpaia-chat-root :is(.focus\:shadow-none:focus) {
@@ -1516,6 +1597,10 @@
 
 #wpaia-chat-root :is(.disabled\:cursor-not-allowed:disabled) {
   cursor: not-allowed;
+}
+
+#wpaia-chat-root :is(.disabled\:opacity-50:disabled) {
+  opacity: 0.5;
 }
 
 #wpaia-chat-root :is(.group:hover .group-hover\:flex) {
