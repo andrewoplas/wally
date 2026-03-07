@@ -16,16 +16,17 @@
 - [ ] Add per-page metadata overrides for blog posts
 
 ### Google Search Console
-- [ ] Add property for `wallychat.com`
-- [ ] Verify ownership via DNS TXT record
-- [ ] Submit sitemap: `https://www.wallychat.com/sitemap.xml`
+- [x] Add property for `wallychat.com`
+- [x] Verify ownership via DNS TXT record
+- [x] Submit sitemap: `https://www.wallychat.com/sitemap.xml`
 - [ ] Check for crawl errors after 24–48 hours
 
 ### Google Analytics (GA4)
-- [ ] Create GA4 property at analytics.google.com
-- [ ] Copy Measurement ID (`G-XXXXXXXXXX`)
-- [ ] Add `NEXT_PUBLIC_GA_MEASUREMENT_ID` to production env vars
-- [ ] Implement GA4 script in `layout.tsx` (code change)
+- [x] Create GA4 property at analytics.google.com
+- [x] Copy Measurement ID (`G-257CT955H0`)
+- [x] Add `NEXT_PUBLIC_GA_MEASUREMENT_ID` to local env vars
+- [ ] Add `NEXT_PUBLIC_GA_MEASUREMENT_ID=G-257CT955H0` to production env vars
+- [x] Implement GA4 script in `layout.tsx` (code change)
 
 ### Google Tag Manager (optional, replaces direct GA4)
 - [ ] Create GTM account + container

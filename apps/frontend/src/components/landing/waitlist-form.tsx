@@ -33,6 +33,9 @@ export function WaitlistForm({ source = 'landing', variant = 'light' }: Waitlist
         setState('error');
       } else {
         setState('success');
+        if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+          window.gtag('event', 'waitlist_signup', { source });
+        }
       }
     } catch {
       setErrorMsg('Network error. Please try again.');
