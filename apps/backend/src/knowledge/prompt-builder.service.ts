@@ -8,9 +8,43 @@
  *   4. Custom instructions (optional, from wp_options)
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IntentClassifierService } from '../intent/intent-classifier.service.js';
 import { KnowledgeLoaderService } from './knowledge-loader.service.js';
+
+// ─── Token Budget ─────────────────────────────────────────────────────────────
+
+const TOKEN_BUDGET = {
+  SYSTEM_TOTAL_MAX:    8_000,
+  KNOWLEDGE_CHUNKS:    2_500,
+  SITE_CONTEXT:        2_000,
+  ACTION_MEMORY:         400,
+  CONTENT_STYLE:         600,
+  CUSTOM_INSTRUCTIONS:   300,
+} as const;
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+function trimToTokenBudget(text: string, maxTokens: number): string {
+  const maxChars = maxTokens * 4;
+  if (text.length <= maxChars) return text;
+  const cutPoint = text.lastIndexOf('\n', maxChars);
+  return text.slice(0, cutPoint > 0 ? cutPoint : maxChars) + '\n[...trimmed for length]';
+}
+
+// ─── Always-On Knowledge Keys ─────────────────────────────────────────────────
+
+/** These knowledge files are injected on every request regardless of classified intent. */
+const ALWAYS_ON_KNOWLEDGE_KEYS = ['general', 'wally-capabilities'];
+
+/** Intent keys that signal the user wants to create or build a page/layout. */
+const PAGE_CREATION_INTENTS = new Set([
+  'gutenberg-blocks',
+  'page-templates',
+  'content',
+]);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,6 +127,8 @@ export type ConversationMessage =
 
 @Injectable()
 export class PromptBuilderService {
+  private readonly logger = new Logger(PromptBuilderService.name);
+
   constructor(
     private readonly intentClassifier: IntentClassifierService,
     private readonly knowledgeLoader: KnowledgeLoaderService,
@@ -101,16 +137,18 @@ export class PromptBuilderService {
   /**
    * Build the complete system prompt for a chat request.
    *
-   * @param siteProfile     Site context from the WP plugin
-   * @param customPrompt    Optional custom system prompt from plugin settings
-   * @param userMessage     Current user message (used for intent classification)
-   * @param conversationHistory   Recent messages for context-aware classification
+   * @param siteProfile         Site context from the WP plugin
+   * @param customPrompt        Optional custom system prompt from plugin settings
+   * @param userMessage         Current user message (used for intent classification)
+   * @param conversationHistory Recent messages for context-aware classification
+   * @param recentActions       Pre-formatted action summary strings from wp_wally_actions
    */
   buildSystemPrompt(
     siteProfile?: SiteProfile | null,
     customPrompt?: string | null,
     userMessage?: string | null,
     conversationHistory?: ConversationMessage[] | null,
+    recentActions?: string[] | null,
   ): string {
     const parts: string[] = [
       // ── Identity & Expertise ──────────────────────────────────────────
@@ -147,8 +185,8 @@ export class PromptBuilderService {
       '  - After creating a page: "Want me to add this to your main navigation?"',
       '  - After installing a plugin: "Should I configure it now?"',
       '  - After writing a blog post: "Want me to set the SEO meta and featured image?"',
-      '- Detect the user\'s stack and adapt. If they have Elementor, suggest Elementor workflows.',
-      '  If they use Gutenberg, generate block markup. If they have WooCommerce, offer product management.',
+      '- Detect the user\'s stack and adapt. If they have WooCommerce, offer product management.',
+      '  If they have an SEO plugin, proactively set meta fields. Always tailor to the installed tools.',
       '- When the user reports a problem ("my site is slow", "something is broken"), investigate proactively:',
       '  check site health, review active plugins for known conflicts, look for common issues.',
       '',
@@ -165,16 +203,7 @@ export class PromptBuilderService {
       '',
 
       // ── Page & Content Creation ───────────────────────────────────────
-      'PAGE & CONTENT CREATION:',
-      '- When creating pages, use Gutenberg block markup in post_content for rich layouts.',
-      '  Use cover blocks for heroes, columns for grids, group blocks for sections, buttons for CTAs.',
-      '- Think about design: use proper heading hierarchy (h2 for sections, h3 for subsections),',
-      '  add whitespace with spacer blocks, use color and typography for visual hierarchy.',
-      '- When writing blog content, structure it with SEO in mind: compelling title, clear headings,',
-      '  proper paragraph length, and a logical flow.',
-      '- If the user has an SEO plugin (Yoast, RankMath), set meta title and description too.',
-      '- For content that references the business, ask for key details you don\'t already have',
-      '  rather than making up facts (business name, address, phone, hours, etc.).',
+      ...this.buildPageCreationInstructions(siteProfile),
       '',
 
       // ── Tool Usage Guidelines ─────────────────────────────────────────
@@ -192,37 +221,41 @@ export class PromptBuilderService {
       '  for full details, then reason about common plugin behaviors and naming conventions.',
     ];
 
-    // --- Intent-based WordPress knowledge injection ---
-    if (userMessage) {
-      const recentUserMessages = (conversationHistory ?? [])
-        .filter((m) => typeof m === 'object' && (m as { role: string }).role === 'user')
-        .map((m) =>
-          typeof (m as { content: unknown }).content === 'string'
-            ? ((m as { content: string }).content)
-            : '',
-        );
-
-      const intents = this.intentClassifier.classifyIntent(
-        userMessage,
-        recentUserMessages,
+    // --- Intent-based WordPress knowledge injection (Fix 5A + Fix 3) ---
+    const recentUserMessages = (conversationHistory ?? [])
+      .filter((m) => typeof m === 'object' && (m as { role: string }).role === 'user')
+      .map((m) =>
+        typeof (m as { content: unknown }).content === 'string'
+          ? ((m as { content: string }).content)
+          : '',
       );
-      const knowledge = this.knowledgeLoader.getKnowledgeForIntents(intents);
 
-      if (knowledge) {
-        parts.push('', '--- WordPress Knowledge ---', knowledge);
+    let intents: string[];
+    if (userMessage) {
+      const classified = this.intentClassifier.classifyIntent(userMessage, recentUserMessages);
+      // Always-on keys are merged first so they are never crowded out
+      intents = [...new Set([...ALWAYS_ON_KNOWLEDGE_KEYS, ...classified])];
+
+      // If the user wants to create a page and the site has Elementor,
+      // inject Elementor knowledge so the LLM can guide either workflow.
+      const hasPageCreationIntent = intents.some((k) => PAGE_CREATION_INTENTS.has(k));
+      if (hasPageCreationIntent && siteProfile?.elementor?.installed && !intents.includes('elementor')) {
+        intents.push('elementor');
       }
     } else {
-      // Fallback: inject general knowledge (e.g. tool-result continuation route)
-      const knowledge = this.knowledgeLoader.getKnowledgeForIntents(['general']);
-      if (knowledge) {
-        parts.push('', '--- WordPress Knowledge ---', knowledge);
-      }
+      intents = [...new Set([...ALWAYS_ON_KNOWLEDGE_KEYS])];
     }
 
-    // --- Site context ---
+    const knowledge = this.knowledgeLoader.getKnowledgeForIntents(intents);
+    const knowledgeTrimmed = trimToTokenBudget(knowledge, TOKEN_BUDGET.KNOWLEDGE_CHUNKS);
+    if (knowledgeTrimmed) {
+      parts.push('', '--- WordPress Knowledge ---', knowledgeTrimmed);
+    }
+
+    // --- Site context (Fix 3: buffered + trimmed) ---
+    const siteCtxParts: string[] = [];
     if (siteProfile) {
-      parts.push('', '--- Site Context ---');
-      parts.push(
+      siteCtxParts.push(
         `WordPress ${siteProfile.wp_version ?? 'unknown'}, PHP ${siteProfile.php_version ?? 'unknown'}`,
       );
 
@@ -232,31 +265,29 @@ export class PromptBuilderService {
         if (theme.is_child && theme.parent) {
           themeInfo.push(`(child of ${theme.parent})`);
         }
-        parts.push(themeInfo.join(' '));
+        siteCtxParts.push(themeInfo.join(' '));
       }
 
       if (siteProfile.elementor) {
         const el = siteProfile.elementor;
         if (el.installed) {
-          parts.push(
+          siteCtxParts.push(
             `Elementor: v${el.version ?? 'unknown'}${el.pro ? ' (Pro)' : ''}, ${el.pages ?? 0} pages built with Elementor`,
           );
         } else {
-          parts.push('Elementor: not installed');
+          siteCtxParts.push('Elementor: not installed');
         }
       }
 
       if (siteProfile.post_types && siteProfile.post_types.length > 0) {
         const firstItem = siteProfile.post_types[0];
         if (typeof firstItem === 'object') {
-          // Enhanced format: [{name, label, count}]
           const typeList = (siteProfile.post_types as PostTypeInfo[])
             .map((t) => `${t.label ?? t.name} (${t.count ?? 0})`)
             .join(', ');
-          parts.push(`Post types: ${typeList}`);
+          siteCtxParts.push(`Post types: ${typeList}`);
         } else {
-          // Simple format: ['post', 'page', ...]
-          parts.push(`Post types: ${(siteProfile.post_types as string[]).join(', ')}`);
+          siteCtxParts.push(`Post types: ${(siteProfile.post_types as string[]).join(', ')}`);
         }
       }
 
@@ -264,14 +295,14 @@ export class PromptBuilderService {
         const counts = Object.entries(siteProfile.content_counts)
           .map(([type, count]) => `${count} ${type}s`)
           .join(', ');
-        parts.push(`Content: ${counts}`);
+        siteCtxParts.push(`Content: ${counts}`);
       }
 
       if (siteProfile.taxonomies && siteProfile.taxonomies.length > 0) {
         const taxList = siteProfile.taxonomies
           .map((t) => `${t.label ?? t.name} (${t.count ?? 0} terms)`)
           .join(', ');
-        parts.push(`Taxonomies: ${taxList}`);
+        siteCtxParts.push(`Taxonomies: ${taxList}`);
       }
 
       if (siteProfile.menus && siteProfile.menus.length > 0) {
@@ -281,7 +312,7 @@ export class PromptBuilderService {
               `${m.name}${m.location ? ` [${m.location}]` : ''} (${m.item_count ?? 0} items)`,
           )
           .join(', ');
-        parts.push(`Menus: ${menuList}`);
+        siteCtxParts.push(`Menus: ${menuList}`);
       }
 
       if (siteProfile.acf_field_groups && siteProfile.acf_field_groups.length > 0) {
@@ -292,51 +323,150 @@ export class PromptBuilderService {
             return `${fg.title}${types}${fields}`;
           })
           .join('; ');
-        parts.push(`ACF field groups: ${acfList}`);
+        siteCtxParts.push(`ACF field groups: ${acfList}`);
       }
 
       if (siteProfile.front_page) {
-        parts.push(
+        siteCtxParts.push(
           `Front page: "${siteProfile.front_page.title}" (ID ${siteProfile.front_page.id})`,
         );
       }
 
       if (siteProfile.posts_page) {
-        parts.push(
+        siteCtxParts.push(
           `Blog page: "${siteProfile.posts_page.title}" (ID ${siteProfile.posts_page.id})`,
         );
       }
 
       if (siteProfile.active_plugins_summary) {
-        parts.push(`Active plugins: ${siteProfile.active_plugins_summary}`);
+        siteCtxParts.push(`Active plugins: ${siteProfile.active_plugins_summary}`);
       } else if (siteProfile.plugins) {
         const activePlugins = siteProfile.plugins
           .filter((p) => p.active)
           .map((p) => p.name)
           .join(', ');
         if (activePlugins) {
-          parts.push(`Active plugins: ${activePlugins}`);
+          siteCtxParts.push(`Active plugins: ${activePlugins}`);
         }
       }
     }
 
-    // --- Content style reference ---
-    if (
-      siteProfile?.recent_posts_sample &&
-      siteProfile.recent_posts_sample.length > 0
-    ) {
-      parts.push('', '--- Content Style Reference ---');
-      parts.push('Sample of recent posts (use to match the site\'s writing style and tone):');
+    const siteCtxStr = siteCtxParts.join('\n');
+    const siteCtxTrimmed = trimToTokenBudget(siteCtxStr, TOKEN_BUDGET.SITE_CONTEXT);
+    if (siteCtxTrimmed) {
+      parts.push('', '--- Site Context ---');
+      parts.push(siteCtxTrimmed);
+    }
+
+    // --- Content style reference (Fix 3: buffered + trimmed) ---
+    const styleLines: string[] = [];
+    if (siteProfile?.recent_posts_sample && siteProfile.recent_posts_sample.length > 0) {
+      styleLines.push('Sample of recent posts (use to match the site\'s writing style and tone):');
       for (const post of siteProfile.recent_posts_sample) {
-        parts.push(`"${post.title}": ${post.excerpt}`);
+        styleLines.push(`"${post.title}": ${post.excerpt}`);
       }
     }
-
-    // --- Custom instructions ---
-    if (customPrompt) {
-      parts.push('', '--- Custom Instructions ---', customPrompt);
+    const styleTrimmed = trimToTokenBudget(styleLines.join('\n'), TOKEN_BUDGET.CONTENT_STYLE);
+    if (styleTrimmed) {
+      parts.push('', '--- Content Style Reference ---');
+      parts.push(styleTrimmed);
     }
 
-    return parts.join('\n');
+    // --- Recent actions taken (Fix 1) ---
+    let actionsTrimmed = '';
+    if (recentActions && recentActions.length > 0) {
+      const actionsBlock = [
+        'Use this to answer questions like "what did you just do?" or "undo that".',
+        ...recentActions,
+      ].join('\n');
+      actionsTrimmed = trimToTokenBudget(actionsBlock, TOKEN_BUDGET.ACTION_MEMORY);
+      parts.push('', '--- Recent Actions Taken ---');
+      parts.push(actionsTrimmed);
+    }
+
+    // --- Custom instructions (Fix 3: trimmed) ---
+    const customTrimmed = trimToTokenBudget(customPrompt ?? '', TOKEN_BUDGET.CUSTOM_INSTRUCTIONS);
+    if (customTrimmed) {
+      parts.push('', '--- Custom Instructions ---', customTrimmed);
+    }
+
+    // --- Token budget logging (Fix 3) ---
+    const budgetLog = {
+      knowledge: estimateTokens(knowledgeTrimmed),
+      site_context: estimateTokens(siteCtxTrimmed),
+      content_style: estimateTokens(styleTrimmed),
+      action_memory: estimateTokens(actionsTrimmed),
+      custom: estimateTokens(customTrimmed),
+      total: 0,
+    };
+    const fullPrompt = parts.join('\n');
+    budgetLog.total = estimateTokens(fullPrompt);
+    this.logger.debug(`[PromptBudget] ${JSON.stringify(budgetLog)}`);
+
+    return fullPrompt;
+  }
+
+  /**
+   * Build dynamic PAGE & CONTENT CREATION instructions based on the site's
+   * active page builders. When a page builder is detected, the LLM is
+   * instructed to ask the user which builder to use before creating a page.
+   */
+  private buildPageCreationInstructions(siteProfile?: SiteProfile | null): string[] {
+    const detectedBuilders = this.detectPageBuilders(siteProfile);
+    const lines: string[] = ['PAGE & CONTENT CREATION:'];
+
+    if (detectedBuilders.length > 0) {
+      const builderList = ['Gutenberg (default WordPress editor)', ...detectedBuilders].join(', ');
+      lines.push(
+        `- This site has the following page builders available: ${builderList}.`,
+        '- IMPORTANT: Before creating or building any page or layout, ask the user which page builder',
+        '  they want to use. Do not assume — different pages on the same site may use different builders.',
+        '  Example: "I can build this page using Elementor or the default Gutenberg editor. Which would you prefer?"',
+        '- Once the user chooses, use the appropriate workflow:',
+        '  - Gutenberg: Use block markup in post_content (cover blocks for heroes, columns for grids, group blocks for sections, buttons for CTAs).',
+        '  - Elementor: Create the page and populate _elementor_data with the proper JSON structure (sections → columns → widgets).',
+      );
+    } else {
+      lines.push(
+        '- When creating pages, use Gutenberg block markup in post_content for rich layouts.',
+        '  Use cover blocks for heroes, columns for grids, group blocks for sections, buttons for CTAs.',
+      );
+    }
+
+    lines.push(
+      '- Think about design: use proper heading hierarchy (h2 for sections, h3 for subsections),',
+      '  add whitespace with spacer blocks, use color and typography for visual hierarchy.',
+      '- When writing blog content, structure it with SEO in mind: compelling title, clear headings,',
+      '  proper paragraph length, and a logical flow.',
+      '- If the user has an SEO plugin (Yoast, RankMath), set meta title and description too.',
+      '- For content that references the business, ask for key details you don\'t already have',
+      '  rather than making up facts (business name, address, phone, hours, etc.).',
+    );
+
+    return lines;
+  }
+
+  /**
+   * Detect active page builders from the site profile.
+   * Returns a list of human-readable page builder names (excluding Gutenberg which is always available).
+   */
+  private detectPageBuilders(siteProfile?: SiteProfile | null): string[] {
+    const builders: string[] = [];
+    if (!siteProfile) return builders;
+
+    // Elementor — detected via dedicated site profile field
+    if (siteProfile.elementor?.installed) {
+      builders.push(`Elementor${siteProfile.elementor.pro ? ' Pro' : ''}`);
+    }
+
+    // Other page builders — detected via active plugins summary
+    const plugins = siteProfile.active_plugins_summary?.toLowerCase() ?? '';
+    if (/\bdivi\b/.test(plugins)) builders.push('Divi');
+    if (/\bbeaver\s*builder\b/.test(plugins)) builders.push('Beaver Builder');
+    if (/\bwpbakery\b|visual\s*composer\b/.test(plugins)) builders.push('WPBakery');
+    if (/\bbrizy\b/.test(plugins)) builders.push('Brizy');
+    if (/\boxygen\b/.test(plugins)) builders.push('Oxygen');
+
+    return builders;
   }
 }

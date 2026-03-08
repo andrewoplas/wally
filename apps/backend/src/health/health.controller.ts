@@ -30,4 +30,11 @@ export class HealthController {
       timestamp: new Date().toISOString(),
     };
   }
+
+  @ApiOperation({ summary: 'Debug sentry' })
+  @ApiResponse({ status: 200 })
+  @Get('/debug-sentry')
+  getError() {
+    throw new Error('My first Sentry error!');
+  }
 }

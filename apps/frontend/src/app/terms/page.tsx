@@ -4,10 +4,12 @@ import { LegalFooter } from '@/components/legal/legal-footer';
 
 export const metadata = {
   title: 'Terms of Service',
-  description: 'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
+  description:
+    'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
   openGraph: {
     title: 'Terms of Service | Wally',
-    description: 'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
+    description:
+      'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
     url: '/terms',
     type: 'website',
     images: [{ url: '/site-og.png', width: 1200, height: 630 }],
@@ -15,7 +17,8 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Terms of Service | Wally',
-    description: 'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
+    description:
+      'Terms of Service for Wally, the AI-powered WordPress admin assistant.',
     images: ['/site-og.png'],
   },
   alternates: { canonical: '/terms' },
@@ -64,7 +67,9 @@ export default function TermsPage() {
       <header className="flex h-16 items-center justify-between border-b border-border px-20">
         <Link href="/" className="flex items-center gap-2.5">
           <MessageCircle className="h-8 w-8 text-primary" />
-          <span className="font-heading text-[28px] font-bold text-foreground">Wally</span>
+          <span className="font-heading text-[28px] font-bold text-foreground">
+            Wally
+          </span>
         </Link>
         <Link
           href="/"
@@ -91,9 +96,10 @@ export default function TermsPage() {
 
           {/* Intro */}
           <p className="text-[15px] leading-[1.7] text-muted-foreground">
-            By installing, accessing, or using Wally (&ldquo;the Plugin&rdquo;), you agree to be bound by
-            these Terms of Service. If you do not agree, please do not use the Plugin. These terms
-            apply to all users, including website administrators and content editors.
+            By installing, accessing, or using Wally (&ldquo;the Plugin&rdquo;),
+            you agree to be bound by these Terms of Service. If you do not
+            agree, please do not use the Plugin. These terms apply to all users,
+            including website administrators and content editors.
           </p>
 
           {/* Sections */}
@@ -102,7 +108,9 @@ export default function TermsPage() {
               <h2 className="font-heading text-xl font-semibold text-foreground">
                 {section.title}
               </h2>
-              <p className="text-[15px] leading-[1.7] text-muted-foreground">{section.body}</p>
+              <p className="text-[15px] leading-[1.7] text-muted-foreground">
+                {section.body}
+              </p>
             </div>
           ))}
 

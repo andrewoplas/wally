@@ -56,7 +56,7 @@ export class ChatController {
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    const { message, conversation_history, site_profile, tool_definitions, custom_system_prompt } =
+    const { message, conversation_history, site_profile, tool_definitions, custom_system_prompt, recent_actions } =
       body;
     const model = body.model || this.config.get<string>('defaultModel')!;
 
@@ -73,6 +73,7 @@ export class ChatController {
         custom_system_prompt,
         message,
         conversation_history as Array<{ role: string; content: string }> | undefined,
+        recent_actions,
       );
 
       // Build messages array: conversation history + new user message

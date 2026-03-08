@@ -8,6 +8,9 @@
 import type {
   ActivateLicenseDto,
   ActivateResponseDto,
+  CreateFeedbackDto,
+  CreateGeneralFeedbackDto,
+  CreateRatingDto,
   HealthResponseDto,
   LicenseResponseDto,
   UsageResponseDto,
@@ -249,6 +252,117 @@ export const userControllerDeactivateSite = async (siteId: string, options?: Req
     method: 'DELETE'
     
     
+  }
+);}
+  
+
+
+/**
+ * @summary Submit feedback from website (public)
+ */
+export type feedbackControllerSubmitWebsiteFeedbackResponse201 = {
+  data: void
+  status: 201
+}
+
+export type feedbackControllerSubmitWebsiteFeedbackResponseSuccess = (feedbackControllerSubmitWebsiteFeedbackResponse201) & {
+  headers: Headers;
+};
+;
+
+export type feedbackControllerSubmitWebsiteFeedbackResponse = (feedbackControllerSubmitWebsiteFeedbackResponseSuccess)
+
+export const getFeedbackControllerSubmitWebsiteFeedbackUrl = () => {
+
+
+  
+
+  return `/api/v1/feedback`
+}
+
+export const feedbackControllerSubmitWebsiteFeedback = async (createFeedbackDto: CreateFeedbackDto, options?: RequestInit): Promise<feedbackControllerSubmitWebsiteFeedbackResponse> => {
+  
+  return wallyFetch<feedbackControllerSubmitWebsiteFeedbackResponse>(getFeedbackControllerSubmitWebsiteFeedbackUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createFeedbackDto,)
+  }
+);}
+  
+
+
+/**
+ * @summary Submit per-message rating from plugin
+ */
+export type feedbackControllerSubmitRatingResponse201 = {
+  data: void
+  status: 201
+}
+
+export type feedbackControllerSubmitRatingResponseSuccess = (feedbackControllerSubmitRatingResponse201) & {
+  headers: Headers;
+};
+;
+
+export type feedbackControllerSubmitRatingResponse = (feedbackControllerSubmitRatingResponseSuccess)
+
+export const getFeedbackControllerSubmitRatingUrl = () => {
+
+
+  
+
+  return `/api/v1/feedback/rating`
+}
+
+export const feedbackControllerSubmitRating = async (createRatingDto: CreateRatingDto, options?: RequestInit): Promise<feedbackControllerSubmitRatingResponse> => {
+  
+  return wallyFetch<feedbackControllerSubmitRatingResponse>(getFeedbackControllerSubmitRatingUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createRatingDto,)
+  }
+);}
+  
+
+
+/**
+ * @summary Submit general feedback from plugin
+ */
+export type feedbackControllerSubmitGeneralFeedbackResponse201 = {
+  data: void
+  status: 201
+}
+
+export type feedbackControllerSubmitGeneralFeedbackResponseSuccess = (feedbackControllerSubmitGeneralFeedbackResponse201) & {
+  headers: Headers;
+};
+;
+
+export type feedbackControllerSubmitGeneralFeedbackResponse = (feedbackControllerSubmitGeneralFeedbackResponseSuccess)
+
+export const getFeedbackControllerSubmitGeneralFeedbackUrl = () => {
+
+
+  
+
+  return `/api/v1/feedback/general`
+}
+
+export const feedbackControllerSubmitGeneralFeedback = async (createGeneralFeedbackDto: CreateGeneralFeedbackDto, options?: RequestInit): Promise<feedbackControllerSubmitGeneralFeedbackResponse> => {
+  
+  return wallyFetch<feedbackControllerSubmitGeneralFeedbackResponse>(getFeedbackControllerSubmitGeneralFeedbackUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createGeneralFeedbackDto,)
   }
 );}
   

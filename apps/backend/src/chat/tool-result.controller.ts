@@ -65,6 +65,7 @@ export class ToolResultController {
       tool_results,
       pending_tool_calls,
       tool_definitions,
+      recent_actions,
     } = body;
     const model = body.model || this.config.get<string>('defaultModel')!;
 
@@ -96,6 +97,7 @@ export class ToolResultController {
         custom_system_prompt,
         lastUserMessage || null,
         conversation_history as Array<{ role: string; content: string }> | undefined,
+        recent_actions,
       );
 
       const messages = this.messageBuilder.buildToolResultMessages(

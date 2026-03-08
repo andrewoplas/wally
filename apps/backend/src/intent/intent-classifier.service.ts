@@ -96,6 +96,10 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\binfographic/i,
       /\bnews[\s-]?press\b/i,
       /\bfan[\s-]?love\b/i,
+      // Common rephrasing for content edits
+      /\bfix\s+(?:my\s+)?(?:title|heading|text|copy|content|wording)\b/i,
+      /\bchange\s+(?:the\s+)?(?:wording|language|phrasing|text|copy)\b/i,
+      /\bupdate\s+(?:the\s+)?(?:title|heading|content|text|copy)\b/i,
     ],
   },
   {
@@ -118,6 +122,15 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\bplugins?\s*(?:management|list|status|version|update|install)/i,
       /\blist\s+(?:all\s+)?plugins\b/i,
       /\bplugins?\b/i,
+      // Common action synonyms that don't use the word "plugin"
+      /\bget\s+rid\s+of\b/i,
+      /\buninstall\b/i,
+      // Well-known plugin names as intent signals
+      /\bhello[\s-]dolly\b/i,
+      /\bakismet\b/i,
+      /\bwordfence\b/i,
+      /\bupdraftplus\b/i,
+      /\bwpforms\b/i,
     ],
   },
   {
@@ -414,6 +427,13 @@ const INTENT_PATTERNS: IntentPattern[] = [
       /\bseopress\b/i,
       /\b_seopress_/i,
       /\baioseo_/i,
+      // Generic SEO phrases not covered by Yoast/RankMath-specific intents
+      /\bfix\s+(?:my\s+)?seo\b/i,
+      /\bimprove\s+(?:my\s+)?seo\b/i,
+      /\bseo\s+(?:score|audit|check|issue|problem|optimization)\b/i,
+      /\bmeta\s+(?:title|description|tag)\b/i,
+      /\bsearch\s+(?:engine|ranking|result)\b/i,
+      /\bopen\s+graph\b/i,
     ],
   },
 

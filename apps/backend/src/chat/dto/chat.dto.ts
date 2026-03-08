@@ -39,4 +39,11 @@ export class ChatRequestDto {
   @IsOptional()
   @IsString()
   custom_system_prompt?: string;
+
+  @ApiPropertyOptional({ type: 'array', items: { type: 'string' }, maxItems: 15, description: 'Pre-formatted action summary strings from wp_wally_actions' })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(15)
+  @IsString({ each: true })
+  recent_actions?: string[];
 }

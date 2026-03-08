@@ -19,8 +19,9 @@ import { fileURLToPath } from 'url';
 // ─── Knowledge Domain Registry ────────────────────────────────────────────────
 
 const KNOWLEDGE_FILES: string[] = [
-  // Core WP content & structure
+  // Always-on: loaded for every request
   'general',
+  'wally-capabilities',
   'content',
   'elementor',
   'acf',

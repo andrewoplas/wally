@@ -293,6 +293,9 @@ class RestController {
 		$custom_prompt    = get_option( 'wally_custom_prompt', '' );
 		$tool_definitions = ToolExecutor::instance()->get_tool_definitions();
 
+		// Fix 1: Fetch recent actions from wp_wally_actions for action memory injection.
+		$recent_actions = $this->get_recent_action_summaries( $conversation_id );
+
 		// 5. Begin SSE output.
 		$this->start_sse();
 
@@ -309,6 +312,7 @@ class RestController {
 			'conversation_history' => $conversation_history,
 			'site_profile'         => $site_profile,
 			'tool_definitions'     => $tool_definitions,
+			'recent_actions'       => $recent_actions,
 		];
 		if ( $custom_prompt ) {
 			$chat_payload['custom_system_prompt'] = $custom_prompt;
@@ -331,7 +335,7 @@ class RestController {
 		$tool_calls         = $result['tool_calls'];
 		$total_token_count += ( $result['token_usage']['input_tokens'] ?? 0 ) + ( $result['token_usage']['output_tokens'] ?? 0 );
 
-		// 7. Tool execution loop (up to 5 iterations).
+		// 7. Tool execution loop (up to 10 iterations).
 		$executor     = ToolExecutor::instance();
 		$confirmation = null;
 		$max_loops    = 10;
@@ -369,6 +373,29 @@ class RestController {
 					continue;
 				}
 
+				// Fix 2: Store a compact tool result summary in conversation history
+				// so subsequent requests have readable context (not truncated raw JSON).
+				if ( $exec_result['success'] && is_array( $exec_result['result'] ?? null ) ) {
+					$summary = ResultSummarizer::summarize( $tool_name, $exec_result['result'] );
+					$wpdb->insert( $msg_table, [
+						'conversation_id' => $conversation_id,
+						'role'            => 'assistant',
+						'content'         => '[Tool: ' . $tool_name . '] ' . $summary,
+					]);
+
+					// Fix 1: Keep in-memory action list up to date so subsequent
+					// tool-result calls include actions from the current turn.
+					$recent_actions[] = AuditLog::format_action_summary([
+						'tool_name'  => $tool_name,
+						'tool_input' => wp_json_encode( $input ),
+						'status'     => 'success',
+						'created_at' => current_time( 'mysql' ),
+					]);
+					if ( count( $recent_actions ) > 15 ) {
+						array_shift( $recent_actions );
+					}
+				}
+
 				$tool_results[] = [
 					'tool_call_id' => $call_id,
 					'tool_name'    => $tool_name,
@@ -395,6 +422,7 @@ class RestController {
 					'tool_definitions'     => $tool_definitions,
 					'tool_results'         => $tool_results,
 					'pending_tool_calls'   => $tool_calls,
+					'recent_actions'       => $recent_actions,
 				],
 				$license_key
 			);
@@ -492,11 +520,15 @@ class RestController {
 		$custom_prompt    = get_option( 'wally_custom_prompt', '' );
 		$tool_definitions = ToolExecutor::instance()->get_tool_definitions();
 
+		// Fix 1: Fetch recent actions for action memory injection.
+		$recent_actions = $this->get_recent_action_summaries( $conversation_id );
+
 		$chat_payload = [
 			'message'              => $message,
 			'conversation_history' => $conversation_history,
 			'site_profile'         => $site_profile,
 			'tool_definitions'     => $tool_definitions,
+			'recent_actions'       => $recent_actions,
 		];
 		if ( $custom_prompt ) {
 			$chat_payload['custom_system_prompt'] = $custom_prompt;
@@ -531,7 +563,7 @@ class RestController {
 			$result = $this->process_tool_calls_json(
 				$tool_calls, $user_id, $conversation_id, $backend_url, $license_key,
 				array_merge( $conversation_history, [ [ 'role' => 'user', 'content' => $message ] ] ),
-				$site_profile, $tool_definitions, $reply_text
+				$site_profile, $tool_definitions, $reply_text, $recent_actions
 			);
 			$reply_text         = $result['reply'];
 			$confirmation       = $result['confirmation'];
@@ -567,8 +599,11 @@ class RestController {
 	private function process_tool_calls_json(
 		array $tool_calls, int $user_id, int $conversation_id,
 		string $backend_url, string $license_key,
-		array $conversation_history, array $site_profile, array $tool_definitions, string $accumulated_text
+		array $conversation_history, array $site_profile, array $tool_definitions,
+		string $accumulated_text, array $recent_actions = []
 	): array {
+		global $wpdb;
+		$msg_table         = $wpdb->prefix . 'wally_messages';
 		$executor          = ToolExecutor::instance();
 		$confirmation      = null;
 		$max_loops         = 10;
@@ -595,6 +630,27 @@ class RestController {
 					continue;
 				}
 
+				// Fix 2: Store compact tool result summary in conversation history.
+				if ( $exec_result['success'] && is_array( $exec_result['result'] ?? null ) ) {
+					$summary = ResultSummarizer::summarize( $tool_name, $exec_result['result'] );
+					$wpdb->insert( $msg_table, [
+						'conversation_id' => $conversation_id,
+						'role'            => 'assistant',
+						'content'         => '[Tool: ' . $tool_name . '] ' . $summary,
+					]);
+
+					// Fix 1: Keep in-memory action list current for this loop.
+					$recent_actions[] = AuditLog::format_action_summary([
+						'tool_name'  => $tool_name,
+						'tool_input' => wp_json_encode( $input ),
+						'status'     => 'success',
+						'created_at' => current_time( 'mysql' ),
+					]);
+					if ( count( $recent_actions ) > 15 ) {
+						array_shift( $recent_actions );
+					}
+				}
+
 				$tool_results[] = [
 					'tool_call_id' => $call_id,
 					'tool_name'    => $tool_name,
@@ -609,6 +665,7 @@ class RestController {
 				'tool_definitions'     => $tool_definitions,
 				'tool_results'         => $tool_results,
 				'pending_tool_calls'   => $tool_calls,
+				'recent_actions'       => $recent_actions,
 			], $license_key );
 
 			if ( is_wp_error( $response ) ) {
@@ -639,6 +696,48 @@ class RestController {
 			'confirmation' => $confirmation,
 			'token_count'  => $total_token_count,
 		];
+	}
+
+	// ─── Action Memory Helpers ──────────────────────────────────────────
+
+	/**
+	 * Fetch and format the last 15 completed actions for a conversation.
+	 *
+	 * Returns an array of human-readable summary strings ready to be
+	 * injected into the system prompt as action memory (Fix 1).
+	 *
+	 * @param int $conversation_id Conversation to fetch actions for.
+	 * @return string[] Formatted summary strings in chronological order.
+	 */
+	private function get_recent_action_summaries( int $conversation_id ): array {
+		global $wpdb;
+
+		if ( ! $conversation_id ) {
+			return [];
+		}
+
+		$actions_table = $wpdb->prefix . 'wally_actions';
+		$rows          = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT tool_name, tool_input, status, created_at
+				 FROM {$actions_table}
+				 WHERE conversation_id = %d
+				   AND status NOT IN ('pending', 'failed')
+				 ORDER BY created_at DESC, id DESC
+				 LIMIT 15",
+				$conversation_id
+			),
+			ARRAY_A
+		);
+
+		if ( empty( $rows ) ) {
+			return [];
+		}
+
+		return array_map(
+			[ AuditLog::class, 'format_action_summary' ],
+			array_reverse( $rows )
+		);
 	}
 
 	// ─── URL Validation ─────────────────────────────────────────────────

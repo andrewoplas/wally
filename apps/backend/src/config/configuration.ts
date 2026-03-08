@@ -25,7 +25,7 @@ export default (): WallyConfig => ({
 
   anthropicApiKey: process.env['ANTHROPIC_API_KEY'] ?? '',
   openaiApiKey: process.env['OPENAI_API_KEY'] ?? '',
-  defaultModel: process.env['DEFAULT_MODEL'] ?? 'claude-sonnet-4-6',
+  defaultModel: process.env['DEFAULT_MODEL'] ?? 'claude-3-5-sonnet',
 
   rateLimitPerSitePerMinute: parseInt(
     process.env['RATE_LIMIT_PER_SITE_PER_MINUTE'] ?? '30',

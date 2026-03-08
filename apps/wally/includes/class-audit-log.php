@@ -10,6 +10,42 @@ namespace Wally;
 class AuditLog {
 
 	/**
+	 * Format a raw action row into a single human-readable summary line.
+	 *
+	 * Used to build the Recent Actions block injected into the system prompt.
+	 * Deterministic — no LLM call required.
+	 *
+	 * @param array $action Associative array with keys: tool_name, tool_input (JSON string), status, created_at.
+	 * @return string Formatted summary e.g. "[2026-03-08 14:32] SUCCESS — Installed plugin: yoast-seo"
+	 */
+	public static function format_action_summary( array $action ): string {
+		$tool   = $action['tool_name'] ?? 'unknown';
+		$input  = json_decode( $action['tool_input'] ?? '{}', true ) ?: [];
+		$status = strtoupper( $action['status'] ?? 'success' );
+		$time   = $action['created_at'] ?? '';
+
+		$summaries = [
+			'install_plugin'    => 'Installed plugin: ' . ( $input['slug'] ?? 'unknown' ),
+			'activate_plugin'   => 'Activated plugin: ' . ( $input['slug'] ?? 'unknown' ),
+			'deactivate_plugin' => 'Deactivated plugin: ' . ( $input['slug'] ?? 'unknown' ),
+			'delete_plugin'     => 'Deleted plugin: ' . ( $input['slug'] ?? 'unknown' ),
+			'update_plugin'     => 'Updated plugin: ' . ( $input['slug'] ?? 'unknown' ),
+			'create_post'       => 'Created post: ' . ( $input['title'] ?? 'untitled' ),
+			'update_post'       => 'Updated post #' . ( $input['post_id'] ?? '?' ) . ': ' . ( $input['field'] ?? 'content' ),
+			'trash_post'        => 'Trashed post: ' . ( $input['title'] ?? '#' . ( $input['post_id'] ?? '?' ) ),
+			'restore_post'      => 'Restored post: ' . ( $input['title'] ?? '#' . ( $input['post_id'] ?? '?' ) ),
+			'search_replace'    => "Search/replaced '{$input['search']}' → '{$input['replace']}' in " . ( $input['scope'] ?? 'content' ),
+			'update_option'     => 'Updated site option: ' . ( $input['option_name'] ?? 'unknown' ),
+			'create_category'   => 'Created category: ' . ( $input['name'] ?? 'unknown' ),
+			'create_tag'        => 'Created tag: ' . ( $input['name'] ?? 'unknown' ),
+		];
+
+		$description = $summaries[ $tool ] ?? "{$tool} executed";
+
+		return "[{$time}] {$status} — {$description}";
+	}
+
+	/**
 	 * Log a tool execution to the actions table.
 	 *
 	 * @param array $data {
