@@ -10,6 +10,7 @@ const { withSentryConfig } = require('@sentry/nextjs');
  **/
 const nextConfig = {
   nx: {},
+  transpilePackages: ['@wally/api-client'],
 };
 
 const composedConfig = composePlugins(withNx)(nextConfig);

@@ -13,6 +13,7 @@ export * from './activateResponseDtoExpiresAt';
 export * from './createFeedbackDto';
 export * from './createGeneralFeedbackDto';
 export * from './createRatingDto';
+export * from './feedbackControllerListFeedbackParams';
 export * from './healthResponseDto';
 export * from './licenseFeaturesDto';
 export * from './licenseResponseDto';

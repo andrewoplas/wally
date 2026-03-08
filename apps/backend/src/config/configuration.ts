@@ -12,6 +12,7 @@ export interface WallyConfig {
   rateLimitPerSitePerMinute: number;
   rateLimitPerSitePerDay: number;
   skipLicenseValidation: boolean;
+  adminApiKey: string;
   supabase: {
     url: string;
     serviceRoleKey: string;
@@ -37,6 +38,7 @@ export default (): WallyConfig => ({
   ),
 
   skipLicenseValidation: process.env['SKIP_LICENSE_VALIDATION'] === 'true',
+  adminApiKey: process.env['ADMIN_API_KEY'] ?? '',
 
   supabase: {
     url: process.env['SUPABASE_URL'] ?? '',

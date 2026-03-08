@@ -5,6 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       { userAgent: '*', allow: '/' },
       { userAgent: '*', disallow: '/app/' },
+      { userAgent: '*', disallow: '/admin/' },
     ],
     sitemap: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.wallychat.com'}/sitemap.xml`,
   };

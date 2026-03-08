@@ -17,11 +17,13 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@wally/api-client": ["../../libs/api-client/src/index.ts"]
     },
     "types": ["jest", "node"],
+    "composite": false,
+    "declarationMap": false,
     "outDir": "dist",
-    "rootDir": "src",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": [

@@ -1,7 +1,9 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
+  Query,
   Req,
   HttpCode,
   HttpStatus,
@@ -15,6 +17,7 @@ import { CreateFeedbackDto } from './dto/create-feedback.dto.js';
 import { CreateRatingDto } from './dto/create-rating.dto.js';
 import { CreateGeneralFeedbackDto } from './dto/create-general-feedback.dto.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
+import { AdminGuard } from '../common/guards/admin.guard.js';
 
 interface AuthenticatedRequest extends Request {
   siteId: string;
@@ -24,6 +27,25 @@ interface AuthenticatedRequest extends Request {
 @Controller('v1/feedback')
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
+
+  @ApiOperation({ summary: 'List all feedback (admin only)' })
+  @UseGuards(AdminGuard)
+  @Get()
+  async listFeedback(
+    @Query('type') type?: string,
+    @Query('source') source?: string,
+    @Query('category') category?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.feedbackService.findAll({
+      type,
+      source,
+      category,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      offset: offset ? parseInt(offset, 10) : undefined,
+    });
+  }
 
   @ApiOperation({ summary: 'Submit feedback from website (public)' })
   @Post()

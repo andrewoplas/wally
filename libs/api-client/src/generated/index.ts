@@ -11,6 +11,7 @@ import type {
   CreateFeedbackDto,
   CreateGeneralFeedbackDto,
   CreateRatingDto,
+  FeedbackControllerListFeedbackParams,
   HealthResponseDto,
   LicenseResponseDto,
   UsageResponseDto,
@@ -191,6 +192,42 @@ export const healthControllerCheck = async ( options?: RequestInit): Promise<hea
   
 
 
+/**
+ * @summary Debug sentry
+ */
+export type healthControllerGetErrorResponse200 = {
+  data: void
+  status: 200
+}
+
+export type healthControllerGetErrorResponseSuccess = (healthControllerGetErrorResponse200) & {
+  headers: Headers;
+};
+;
+
+export type healthControllerGetErrorResponse = (healthControllerGetErrorResponseSuccess)
+
+export const getHealthControllerGetErrorUrl = () => {
+
+
+  
+
+  return `/api/health/debug-sentry`
+}
+
+export const healthControllerGetError = async ( options?: RequestInit): Promise<healthControllerGetErrorResponse> => {
+  
+  return wallyFetch<healthControllerGetErrorResponse>(getHealthControllerGetErrorUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
 export type userControllerGetLicenseResponse200 = {
   data: void
   status: 200
@@ -250,6 +287,49 @@ export const userControllerDeactivateSite = async (siteId: string, options?: Req
   {      
     ...options,
     method: 'DELETE'
+    
+    
+  }
+);}
+  
+
+
+/**
+ * @summary List all feedback (admin only)
+ */
+export type feedbackControllerListFeedbackResponse200 = {
+  data: void
+  status: 200
+}
+
+export type feedbackControllerListFeedbackResponseSuccess = (feedbackControllerListFeedbackResponse200) & {
+  headers: Headers;
+};
+;
+
+export type feedbackControllerListFeedbackResponse = (feedbackControllerListFeedbackResponseSuccess)
+
+export const getFeedbackControllerListFeedbackUrl = (params: FeedbackControllerListFeedbackParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/feedback?${stringifiedParams}` : `/api/v1/feedback`
+}
+
+export const feedbackControllerListFeedback = async (params: FeedbackControllerListFeedbackParams, options?: RequestInit): Promise<feedbackControllerListFeedbackResponse> => {
+  
+  return wallyFetch<feedbackControllerListFeedbackResponse>(getFeedbackControllerListFeedbackUrl(params),
+  {      
+    ...options,
+    method: 'GET'
     
     
   }
