@@ -274,14 +274,14 @@ class ElementorCreatePage extends ElementorBuilderBase {
 	}
 
 	public function get_description(): string {
-		return 'Create a new WordPress page with an Elementor layout. Design the page by providing an elements array of containers and widgets.
+		return 'Create a new WordPress page with an Elementor layout. Provide the COMPLETE elements array in one call — include all sections, columns, and widgets up front. After creating, call elementor_get_page_structure to verify the content saved correctly.
 
 ELEMENT STRUCTURE:
-- Container: {"id":"8hexchars","elType":"container","isInner":false,"settings":{"html_tag":"section"},"elements":[...]}
+- Container: {"id":"8hexchars","elType":"container","isInner":false,"settings":{},"elements":[...]}
 - Widget:    {"id":"8hexchars","elType":"widget","widgetType":"TYPE","isInner":false,"settings":{...},"elements":[]}
 
 WIDGET TYPES AND KEY SETTINGS:
-- heading:    {"title":"text","header_size":"h1|h2|h3|h4|h5|h6","align":"left|center|right"}
+- heading:    {"title":"text","header_size":"h1|h2|h3|h4|h5|h6","align":"left|center|right","title_color":"#hex"}
 - text-editor:{"editor":"<p>HTML content</p>"}
 - image:      {"image":{"url":"","id":0},"align":"left|center|right"}
 - button:     {"text":"Label","link":{"url":"https://..."},"align":"left|center|right|justify","button_type":"default|info|success|warning|danger"}
@@ -292,7 +292,41 @@ WIDGET TYPES AND KEY SETTINGS:
 - html:       {"html":"<div>custom HTML</div>"}
 - shortcode:  {"shortcode":"[my_shortcode]"}
 
-Always generate unique 8-character hex IDs for each element (e.g. "a1b2c3d4").';
+MULTI-COLUMN LAYOUT: Use a container with "flex_direction":"row" containing inner containers (isInner:true) with "width":{"unit":"%","size":50} (two cols) or "size":33 (three cols).
+
+STYLING: Background color: "background_background":"classic","background_color":"#1a1a2e". Padding: "padding":{"unit":"px","top":"60","right":"40","bottom":"60","left":"40","isLinked":false}.
+
+COMPLETE EXAMPLE — landing page with hero, 3-column features, and CTA:
+[
+  {"id":"aaa11111","elType":"container","isInner":false,
+   "settings":{"background_background":"classic","background_color":"#1a1a2e","padding":{"unit":"px","top":"80","right":"40","bottom":"80","left":"40","isLinked":false}},
+   "elements":[
+     {"id":"aaa11112","elType":"widget","widgetType":"heading","isInner":false,"settings":{"title":"Your Headline","header_size":"h1","align":"center","title_color":"#ffffff"},"elements":[]},
+     {"id":"aaa11113","elType":"widget","widgetType":"text-editor","isInner":false,"settings":{"editor":"<p style=\"text-align:center;color:#cccccc;\">Sub-headline text.</p>"},"elements":[]},
+     {"id":"aaa11114","elType":"widget","widgetType":"button","isInner":false,"settings":{"text":"Get Started","link":{"url":"#"},"align":"center"},"elements":[]}
+   ]},
+  {"id":"bbb22222","elType":"container","isInner":false,
+   "settings":{"padding":{"unit":"px","top":"60","right":"40","bottom":"60","left":"40","isLinked":false},"flex_direction":"row"},
+   "elements":[
+     {"id":"bbb22223","elType":"container","isInner":true,"settings":{"width":{"unit":"%","size":33}},"elements":[
+       {"id":"bbb22224","elType":"widget","widgetType":"icon-box","isInner":false,"settings":{"icon":{"value":"fas fa-star","library":"fa-solid"},"title_text":"Feature One","description_text":"Description of this feature."},"elements":[]}
+     ]},
+     {"id":"bbb22225","elType":"container","isInner":true,"settings":{"width":{"unit":"%","size":33}},"elements":[
+       {"id":"bbb22226","elType":"widget","widgetType":"icon-box","isInner":false,"settings":{"icon":{"value":"fas fa-bolt","library":"fa-solid"},"title_text":"Feature Two","description_text":"Description of this feature."},"elements":[]}
+     ]},
+     {"id":"bbb22227","elType":"container","isInner":true,"settings":{"width":{"unit":"%","size":33}},"elements":[
+       {"id":"bbb22228","elType":"widget","widgetType":"icon-box","isInner":false,"settings":{"icon":{"value":"fas fa-check","library":"fa-solid"},"title_text":"Feature Three","description_text":"Description of this feature."},"elements":[]}
+     ]}
+   ]},
+  {"id":"ccc33333","elType":"container","isInner":false,
+   "settings":{"background_background":"classic","background_color":"#0066cc","padding":{"unit":"px","top":"60","right":"40","bottom":"60","left":"40","isLinked":false}},
+   "elements":[
+     {"id":"ccc33334","elType":"widget","widgetType":"heading","isInner":false,"settings":{"title":"Ready to Get Started?","header_size":"h2","align":"center","title_color":"#ffffff"},"elements":[]},
+     {"id":"ccc33335","elType":"widget","widgetType":"button","isInner":false,"settings":{"text":"Contact Us","link":{"url":"/contact"},"align":"center"},"elements":[]}
+   ]}
+]
+
+Always generate unique 8-character hex IDs for each element (e.g. "a1b2c3d4"). Never reuse an ID within the same page.';
 	}
 
 	public function get_category(): string {
@@ -569,9 +603,24 @@ class ElementorUpdatePageLayout extends ElementorBuilderBase {
 	}
 
 	public function get_description(): string {
-		return 'Replace the entire Elementor layout of an existing page with a new elements array. Use this to fully redesign a page. CAUTION: this overwrites all existing Elementor content. Use elementor_get_page_structure first to see the current layout.
+		return 'Replace the entire Elementor layout of an existing page with a new elements array. CAUTION: fully overwrites all existing Elementor content — use elementor_get_page_structure first to see the current layout before replacing it.
 
-Elements format: same as elementor_create_page — array of container/widget objects with id, elType, widgetType, isInner, settings, elements fields.';
+Provide the complete new elements array in one call — same format as elementor_create_page (containers and widgets with id, elType, widgetType, isInner, settings, elements fields). After updating, call elementor_get_page_structure to confirm the new layout saved correctly.
+
+MULTI-COLUMN LAYOUT: Use an outer container with "flex_direction":"row" containing inner containers (isInner:true) with "width":{"unit":"%","size":50} for two columns or "size":33 for three columns.
+
+EXAMPLE — two-column section with text and image:
+{"id":"sec00001","elType":"container","isInner":false,
+ "settings":{"flex_direction":"row","padding":{"unit":"px","top":"60","right":"40","bottom":"60","left":"40","isLinked":false}},
+ "elements":[
+   {"id":"col00011","elType":"container","isInner":true,"settings":{"width":{"unit":"%","size":50}},"elements":[
+     {"id":"hd000111","elType":"widget","widgetType":"heading","isInner":false,"settings":{"title":"Our Story","header_size":"h2","align":"left"},"elements":[]},
+     {"id":"tx000111","elType":"widget","widgetType":"text-editor","isInner":false,"settings":{"editor":"<p>Your story content here.</p>"},"elements":[]}
+   ]},
+   {"id":"col00012","elType":"container","isInner":true,"settings":{"width":{"unit":"%","size":50}},"elements":[
+     {"id":"im000121","elType":"widget","widgetType":"image","isInner":false,"settings":{"image":{"url":"","id":0},"align":"center"},"elements":[]}
+   ]}
+ ]}';
 	}
 
 	public function get_category(): string {
@@ -644,10 +693,26 @@ class ElementorAddWidget extends ElementorBuilderBase {
 	}
 
 	public function get_description(): string {
-		return 'Add a widget to an existing Elementor page inside a specific container or section. Use elementor_get_page_structure to find the container_id.
+		return 'Add a widget to an existing Elementor page inside a specific container. Use elementor_get_page_structure to find a valid container_id first.
 
-Widget object format:
-{"id":"8hexchars","elType":"widget","widgetType":"heading|text-editor|image|button|divider|spacer|icon-box|video|html|shortcode","isInner":false,"settings":{...},"elements":[]}';
+WIDGET EXAMPLES (copy and adjust settings):
+
+Heading:
+{"id":"a1b2c3d4","elType":"widget","widgetType":"heading","isInner":false,"settings":{"title":"Section Title","header_size":"h2","align":"center","title_color":"#333333"},"elements":[]}
+
+Text block:
+{"id":"e5f6a7b8","elType":"widget","widgetType":"text-editor","isInner":false,"settings":{"editor":"<p>Your paragraph content here.</p>"},"elements":[]}
+
+Button:
+{"id":"12345678","elType":"widget","widgetType":"button","isInner":false,"settings":{"text":"Click Here","link":{"url":"https://example.com"},"align":"center","button_type":"default"},"elements":[]}
+
+Icon-box:
+{"id":"abcdef12","elType":"widget","widgetType":"icon-box","isInner":false,"settings":{"icon":{"value":"fas fa-star","library":"fa-solid"},"title_text":"Feature Title","description_text":"A short description."},"elements":[]}
+
+Spacer:
+{"id":"99887766","elType":"widget","widgetType":"spacer","isInner":false,"settings":{"space":{"unit":"px","size":40,"sizes":[]}},"elements":[]}
+
+Use a unique 8-character hex ID for each widget. Never reuse an ID already on the page (check with elementor_get_page_structure).';
 	}
 
 	public function get_category(): string {
