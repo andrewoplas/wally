@@ -960,3 +960,141 @@ class ElementorDeleteElement extends ElementorBuilderBase {
 		];
 	}
 }
+
+/**
+ * Verify an Elementor page has renderable content.
+ *
+ * Checks _elementor_data, element/widget counts, CSS generation, and
+ * post_content to detect blank-page conditions after programmatic saves.
+ */
+class ElementorVerifyPage extends ElementorBuilderBase {
+
+	public function get_name(): string {
+		return 'elementor_verify_page';
+	}
+
+	public function get_description(): string {
+		return 'Verify an Elementor page has renderable content. Call this after elementor_create_page or elementor_update_page_layout to confirm the page will display correctly. Reports issues if the page may appear blank.';
+	}
+
+	public function get_category(): string {
+		return 'elementor';
+	}
+
+	public function get_action(): string {
+		return 'read';
+	}
+
+	public function get_parameters_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'post_id' => [
+					'type'        => 'integer',
+					'description' => 'ID of the Elementor page to verify.',
+				],
+			],
+			'required'   => [ 'post_id' ],
+		];
+	}
+
+	public function get_required_capability(): string {
+		return 'edit_posts';
+	}
+
+	public function execute( array $input ): array {
+		$post_id = absint( $input['post_id'] );
+
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return [ 'success' => false, 'error' => "Post not found: {$post_id}" ];
+		}
+
+		$issues = [];
+
+		// Check 1: _elementor_edit_mode is 'builder'.
+		$edit_mode        = get_post_meta( $post_id, '_elementor_edit_mode', true );
+		$has_builder_mode = 'builder' === $edit_mode;
+		if ( ! $has_builder_mode ) {
+			$issues[] = '_elementor_edit_mode is not set to "builder" — re-create the page with elementor_create_page.';
+		}
+
+		// Check 2: _elementor_data exists and is valid JSON.
+		$raw      = get_post_meta( $post_id, '_elementor_data', true );
+		$has_data = ! empty( $raw );
+		$elements = [];
+
+		if ( $has_data ) {
+			$decoded = json_decode( $raw, true );
+			if ( ! is_array( $decoded ) ) {
+				$has_data = false;
+				$issues[] = '_elementor_data exists but contains invalid JSON — re-create the page with elementor_create_page.';
+			} else {
+				$elements = $decoded;
+			}
+		} else {
+			$issues[] = '_elementor_data is missing — the page has no Elementor content.';
+		}
+
+		// Check 3: Elements array contains actual widgets (not just empty containers).
+		$element_count = 0;
+		$widget_count  = 0;
+		if ( ! empty( $elements ) ) {
+			$this->count_elements( $elements, $element_count, $widget_count );
+		}
+
+		if ( 0 === $element_count ) {
+			$issues[] = 'Elements array is empty — no content was saved. Retry with elementor_create_page.';
+		} elseif ( 0 === $widget_count ) {
+			$issues[] = 'No widgets found — only empty containers exist. Add content with elementor_add_widget or rebuild with elementor_update_page_layout.';
+		}
+
+		// Check 4: CSS has been generated (_elementor_css meta is non-empty after generation).
+		$css_meta = get_post_meta( $post_id, '_elementor_css', true );
+		$has_css  = ! empty( $css_meta );
+		if ( ! $has_css ) {
+			$issues[] = 'No CSS generated yet — call elementor_clear_css_cache to force regeneration on next page load.';
+		}
+
+		// Check 5: post_content is non-empty (populated by Elementor Document API on save).
+		$has_rendered_content = ! empty( $post->post_content );
+		if ( ! $has_rendered_content ) {
+			$issues[] = 'post_content is empty — the Elementor save pipeline may not have completed. Retry with elementor_update_page_layout.';
+		}
+
+		return [
+			'success' => true,
+			'data'    => [
+				'post_id'              => $post_id,
+				'title'                => $post->post_title,
+				'has_builder_mode'     => $has_builder_mode,
+				'has_data'             => $has_data,
+				'element_count'        => $element_count,
+				'widget_count'         => $widget_count,
+				'has_css'              => $has_css,
+				'has_rendered_content' => $has_rendered_content,
+				'status'               => empty( $issues ) ? 'healthy' : 'unhealthy',
+				'issues'               => $issues,
+			],
+		];
+	}
+
+	/**
+	 * Recursively count total elements and widget elements in the Elementor tree.
+	 *
+	 * @param array $elements     Element tree.
+	 * @param int   $total        Running count of all elements (by reference).
+	 * @param int   $widget_count Running count of widget elements (by reference).
+	 */
+	private function count_elements( array $elements, int &$total, int &$widget_count ): void {
+		foreach ( $elements as $el ) {
+			++$total;
+			if ( 'widget' === ( $el['elType'] ?? '' ) ) {
+				++$widget_count;
+			}
+			if ( ! empty( $el['elements'] ) && is_array( $el['elements'] ) ) {
+				$this->count_elements( $el['elements'], $total, $widget_count );
+			}
+		}
+	}
+}
