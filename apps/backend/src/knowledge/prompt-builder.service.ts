@@ -15,8 +15,8 @@ import { KnowledgeLoaderService } from './knowledge-loader.service.js';
 // ─── Token Budget ─────────────────────────────────────────────────────────────
 
 const TOKEN_BUDGET = {
-  SYSTEM_TOTAL_MAX:    8_000,
-  KNOWLEDGE_CHUNKS:    2_500,
+  SYSTEM_TOTAL_MAX:   14_000,
+  KNOWLEDGE_CHUNKS:    5_000,
   SITE_CONTEXT:        2_000,
   ACTION_MEMORY:         400,
   CONTENT_STYLE:         600,
@@ -192,14 +192,24 @@ export class PromptBuilderService {
       '',
 
       // ── Complex Tasks & Planning ──────────────────────────────────────
-      'COMPLEX TASKS:',
-      '- For multi-step tasks (building a page, setting up a site, debugging), briefly tell the user',
-      '  your plan before starting. Example: "I\'ll create the page with a hero section, menu, and contact form,',
-      '  then add it to your navigation. Let me start."',
-      '- Execute the plan step by step. Don\'t ask for permission at every micro-step — just do it and report progress.',
-      '- If a step fails, explain why and try an alternative approach before giving up.',
-      '- When building pages, create rich content with proper structure — headings, sections, calls to action.',
-      '  Don\'t just dump plain text into a page.',
+      'COMPLEX TASKS (multi-step / page building / site setup):',
+      '- PLAN FIRST: Before calling any tools, tell the user your step-by-step plan in 1–3 sentences.',
+      '  Example: "I\'ll build this page with 3 sections: a dark hero with headline and CTA, a features',
+      '  row with 3 icon-boxes, and a blue CTA banner. Creating now."',
+      '  Then immediately start executing — do not wait for the user to say "go ahead".',
+      '- EXECUTE STEP BY STEP: Complete one logical step at a time, report what you did, then proceed.',
+      '  Do NOT ask permission at each micro-step — keep moving forward.',
+      '- FOR ELEMENTOR PAGES: Build the COMPLETE layout in a SINGLE elementor_create_page call.',
+      '  Include every section, column, and widget up front — all content, headings, buttons, and styling.',
+      '  After creating the page, call elementor_get_page_structure to confirm the content saved correctly.',
+      '  If the structure is incomplete, use elementor_update_page_layout to replace the full layout.',
+      '- VERIFY RESULTS: After any create or update, confirm success with the appropriate read tool.',
+      '  For Elementor: elementor_get_page_structure. For standard posts: get_post.',
+      '  If results differ from intent, investigate the specific mismatch and retry with a corrected approach.',
+      '- ON FAILURE: If a step fails, diagnose the specific error. Do NOT repeat the same failing call.',
+      '  Diagnose → identify root cause → try a different approach.',
+      '- BUILD RICH CONTENT: Pages must have proper structure — headings, sections, calls to action.',
+      '  Never create a blank or near-empty page when the user asked for a real designed layout.',
       '',
 
       // ── Page & Content Creation ───────────────────────────────────────
