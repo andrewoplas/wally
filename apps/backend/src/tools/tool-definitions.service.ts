@@ -36,16 +36,7 @@ export interface AnthropicTool {
   input_schema: JsonSchema;
 }
 
-export interface OpenAiTool {
-  type: 'function';
-  function: {
-    name: string;
-    description: string;
-    parameters: JsonSchema;
-  };
-}
-
-export type LlmProvider = 'anthropic' | 'openai';
+export type LlmProvider = 'anthropic';
 
 // ─── Tool Definitions ─────────────────────────────────────────────────────────
 
@@ -375,30 +366,14 @@ export class ToolDefinitionsService {
   }
 
   /**
-   * Returns tool definitions formatted for a specific LLM provider.
-   * - `'anthropic'` → `{ name, description, input_schema }` format
-   * - `'openai'`    → `{ type: 'function', function: { name, description, parameters } }` format
-   * - fallback      → raw internal definitions
+   * Returns tool definitions formatted for Anthropic.
    */
-  getToolsForProvider(provider: LlmProvider): AnthropicTool[] | OpenAiTool[] {
-    if (provider === 'anthropic') {
-      return TOOL_DEFINITIONS.map(
-        (tool): AnthropicTool => ({
-          name: tool.name,
-          description: tool.description,
-          input_schema: tool.parameters,
-        }),
-      );
-    }
-
+  getToolsForProvider(_provider: LlmProvider): AnthropicTool[] {
     return TOOL_DEFINITIONS.map(
-      (tool): OpenAiTool => ({
-        type: 'function',
-        function: {
-          name: tool.name,
-          description: tool.description,
-          parameters: tool.parameters,
-        },
+      (tool): AnthropicTool => ({
+        name: tool.name,
+        description: tool.description,
+        input_schema: tool.parameters,
       }),
     );
   }
@@ -457,30 +432,17 @@ export class ToolDefinitionsService {
   }
 
   /**
-   * Convert dynamic tool definitions to a specific LLM provider format.
+   * Convert dynamic tool definitions to Anthropic format.
    */
   getDynamicToolsForProvider(
-    provider: LlmProvider,
+    _provider: LlmProvider,
     dynamicTools: ToolDefinition[],
-  ): AnthropicTool[] | OpenAiTool[] {
-    if (provider === 'anthropic') {
-      return dynamicTools.map(
-        (tool): AnthropicTool => ({
-          name: tool.name,
-          description: tool.description,
-          input_schema: tool.parameters,
-        }),
-      );
-    }
-
+  ): AnthropicTool[] {
     return dynamicTools.map(
-      (tool): OpenAiTool => ({
-        type: 'function',
-        function: {
-          name: tool.name,
-          description: tool.description,
-          parameters: tool.parameters,
-        },
+      (tool): AnthropicTool => ({
+        name: tool.name,
+        description: tool.description,
+        input_schema: tool.parameters,
       }),
     );
   }

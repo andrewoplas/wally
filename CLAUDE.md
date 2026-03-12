@@ -223,3 +223,32 @@ Full product specification is in `prd/PRD.md`. It defines:
 - 40+ WordPress tool definitions (posts, pages, plugins, search/replace, Elementor, etc.)
 - Permission matrix mapping tools to WordPress roles
 - Conversation quality test cases (`prd/PRD-conversation-quality-tests.md`)
+
+## Documentation
+
+Comprehensive architecture documentation lives in `docs/ARCHITECTURE.md`. It covers:
+- High-level architecture and data flows
+- All three apps (plugin, backend, frontend) in detail
+- Database schemas (WordPress + Supabase)
+- Full API reference (backend + plugin endpoints)
+- Tool system architecture and execution pipeline
+- Knowledge & prompt system (intent classification, prompt builder)
+- Authentication, authorization, and rate limiting
+- Licensing, usage tracking, and monetization tiers
+- Testing setup and developer guide
+
+### Keeping Documentation Updated
+
+**IMPORTANT:** Whenever you make changes to the codebase, you MUST update `docs/ARCHITECTURE.md` to reflect those changes. This includes but is not limited to:
+
+- Adding, removing, or modifying API endpoints
+- Adding or changing database tables/columns
+- Creating new modules, services, controllers, or components
+- Changing authentication or authorization flows
+- Adding or modifying tools (plugin tool system)
+- Changing environment variables or configuration
+- Modifying the knowledge/prompt system
+- Adding new routes or pages to the frontend
+- Changing the monorepo structure or build setup
+
+Update the relevant section(s) in `docs/ARCHITECTURE.md` and bump the "Last updated" date at the top of the file. Keep changes minimal and focused — only update what actually changed.

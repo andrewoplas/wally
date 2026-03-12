@@ -1,5 +1,5 @@
 export interface ModelConfig {
-  provider: 'anthropic' | 'openai';
+  provider: 'anthropic';
   modelId: string;
 }
 
@@ -7,7 +7,6 @@ export interface WallyConfig {
   port: number;
   nodeEnv: string;
   anthropicApiKey: string;
-  openaiApiKey: string;
   defaultModel: string;
   rateLimitPerSitePerMinute: number;
   rateLimitPerSitePerDay: number;
@@ -25,8 +24,7 @@ export default (): WallyConfig => ({
   nodeEnv: process.env['NODE_ENV'] ?? 'development',
 
   anthropicApiKey: process.env['ANTHROPIC_API_KEY'] ?? '',
-  openaiApiKey: process.env['OPENAI_API_KEY'] ?? '',
-  defaultModel: process.env['DEFAULT_MODEL'] ?? 'claude-3-5-sonnet',
+  defaultModel: process.env['DEFAULT_MODEL'] ?? 'claude-sonnet-4-6',
 
   rateLimitPerSitePerMinute: parseInt(
     process.env['RATE_LIMIT_PER_SITE_PER_MINUTE'] ?? '30',
@@ -51,7 +49,5 @@ export default (): WallyConfig => ({
       provider: 'anthropic',
       modelId: 'claude-haiku-4-5-20251001',
     },
-    'gpt-4o': { provider: 'openai', modelId: 'gpt-4o' },
-    'gpt-4o-mini': { provider: 'openai', modelId: 'gpt-4o-mini' },
   },
 });

@@ -30,12 +30,12 @@ const DEFAULT_FEATURES: Record<string, Record<string, unknown>> = {
   },
   pro: {
     max_messages_per_day: 1000,
-    models_available: ['claude-sonnet-4-6', 'claude-haiku-4-5', 'gpt-4o', 'gpt-4o-mini'],
+    models_available: ['claude-sonnet-4-6', 'claude-haiku-4-5'],
     tool_categories: ['content', 'site', 'plugins', 'search', 'elementor'],
   },
   enterprise: {
     max_messages_per_day: 10000,
-    models_available: ['claude-sonnet-4-6', 'claude-haiku-4-5', 'gpt-4o', 'gpt-4o-mini'],
+    models_available: ['claude-sonnet-4-6', 'claude-haiku-4-5'],
     tool_categories: ['content', 'site', 'plugins', 'search', 'elementor'],
   },
 };

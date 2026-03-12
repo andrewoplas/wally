@@ -2,7 +2,7 @@
 
 ## Loop 1 (P0): Fix Elementor Save Bug
 
-- [ ] **1.1 Fix `save_elementor_data()` to use Elementor's Document API** — `apps/wally/includes/tools/class-elementor-builder-tools.php`
+- [x] **1.1 Fix `save_elementor_data()` to use Elementor's Document API** — `apps/wally/includes/tools/class-elementor-builder-tools.php`
   - **Problem:** The current `save_elementor_data()` method calls `update_post_meta()` to store `_elementor_data` and then `clear_elementor_css()` to delete the CSS cache. But this bypasses Elementor's rendering pipeline — no CSS file is generated, no `post_content` is updated with rendered HTML. Pages created programmatically appear completely blank on the frontend even though the JSON data is in the database.
   - **Fix:** Replace the method body with a 3-tier approach:
     1. **Primary:** Use Elementor's Document API — `\Elementor\Plugin::$instance->documents->get($post_id)` then `$document->save(['elements' => $data])`. This triggers Elementor's full save pipeline: persists `_elementor_data`, generates per-post CSS file, updates `post_content` with rendered HTML, fires hooks. Verify this API exists via context7/WebSearch first.
@@ -13,7 +13,7 @@
 
 ## Loop 2 (P1): Improve System Prompt & Knowledge
 
-- [ ] **2.1 Expand token budget, add planning framework, rewrite Elementor knowledge** — Multiple files
+- [x] **2.1 Expand token budget, add planning framework, rewrite Elementor knowledge** — Multiple files
   - **Part A: Expand token budget** — `apps/backend/src/knowledge/prompt-builder.service.ts`
     - Increase `SYSTEM_TOTAL_MAX` from 8000 to 14000 tokens
     - Increase `KNOWLEDGE_CHUNKS` from 2500 to 5000 tokens
@@ -46,7 +46,7 @@
 
 ## Loop 3 (P2): Improve Tool Descriptions with Examples
 
-- [ ] **3.1 Add complete working examples to Elementor builder tool descriptions** — `apps/wally/includes/tools/class-elementor-builder-tools.php`
+- [x] **3.1 Add complete working examples to Elementor builder tool descriptions** — `apps/wally/includes/tools/class-elementor-builder-tools.php`
   - **`elementor_create_page` description** — Add a complete working example at the end of the description string showing a minimal but real page with:
     - A hero container with heading + text + button
     - A features container with 3 icon-boxes
@@ -61,7 +61,7 @@
 
 ## Loop 4 (P3): Add Page Verification Tool
 
-- [ ] **4.1 Create `elementor_verify_page` tool** — `apps/wally/includes/tools/class-elementor-builder-tools.php`
+- [x] **4.1 Create `elementor_verify_page` tool** — `apps/wally/includes/tools/class-elementor-builder-tools.php`
   - **Purpose:** After creating/modifying an Elementor page, the LLM can call this tool to verify the page has renderable content. This closes the feedback loop.
   - **What it checks:**
     1. `_elementor_data` exists and is valid JSON

@@ -1,18 +1,15 @@
 /**
  * LlmService
  *
- * Unified service for sending requests to LLM providers (Anthropic / OpenAI).
+ * Service for sending requests to Anthropic Claude.
  *
- * - Routes requests to the correct provider based on the model config.
  * - Streams token events as SSE to the Express response object.
- * - Normalises the Anthropic and OpenAI response shapes into a single
- *   `LlmResponse` format consumed by the controllers.
+ * - Returns a normalised `LlmResponse` format consumed by the controllers.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
-import OpenAI from 'openai';
 import type { Response } from 'express';
 import { ToolDefinitionsService } from '../tools/tool-definitions.service.js';
 import type { WallyConfig } from '../config/configuration.js';
@@ -68,7 +65,6 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
   private anthropicClient: Anthropic | null = null;
-  private openaiClient: OpenAI | null = null;
 
   constructor(
     private readonly config: ConfigService<WallyConfig>,
@@ -103,17 +99,8 @@ export class LlmService {
       throw new Error(`Unknown model: ${model}. Available: ${available}`);
     }
 
-    const { provider, modelId } = modelConfig;
-
-    if (provider === 'anthropic') {
-      return this.sendToAnthropic({ modelId, systemPrompt, messages, res, overrideTools });
-    }
-
-    if (provider === 'openai') {
-      return this.sendToOpenAI({ modelId, systemPrompt, messages, res, overrideTools });
-    }
-
-    throw new Error(`Unknown provider: ${provider}`);
+    const { modelId } = modelConfig;
+    return this.sendToAnthropic({ modelId, systemPrompt, messages, res, overrideTools });
   }
 
   // ─── Anthropic ──────────────────────────────────────────────────────────────
@@ -216,107 +203,6 @@ export class LlmService {
     };
   }
 
-  // ─── OpenAI ─────────────────────────────────────────────────────────────────
-
-  private async sendToOpenAI(options: {
-    modelId: string;
-    systemPrompt: string;
-    messages: Array<{ role: 'user' | 'assistant'; content: string | unknown[] }>;
-    res: Response;
-    overrideTools?: unknown[];
-  }): Promise<LlmResponse> {
-    const { modelId, systemPrompt, messages, res, overrideTools } = options;
-
-    const client = this.getOpenAIClient();
-    if (!client) throw new Error('OpenAI API key not configured');
-
-    const tools = (overrideTools ?? this.toolDefinitions.getToolsForProvider('openai')) as OpenAI.Chat.ChatCompletionTool[];
-
-    // Convert Anthropic-style messages to OpenAI format
-    const openaiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: 'system', content: systemPrompt },
-      ...messages.map((msg) => ({
-        role: (msg.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
-        content:
-          typeof msg.content === 'string'
-            ? msg.content
-            : JSON.stringify(msg.content),
-      })),
-    ];
-
-    const stream = await client.chat.completions.create({
-      model: modelId,
-      messages: openaiMessages,
-      tools: tools.length > 0 ? tools : undefined,
-      stream: true,
-    });
-
-    let fullContent = '';
-    const toolCallsMap: Map<
-      number,
-      { id: string; type: string; function: { name: string; arguments: string } }
-    > = new Map();
-
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta;
-      if (!delta) continue;
-
-      if (delta.content) {
-        fullContent += delta.content;
-        this.sseWrite(res, { type: 'token', content: delta.content });
-      }
-
-      if (delta.tool_calls) {
-        for (const tc of delta.tool_calls) {
-          if (tc.index !== undefined) {
-            if (!toolCallsMap.has(tc.index)) {
-              toolCallsMap.set(tc.index, {
-                id: tc.id ?? '',
-                type: 'function',
-                function: { name: '', arguments: '' },
-              });
-            }
-            const existing = toolCallsMap.get(tc.index)!;
-            if (tc.function?.name) existing.function.name = tc.function.name;
-            if (tc.function?.arguments)
-              existing.function.arguments += tc.function.arguments;
-          }
-        }
-      }
-    }
-
-    // Normalise to Anthropic-like content blocks
-    const content: LlmContentBlock[] = [];
-
-    if (fullContent) {
-      content.push({ type: 'text', text: fullContent });
-    }
-
-    for (const tc of toolCallsMap.values()) {
-      let parsedInput: Record<string, unknown> = {};
-      try {
-        parsedInput = JSON.parse(tc.function.arguments || '{}') as Record<string, unknown>;
-      } catch {
-        this.logger.warn('Failed to parse tool call arguments; using empty input', {
-          tool: tc.function.name,
-        });
-      }
-      content.push({
-        type: 'tool_use',
-        id: tc.id,
-        name: tc.function.name,
-        input: parsedInput,
-      });
-    }
-
-    return {
-      content,
-      model: modelId,
-      usage: null, // OpenAI streaming doesn't return usage in chunks
-      stop_reason: toolCallsMap.size > 0 ? 'tool_use' : 'end_turn',
-    };
-  }
-
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
   private getAnthropicClient(): Anthropic | null {
@@ -325,14 +211,6 @@ export class LlmService {
       if (apiKey) this.anthropicClient = new Anthropic({ apiKey });
     }
     return this.anthropicClient;
-  }
-
-  private getOpenAIClient(): OpenAI | null {
-    if (!this.openaiClient) {
-      const apiKey = this.config.get<string>('openaiApiKey');
-      if (apiKey) this.openaiClient = new OpenAI({ apiKey });
-    }
-    return this.openaiClient;
   }
 
   private sseWrite(res: Response, data: Record<string, unknown>): void {
