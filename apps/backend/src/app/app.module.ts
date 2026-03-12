@@ -11,6 +11,7 @@ import { UsageModule } from '../usage/usage.module.js';
 import { HealthModule } from '../health/health.module.js';
 import { UserModule } from '../user/user.module.js';
 import { FeedbackModule } from '../feedback/feedback.module.js';
+import { AgentModule } from '../agent/agent.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { FeedbackModule } from '../feedback/feedback.module.js';
       envFilePath: ['.env.local', '.env'],
     }),
     SupabaseModule,
+    AgentModule,
     ChatModule,
     LicenseModule,
     UsageModule,
