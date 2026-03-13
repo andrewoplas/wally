@@ -13,11 +13,12 @@ import { ConfigService } from '@nestjs/config';
 import EventEmitter from 'events';
 import type { Response } from 'express';
 import { query } from '@anthropic-ai/claude-agent-sdk';
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
+import type { SDKMessage, SDKResultMessage } from '@anthropic-ai/claude-agent-sdk';
 import { ToolCallbackStore } from './tool-callback.store.js';
 import { McpToolFactory } from './mcp-tool.factory.js';
 import { PromptBuilderService } from '../knowledge/prompt-builder.service.js';
 import type { SiteProfile, ConversationMessage } from '../knowledge/prompt-builder.service.js';
+import { UsageService } from '../usage/usage.service.js';
 import type { WallyConfig } from '../config/configuration.js';
 
 const MAX_HISTORY_CONTENT = 4_000;
@@ -26,6 +27,7 @@ const MAX_TURNS = 15;
 // ─── Public Params Type ───────────────────────────────────────────────────────
 
 export interface ChatBridgeParams {
+  siteId: string;
   message: string;
   model?: string;
   conversation_history?: unknown[] | null;
@@ -45,6 +47,7 @@ export class AgentBridgeService {
     private readonly callbackStore: ToolCallbackStore,
     private readonly mcpToolFactory: McpToolFactory,
     private readonly promptBuilder: PromptBuilderService,
+    private readonly usageService: UsageService,
     private readonly config: ConfigService<WallyConfig>,
   ) {}
 
@@ -59,6 +62,7 @@ export class AgentBridgeService {
    */
   async runChat(params: ChatBridgeParams, res: Response): Promise<void> {
     const {
+      siteId,
       message,
       conversation_history,
       site_profile,
@@ -153,6 +157,7 @@ export class AgentBridgeService {
         this.handleSdkMessage(sdkMessage, res);
 
         if (sdkMessage.type === 'result') {
+          void this.recordUsage(siteId, sdkMessage as SDKResultMessage);
           res.end();
           break;
         }
@@ -193,14 +198,34 @@ export class AgentBridgeService {
     }
 
     if (sdkMessage.type === 'result') {
-      if (sdkMessage.subtype === 'success') {
+      const result = sdkMessage as SDKResultMessage;
+      this.sseWrite(res, {
+        type: 'usage',
+        input_tokens: result.usage.input_tokens,
+        output_tokens: result.usage.output_tokens,
+      });
+
+      if (result.subtype === 'success') {
         this.sseWrite(res, { type: 'done', stop_reason: 'end_turn' });
       } else {
         const errMessage =
-          (sdkMessage as { errors?: string[] }).errors?.[0] ??
-          `Query stopped: ${sdkMessage.subtype}`;
+          (result as { errors?: string[] }).errors?.[0] ??
+          `Query stopped: ${result.subtype}`;
         this.sseWrite(res, { type: 'error', message: errMessage });
       }
+    }
+  }
+
+  /** Fire-and-forget: record token usage to Supabase after query completes. */
+  private async recordUsage(siteId: string, result: SDKResultMessage): Promise<void> {
+    try {
+      await this.usageService.recordUsage(
+        siteId,
+        result.usage.input_tokens,
+        result.usage.output_tokens,
+      );
+    } catch (err) {
+      this.logger.error(`Failed to record usage for site ${siteId}`, (err as Error).stack);
     }
   }
 

@@ -49,8 +49,9 @@ export class ChatController {
       body;
 
     try {
+      const siteId = (req as Request & { siteId?: string }).siteId ?? '';
       await this.agentBridge.runChat(
-        { message, model, conversation_history, site_profile, tool_definitions, custom_system_prompt, recent_actions },
+        { siteId, message, model, conversation_history, site_profile, tool_definitions, custom_system_prompt, recent_actions },
         res,
       );
     } catch (err) {
