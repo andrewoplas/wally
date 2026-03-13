@@ -4,8 +4,8 @@ namespace Wally;
 class Settings {
     public static function register_menu() {
         add_menu_page(
-            'Wally — AI Assistant',
-            'Wally — AI Assistant',
+            esc_html__( 'Wally — AI Assistant', 'wally' ),
+            esc_html__( 'Wally — AI Assistant', 'wally' ),
             'manage_options',
             'wally',
             [ self::class, 'render_page' ],
@@ -92,17 +92,17 @@ class Settings {
         $site_profile  = SiteScanner::get_profile();
 
         $profile_display = [
-            'Site URL'           => $site_profile['site_url'] ?? get_site_url(),
-            'WordPress Version'  => $site_profile['wp_version'] ?? get_bloginfo( 'version' ),
-            'Active Theme'       => $site_profile['theme'] ?? wp_get_theme()->get( 'Name' ),
-            'Active Plugins'     => isset( $site_profile['active_plugins'] ) ? count( $site_profile['active_plugins'] ) . ' plugins' : '—',
-            'PHP Version'        => $site_profile['php_version'] ?? PHP_VERSION,
+            __( 'Site URL', 'wally' )           => $site_profile['site_url'] ?? get_site_url(),
+            __( 'WordPress Version', 'wally' )  => $site_profile['wp_version'] ?? get_bloginfo( 'version' ),
+            __( 'Active Theme', 'wally' )       => $site_profile['theme'] ?? wp_get_theme()->get( 'Name' ),
+            __( 'Active Plugins', 'wally' )     => isset( $site_profile['active_plugins'] ) ? count( $site_profile['active_plugins'] ) . ' plugins' : '—',
+            __( 'PHP Version', 'wally' )        => $site_profile['php_version'] ?? PHP_VERSION,
         ];
 
         $last_scan = get_option( 'wally_last_site_scan' );
         $last_scan_display = $last_scan
-            ? 'Last scanned: ' . date( 'M j, Y \a\t g:i A', strtotime( $last_scan ) )
-            : 'Not yet scanned.';
+            ? sprintf( __( 'Last scanned: %s', 'wally' ), date( 'M j, Y \a\t g:i A', strtotime( $last_scan ) ) )
+            : __( 'Not yet scanned.', 'wally' );
 
         // Audit log recent items
         $audit_result = AuditLog::get_actions( [ 'per_page' => 5, 'page' => 1 ] );
@@ -112,20 +112,20 @@ class Settings {
         $defaults      = Permissions::get_default_permissions();
         $overrides     = get_option( 'wally_tool_permissions', [] );
         $action_labels = [
-            'read'    => 'Read',
-            'create'  => 'Create',
-            'update'  => 'Update',
-            'delete'  => 'Delete',
-            'plugins' => 'Plugins',
-            'site'    => 'Site Settings',
+            'read'    => __( 'Read', 'wally' ),
+            'create'  => __( 'Create', 'wally' ),
+            'update'  => __( 'Update', 'wally' ),
+            'delete'  => __( 'Delete', 'wally' ),
+            'plugins' => __( 'Plugins', 'wally' ),
+            'site'    => __( 'Site Settings', 'wally' ),
         ];
         $action_descs = [
-            'read'    => 'View & search content, settings, and plugins',
-            'create'  => 'Create new posts, pages, and taxonomy terms',
-            'update'  => 'Edit existing content and Elementor pages',
-            'delete'  => 'Trash or permanently delete content',
-            'plugins' => 'Install, activate, deactivate, and update plugins',
-            'site'    => 'Modify WordPress settings and options',
+            'read'    => __( 'View & search content, settings, and plugins', 'wally' ),
+            'create'  => __( 'Create new posts, pages, and taxonomy terms', 'wally' ),
+            'update'  => __( 'Edit existing content and Elementor pages', 'wally' ),
+            'delete'  => __( 'Trash or permanently delete content', 'wally' ),
+            'plugins' => __( 'Install, activate, deactivate, and update plugins', 'wally' ),
+            'site'    => __( 'Modify WordPress settings and options', 'wally' ),
         ];
 
         $conv_url      = admin_url( 'admin.php?page=wpaia-conversations' );
@@ -156,7 +156,7 @@ class Settings {
                 </div>
                 <div class="wpaia-header-right">
                     <?php if ( $is_admin ) : ?>
-                    <button type="submit" name="wally_save" class="wpaia-btn-primary">Save Settings</button>
+                    <button type="submit" name="wally_save" class="wpaia-btn-primary"><?php esc_html_e( 'Save Settings', 'wally' ); ?></button>
                     <?php endif; ?>
                 </div>
             </div>
@@ -168,23 +168,23 @@ class Settings {
                 <nav class="wpaia-sidebar">
                     <a href="#section-general" class="wpaia-nav-item wpaia-nav-active">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                        General
+                        <?php esc_html_e( 'General', 'wally' ); ?>
                     </a>
                     <a href="#section-permissions" class="wpaia-nav-item">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        Permissions
+                        <?php esc_html_e( 'Permissions', 'wally' ); ?>
                     </a>
                     <a href="#section-site-profile" class="wpaia-nav-item">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                        Site Profile
+                        <?php esc_html_e( 'Site Profile', 'wally' ); ?>
                     </a>
                     <a href="#section-audit-log" class="wpaia-nav-item">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        Audit Log
+                        <?php esc_html_e( 'Audit Log', 'wally' ); ?>
                     </a>
                     <a href="<?php echo esc_url( $conv_url ); ?>" class="wpaia-nav-item">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        Conversations
+                        <?php esc_html_e( 'Conversations', 'wally' ); ?>
                     </a>
                 </nav>
 
@@ -194,7 +194,7 @@ class Settings {
                     <?php if ( ! $is_admin ) : ?>
                     <div class="wpaia-notice-readonly">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        Settings can only be changed by administrators.
+                        <?php esc_html_e( 'Settings can only be changed by administrators.', 'wally' ); ?>
                     </div>
                     <fieldset disabled style="border:none;padding:0;margin:0;">
                     <?php endif; ?>
@@ -202,80 +202,80 @@ class Settings {
                     <!-- ─── General ─────────────────────────────────── -->
                     <section id="section-general" class="wpaia-section">
                         <div class="wpaia-section-header">
-                            <h1 class="wpaia-section-title">General</h1>
-                            <p class="wpaia-section-desc">Configure your AI assistant's activation, usage limits, and behavior.</p>
+                            <h1 class="wpaia-section-title"><?php esc_html_e( 'General', 'wally' ); ?></h1>
+                            <p class="wpaia-section-desc"><?php esc_html_e( 'Configure your AI assistant\'s activation, usage limits, and behavior.', 'wally' ); ?></p>
                         </div>
 
                         <!-- Activation Card -->
                         <div class="wpaia-card">
-                            <div class="wpaia-card-title">Activation</div>
-                            <p class="wpaia-card-desc">Your license key connects this plugin to the Wally service.</p>
+                            <div class="wpaia-card-title"><?php esc_html_e( 'Activation', 'wally' ); ?></div>
+                            <p class="wpaia-card-desc"><?php esc_html_e( 'Your license key connects this plugin to the Wally service.', 'wally' ); ?></p>
 
                             <div class="wpaia-field">
-                                <label class="wpaia-label">License Key</label>
+                                <label class="wpaia-label"><?php esc_html_e( 'License Key', 'wally' ); ?></label>
                                 <input type="password" name="wally_license_key" class="wpaia-input"
                                        value="<?php echo esc_attr( $license_key ); ?>"
-                                       placeholder="Enter your license key" autocomplete="off" />
-                                <span class="wpaia-hint">Stored encrypted. Get your key from your <a href="https://www.wallychat.com/app/license" target="_blank" rel="noopener noreferrer">account dashboard</a>.</span>
+                                       placeholder="<?php echo esc_attr__( 'Enter your license key', 'wally' ); ?>" autocomplete="off" />
+                                <span class="wpaia-hint"><?php echo wp_kses( sprintf( __( 'Stored encrypted. Get your key from your <a href="%s" target="_blank" rel="noopener noreferrer">account dashboard</a>.', 'wally' ), 'https://www.wallychat.com/app/license' ), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ); ?></span>
                             </div>
                         </div>
 
                         <!-- Usage Limits Card -->
                         <div class="wpaia-card">
-                            <div class="wpaia-card-title">Usage Limits</div>
-                            <p class="wpaia-card-desc">Control how much the AI assistant can be used on your site.</p>
+                            <div class="wpaia-card-title"><?php esc_html_e( 'Usage Limits', 'wally' ); ?></div>
+                            <p class="wpaia-card-desc"><?php esc_html_e( 'Control how much the AI assistant can be used on your site.', 'wally' ); ?></p>
 
                             <div class="wpaia-row2">
                                 <div class="wpaia-field">
-                                    <label class="wpaia-label">Rate Limit</label>
+                                    <label class="wpaia-label"><?php esc_html_e( 'Rate Limit', 'wally' ); ?></label>
                                     <input type="number" name="wally_rate_limit" class="wpaia-input"
                                            value="<?php echo esc_attr( $rate_limit ); ?>"
                                            min="1" max="1000" />
-                                    <span class="wpaia-hint">Maximum messages per user per day.</span>
+                                    <span class="wpaia-hint"><?php esc_html_e( 'Maximum messages per user per day.', 'wally' ); ?></span>
                                 </div>
                                 <div class="wpaia-field">
-                                    <label class="wpaia-label">Monthly Token Budget</label>
+                                    <label class="wpaia-label"><?php esc_html_e( 'Monthly Token Budget', 'wally' ); ?></label>
                                     <input type="number" name="wally_monthly_token_budget" class="wpaia-input"
                                            value="<?php echo esc_attr( $token_budget ); ?>"
                                            min="0" max="100000000" step="1000" />
-                                    <span class="wpaia-hint">Total tokens per month. 0 = unlimited.</span>
+                                    <span class="wpaia-hint"><?php esc_html_e( 'Total tokens per month. 0 = unlimited.', 'wally' ); ?></span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Behavior Card -->
                         <div class="wpaia-card">
-                            <div class="wpaia-card-title">Behavior</div>
+                            <div class="wpaia-card-title"><?php esc_html_e( 'Behavior', 'wally' ); ?></div>
 
                             <div class="wpaia-field">
-                                <label class="wpaia-label">Custom System Prompt</label>
+                                <label class="wpaia-label"><?php esc_html_e( 'Custom System Prompt', 'wally' ); ?></label>
                                 <textarea name="wally_custom_prompt" class="wpaia-textarea"
                                           rows="5"
-                                          placeholder="e.g. You are a helpful assistant for Acme Corp. Always respond in a professional tone."
+                                          placeholder="<?php echo esc_attr__( 'e.g. You are a helpful assistant for Acme Corp. Always respond in a professional tone.', 'wally' ); ?>"
                                 ><?php echo esc_textarea( $custom_prompt ); ?></textarea>
-                                <span class="wpaia-hint">Appended to the AI system prompt. Use for branding, tone, or site-specific context.</span>
+                                <span class="wpaia-hint"><?php esc_html_e( 'Appended to the AI system prompt. Use for branding, tone, or site-specific context.', 'wally' ); ?></span>
                             </div>
 
                             <div class="wpaia-divider"></div>
 
                             <div class="wpaia-field">
-                                <label class="wpaia-label">Data Retention</label>
+                                <label class="wpaia-label"><?php esc_html_e( 'Data Retention', 'wally' ); ?></label>
                                 <select name="wally_data_retention" class="wpaia-select">
-                                    <option value="30"  <?php selected( $data_retention, 30 ); ?>>30 days</option>
-                                    <option value="90"  <?php selected( $data_retention, 90 ); ?>>90 days</option>
-                                    <option value="180" <?php selected( $data_retention, 180 ); ?>>180 days</option>
-                                    <option value="365" <?php selected( $data_retention, 365 ); ?>>1 year</option>
-                                    <option value="0"   <?php selected( $data_retention, 0 ); ?>>Forever</option>
+                                    <option value="30"  <?php selected( $data_retention, 30 ); ?>><?php echo esc_html__( '30 days', 'wally' ); ?></option>
+                                    <option value="90"  <?php selected( $data_retention, 90 ); ?>><?php echo esc_html__( '90 days', 'wally' ); ?></option>
+                                    <option value="180" <?php selected( $data_retention, 180 ); ?>><?php echo esc_html__( '180 days', 'wally' ); ?></option>
+                                    <option value="365" <?php selected( $data_retention, 365 ); ?>><?php echo esc_html__( '1 year', 'wally' ); ?></option>
+                                    <option value="0"   <?php selected( $data_retention, 0 ); ?>><?php echo esc_html__( 'Forever', 'wally' ); ?></option>
                                 </select>
-                                <span class="wpaia-hint">How long conversation history is stored before automatic deletion.</span>
+                                <span class="wpaia-hint"><?php esc_html_e( 'How long conversation history is stored before automatic deletion.', 'wally' ); ?></span>
                             </div>
 
                             <div class="wpaia-divider"></div>
 
                             <div class="wpaia-toggle-row">
                                 <div class="wpaia-toggle-info">
-                                    <div class="wpaia-toggle-label">Confirm destructive actions</div>
-                                    <div class="wpaia-toggle-desc">Require confirmation before executing delete, update, or deactivate operations</div>
+                                    <div class="wpaia-toggle-label"><?php esc_html_e( 'Confirm destructive actions', 'wally' ); ?></div>
+                                    <div class="wpaia-toggle-desc"><?php esc_html_e( 'Require confirmation before executing delete, update, or deactivate operations', 'wally' ); ?></div>
                                 </div>
                                 <label class="wpaia-toggle">
                                     <input type="checkbox" name="wally_confirm_destructive" value="1"
@@ -288,8 +288,8 @@ class Settings {
 
                             <div class="wpaia-toggle-row">
                                 <div class="wpaia-toggle-info">
-                                    <div class="wpaia-toggle-label">Stream responses</div>
-                                    <div class="wpaia-toggle-desc">Display AI responses in real-time as they are generated</div>
+                                    <div class="wpaia-toggle-label"><?php esc_html_e( 'Stream responses', 'wally' ); ?></div>
+                                    <div class="wpaia-toggle-desc"><?php esc_html_e( 'Display AI responses in real-time as they are generated', 'wally' ); ?></div>
                                 </div>
                                 <label class="wpaia-toggle">
                                     <input type="checkbox" name="wally_stream_responses" value="1"
@@ -302,8 +302,8 @@ class Settings {
 
                             <div class="wpaia-toggle-row">
                                 <div class="wpaia-toggle-info">
-                                    <div class="wpaia-toggle-label">Notification sounds</div>
-                                    <div class="wpaia-toggle-desc">Play a sound when the assistant completes a response</div>
+                                    <div class="wpaia-toggle-label"><?php esc_html_e( 'Notification sounds', 'wally' ); ?></div>
+                                    <div class="wpaia-toggle-desc"><?php esc_html_e( 'Play a sound when the assistant completes a response', 'wally' ); ?></div>
                                 </div>
                                 <label class="wpaia-toggle">
                                     <input type="checkbox" name="wally_notification_sounds" value="1"
@@ -319,14 +319,14 @@ class Settings {
                     <!-- ─── Permissions ──────────────────────────────── -->
                     <section id="section-permissions" class="wpaia-section">
                         <div class="wpaia-section-header">
-                            <h2 class="wpaia-section-title">Permissions</h2>
-                            <p class="wpaia-section-desc">Control which roles can access the chat and what actions they are allowed to perform.</p>
+                            <h2 class="wpaia-section-title"><?php esc_html_e( 'Permissions', 'wally' ); ?></h2>
+                            <p class="wpaia-section-desc"><?php esc_html_e( 'Control which roles can access the chat and what actions they are allowed to perform.', 'wally' ); ?></p>
                         </div>
 
                         <!-- Chat Access Card -->
                         <div class="wpaia-card">
-                            <div class="wpaia-card-title">Chat Access</div>
-                            <p class="wpaia-card-desc">Choose which WordPress user roles can open and use the AI chat interface.</p>
+                            <div class="wpaia-card-title"><?php esc_html_e( 'Chat Access', 'wally' ); ?></div>
+                            <p class="wpaia-card-desc"><?php esc_html_e( 'Choose which WordPress user roles can open and use the AI chat interface.', 'wally' ); ?></p>
 
                             <div class="wpaia-roles-grid">
                                 <?php foreach ( wp_roles()->roles as $role_key => $role_data ) :
@@ -345,7 +345,7 @@ class Settings {
                                     <span class="wpaia-role-info">
                                         <span class="wpaia-role-name"><?php echo esc_html( translate_user_role( $role_data['name'] ) ); ?></span>
                                         <?php if ( $is_admin ) : ?>
-                                        <span class="wpaia-role-locked-badge">Always enabled</span>
+                                        <span class="wpaia-role-locked-badge"><?php esc_html_e( 'Always enabled', 'wally' ); ?></span>
                                         <?php endif; ?>
                                     </span>
                                 </label>
@@ -355,14 +355,14 @@ class Settings {
 
                         <!-- Action Permissions Card -->
                         <div class="wpaia-card">
-                            <div class="wpaia-card-title">Action Permissions</div>
-                            <p class="wpaia-card-desc">Define which action types each role can perform through the AI assistant.</p>
+                            <div class="wpaia-card-title"><?php esc_html_e( 'Action Permissions', 'wally' ); ?></div>
+                            <p class="wpaia-card-desc"><?php esc_html_e( 'Define which action types each role can perform through the AI assistant.', 'wally' ); ?></p>
 
                             <div class="wpaia-table-wrap">
                                 <table class="wpaia-table">
                                     <thead>
                                         <tr>
-                                            <th class="wpaia-th-role">Role</th>
+                                            <th class="wpaia-th-role"><?php esc_html_e( 'Role', 'wally' ); ?></th>
                                             <?php foreach ( $all_actions as $action ) : ?>
                                                 <th class="wpaia-th-center" title="<?php echo esc_attr( $action_descs[ $action ] ?? '' ); ?>">
                                                     <?php echo esc_html( $action_labels[ $action ] ?? ucfirst( $action ) ); ?>
@@ -408,16 +408,16 @@ class Settings {
                     <!-- ─── Site Profile ─────────────────────────────── -->
                     <section id="section-site-profile" class="wpaia-section">
                         <div class="wpaia-section-header">
-                            <h2 class="wpaia-section-title">Site Profile</h2>
-                            <p class="wpaia-section-desc">Your site profile is shared with the AI to provide context about your WordPress installation.</p>
+                            <h2 class="wpaia-section-title"><?php esc_html_e( 'Site Profile', 'wally' ); ?></h2>
+                            <p class="wpaia-section-desc"><?php esc_html_e( 'Your site profile is shared with the AI to provide context about your WordPress installation.', 'wally' ); ?></p>
                         </div>
 
                         <div class="wpaia-card">
                             <div class="wpaia-card-row-header">
-                                <div class="wpaia-card-title">Site Information</div>
+                                <div class="wpaia-card-title"><?php esc_html_e( 'Site Information', 'wally' ); ?></div>
                                 <button type="button" class="wpaia-btn-outline" onclick="wpaiaRescan(this)">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                                    Rescan Site
+                                    <?php esc_html_e( 'Rescan Site', 'wally' ); ?>
                                 </button>
                             </div>
 
@@ -439,15 +439,15 @@ class Settings {
                     <!-- ─── Audit Log ────────────────────────────────── -->
                     <section id="section-audit-log" class="wpaia-section">
                         <div class="wpaia-section-header">
-                            <h2 class="wpaia-section-title">Audit Log</h2>
-                            <p class="wpaia-section-desc">Track all actions performed by the AI assistant, including tool executions and content changes.</p>
+                            <h2 class="wpaia-section-title"><?php esc_html_e( 'Audit Log', 'wally' ); ?></h2>
+                            <p class="wpaia-section-desc"><?php esc_html_e( 'Track all actions performed by the AI assistant, including tool executions and content changes.', 'wally' ); ?></p>
                         </div>
 
                         <div class="wpaia-card">
                             <div class="wpaia-card-row-header">
-                                <div class="wpaia-card-title">Recent Activity</div>
+                                <div class="wpaia-card-title"><?php esc_html_e( 'Recent Activity', 'wally' ); ?></div>
                                 <a href="<?php echo esc_url( $audit_url ); ?>" class="wpaia-btn-outline">
-                                    View All
+                                    <?php esc_html_e( 'View All', 'wally' ); ?>
                                 </a>
                             </div>
 
@@ -455,16 +455,16 @@ class Settings {
                                 <table class="wpaia-table">
                                     <thead>
                                         <tr>
-                                            <th style="width:140px;">Time</th>
-                                            <th>Action</th>
-                                            <th style="width:120px;">Tool</th>
-                                            <th style="width:80px;text-align:center;">Status</th>
+                                            <th style="width:140px;"><?php esc_html_e( 'Time', 'wally' ); ?></th>
+                                            <th><?php esc_html_e( 'Action', 'wally' ); ?></th>
+                                            <th style="width:120px;"><?php esc_html_e( 'Tool', 'wally' ); ?></th>
+                                            <th style="width:80px;text-align:center;"><?php esc_html_e( 'Status', 'wally' ); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if ( empty( $audit_items ) ) : ?>
                                         <tr>
-                                            <td colspan="4" style="padding:20px 16px;color:#A1A1AA;font-size:13px;text-align:center;">No activity yet.</td>
+                                            <td colspan="4" style="padding:20px 16px;color:#A1A1AA;font-size:13px;text-align:center;"><?php esc_html_e( 'No activity yet.', 'wally' ); ?></td>
                                         </tr>
                                         <?php else : foreach ( $audit_items as $item ) :
                                             $status_class = [
@@ -501,9 +501,9 @@ class Settings {
 
                     <!-- Footer -->
                     <div class="wpaia-footer">
-                        <span class="wpaia-footer-text">Wally v<?php echo esc_html( WALLY_VERSION ); ?></span>
+                        <span class="wpaia-footer-text"><?php echo sprintf( esc_html__( 'Wally v%s', 'wally' ), esc_html( WALLY_VERSION ) ); ?></span>
                         <?php if ( $is_admin ) : ?>
-                        <button type="submit" name="wally_save" class="wpaia-btn-primary">Save Settings</button>
+                        <button type="submit" name="wally_save" class="wpaia-btn-primary"><?php esc_html_e( 'Save Settings', 'wally' ); ?></button>
                         <?php endif; ?>
                     </div>
 
@@ -515,7 +515,7 @@ class Settings {
         <script>
         function wpaiaRescan(btn) {
             btn.disabled = true;
-            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:wpaia-spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Scanning…';
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:wpaia-spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <?php echo esc_js( __( 'Scanning…', 'wally' ) ); ?>';
             fetch(wpaiaData.restUrl + 'site-profile/rescan', {
                 method: 'POST',
                 headers: { 'X-WP-Nonce': wpaiaData.nonce }
@@ -523,7 +523,7 @@ class Settings {
                 location.reload();
             }).catch(function() {
                 btn.disabled = false;
-                btn.innerHTML = 'Rescan Site';
+                btn.innerHTML = '<?php echo esc_js( __( 'Rescan Site', 'wally' ) ); ?>';
             });
         }
 
@@ -839,7 +839,7 @@ class Settings {
         if ( is_wp_error( $response ) ) {
             return [
                 'type'    => 'error',
-                'message' => 'Could not reach the Wally server: ' . $response->get_error_message(),
+                'message' => sprintf( __( 'Could not reach the Wally server: %s', 'wally' ), $response->get_error_message() ),
             ];
         }
 
@@ -849,18 +849,18 @@ class Settings {
         if ( ! ( $body['valid'] ?? false ) ) {
             $error_map = [
                 'max_sites_reached'  => sprintf(
-                    'Max sites reached (%d/%d). Deactivate another site from your dashboard first.',
+                    __( 'Max sites reached (%d/%d). Deactivate another site from your dashboard first.', 'wally' ),
                     $body['site_count'] ?? '?',
                     $body['max_sites'] ?? '?'
                 ),
-                'license_expired'    => 'Your license has expired. Please renew it from your dashboard.',
-                'license_cancelled'  => 'Your license has been cancelled.',
-                'invalid_key'        => 'Invalid license key. Please check and try again.',
+                'license_expired'    => __( 'Your license has expired. Please renew it from your dashboard.', 'wally' ),
+                'license_cancelled'  => __( 'Your license has been cancelled.', 'wally' ),
+                'invalid_key'        => __( 'Invalid license key. Please check and try again.', 'wally' ),
             ];
             $err_code = $body['error'] ?? '';
             return [
                 'type'    => 'error',
-                'message' => $error_map[ $err_code ] ?? 'Activation failed. Please try again.',
+                'message' => $error_map[ $err_code ] ?? __( 'Activation failed. Please try again.', 'wally' ),
             ];
         }
 
@@ -870,7 +870,7 @@ class Settings {
 
         return [
             'type'    => 'success',
-            'message' => "Wally activated! Plan: {$tier}. Active sites: {$count}/{$max}.",
+            'message' => sprintf( __( 'Wally activated! Plan: %1$s. Active sites: %2$s/%3$s.', 'wally' ), $tier, $count, $max ),
         ];
     }
 }

@@ -9,8 +9,8 @@ class AdminConversationsPage {
 	public static function register_menu() {
 		add_submenu_page(
 			null,
-			'AI Assistant Conversations',
-			'Conversations',
+			esc_html__( 'AI Assistant Conversations', 'wally' ),
+			esc_html__( 'Conversations', 'wally' ),
 			'manage_options',
 			'wpaia-conversations',
 			[ self::class, 'render_page' ]
@@ -20,7 +20,7 @@ class AdminConversationsPage {
 	public static function render_page() {
 		$conv_id = ! empty( $_GET['conv_id'] ) ? (int) $_GET['conv_id'] : 0;
 
-		if ( $conv_id && ! empty( $_GET['export'] ) && $_GET['export'] === 'json' ) {
+		if ( $conv_id && ! empty( $_GET['export'] ) && sanitize_text_field( wp_unslash( $_GET['export'] ) ) === 'json' ) {
 			self::export_json( $conv_id );
 			return;
 		}
@@ -108,8 +108,8 @@ class AdminConversationsPage {
 			<main class="wpaia-main">
 				<!-- Title Area -->
 				<div class="wpaia-section-header">
-					<h1 class="wpaia-section-title">Conversations</h1>
-					<p class="wpaia-section-desc">Full transcripts of all user conversations. Use these to review interactions, spot issues, and improve the assistant.</p>
+					<h1 class="wpaia-section-title"><?php echo esc_html__( 'Conversations', 'wally' ); ?></h1>
+					<p class="wpaia-section-desc"><?php echo esc_html__( 'Full transcripts of all user conversations. Use these to review interactions, spot issues, and improve the assistant.', 'wally' ); ?></p>
 				</div>
 
 				<!-- Filter Row -->
@@ -117,15 +117,15 @@ class AdminConversationsPage {
 					<input type="hidden" name="page" value="wpaia-conversations" />
 					<div class="wpaia-filter-input-wrap">
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-						<input type="text" name="user_filter" placeholder="Filter by title, username, or email"
+						<input type="text" name="user_filter" placeholder="<?php echo esc_attr__( 'Filter by title, username, or email', 'wally' ); ?>"
 						       value="<?php echo esc_attr( $filter_user ?: '' ); ?>"
 						       class="wpaia-filter-input" />
 					</div>
-					<button type="submit" class="wpaia-btn-primary-sm">Filter</button>
-					<a href="<?php echo esc_url( $base_url ); ?>" class="wpaia-btn-outline-sm">Reset</a>
+					<button type="submit" class="wpaia-btn-primary-sm"><?php echo esc_html__( 'Filter', 'wally' ); ?></button>
+					<a href="<?php echo esc_url( $base_url ); ?>" class="wpaia-btn-outline-sm"><?php echo esc_html__( 'Reset', 'wally' ); ?></a>
 					<div style="flex:1;"></div>
 					<span class="wpaia-count-text">
-						<?php echo esc_html( number_format( $total ) ); ?> conversation<?php echo $total !== 1 ? 's' : ''; ?> found
+						<?php echo sprintf( esc_html( _n( '%s conversation found', '%s conversations found', $total, 'wally' ) ), esc_html( number_format( $total ) ) ); ?>
 					</span>
 				</form>
 
@@ -134,20 +134,20 @@ class AdminConversationsPage {
 					<table class="wpaia-table">
 						<thead>
 							<tr>
-								<th style="width:50px;">ID</th>
-								<th>Title</th>
-								<th style="width:90px;">User</th>
-								<th style="width:80px;text-align:center;">Messages</th>
-								<th style="width:90px;text-align:center;">Tokens</th>
-								<th style="width:150px;">Last Active</th>
-								<th style="width:90px;text-align:center;">View</th>
+								<th style="width:50px;"><?php echo esc_html__( 'ID', 'wally' ); ?></th>
+								<th><?php echo esc_html__( 'Title', 'wally' ); ?></th>
+								<th style="width:90px;"><?php echo esc_html__( 'User', 'wally' ); ?></th>
+								<th style="width:80px;text-align:center;"><?php echo esc_html__( 'Messages', 'wally' ); ?></th>
+								<th style="width:90px;text-align:center;"><?php echo esc_html__( 'Tokens', 'wally' ); ?></th>
+								<th style="width:150px;"><?php echo esc_html__( 'Last Active', 'wally' ); ?></th>
+								<th style="width:90px;text-align:center;"><?php echo esc_html__( 'View', 'wally' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php if ( empty( $rows ) ) : ?>
 								<tr>
 									<td colspan="7" style="padding:40px 20px;text-align:center;color:#A1A1AA;font-size:14px;">
-										No conversations found.
+										<?php echo esc_html__( 'No conversations found.', 'wally' ); ?>
 									</td>
 								</tr>
 							<?php else : foreach ( $rows as $row ) :
@@ -158,7 +158,7 @@ class AdminConversationsPage {
 							?>
 							<tr class="wpaia-tr-border">
 								<td style="font-size:13px;font-weight:500;color:#18181B;"><?php echo esc_html( $row->id ); ?></td>
-								<td style="font-size:13px;color:#18181B;"><?php echo esc_html( $row->title ?: '(untitled)' ); ?></td>
+								<td style="font-size:13px;color:#18181B;"><?php echo esc_html( $row->title ?: esc_html__( '(untitled)', 'wally' ) ); ?></td>
 								<td style="font-size:13px;color:#71717A;"><?php echo esc_html( $username ); ?></td>
 								<td style="font-size:13px;color:#71717A;text-align:center;"><?php echo esc_html( number_format( (int) $row->message_count ) ); ?></td>
 								<td style="font-size:13px;text-align:center;color:<?php echo $row->total_tokens ? '#71717A' : '#A1A1AA'; ?>;">
@@ -166,7 +166,7 @@ class AdminConversationsPage {
 								</td>
 								<td style="font-size:12px;color:#A1A1AA;"><?php echo esc_html( $date ); ?></td>
 								<td style="text-align:center;">
-									<a href="<?php echo esc_url( $view_url ); ?>" class="wpaia-transcript-btn">Transcript</a>
+									<a href="<?php echo esc_url( $view_url ); ?>" class="wpaia-transcript-btn"><?php echo esc_html__( 'Transcript', 'wally' ); ?></a>
 								</td>
 							</tr>
 							<?php endforeach; endif; ?>
@@ -178,7 +178,7 @@ class AdminConversationsPage {
 				<?php if ( $total > 0 ) : ?>
 				<div class="wpaia-pagination">
 					<span class="wpaia-pagination-info">
-						Showing <?php echo esc_html( $start_item ); ?>–<?php echo esc_html( $end_item ); ?> of <?php echo esc_html( number_format( $total ) ); ?> conversations
+						<?php echo sprintf( esc_html__( 'Showing %1$s–%2$s of %3$s conversations', 'wally' ), esc_html( $start_item ), esc_html( $end_item ), esc_html( number_format( $total ) ) ); ?>
 					</span>
 					<div class="wpaia-pagination-pages">
 						<!-- Prev -->
@@ -234,7 +234,7 @@ class AdminConversationsPage {
 			self::render_page_header( $settings_url, 'conversations' );
 			echo '<div class="wpaia-body">';
 			self::render_sidebar( $settings_url, 'conversations' );
-			echo '<main class="wpaia-main"><p style="color:#71717A;">Conversation not found. <a href="' . esc_url( $base_url ) . '">← Back to list</a></p></main></div></div>';
+			echo '<main class="wpaia-main"><p style="color:#71717A;">' . esc_html__( 'Conversation not found.', 'wally' ) . ' <a href="' . esc_url( $base_url ) . '">' . esc_html__( '← Back to list', 'wally' ) . '</a></p></main></div></div>';
 			return;
 		}
 
@@ -268,20 +268,20 @@ class AdminConversationsPage {
 				<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
 					<a href="<?php echo esc_url( $base_url ); ?>" class="wpaia-btn-outline">
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-						Back
+						<?php echo esc_html__( 'Back', 'wally' ); ?>
 					</a>
 					<div>
-						<h1 class="wpaia-section-title" style="font-size:22px;">Conversation #<?php echo esc_html( $conv_id ); ?></h1>
-						<p class="wpaia-section-desc" style="font-size:13px;"><?php echo esc_html( $conv->title ?: '(untitled)' ); ?></p>
+						<h1 class="wpaia-section-title" style="font-size:22px;"><?php echo sprintf( esc_html__( 'Conversation #%s', 'wally' ), esc_html( $conv_id ) ); ?></h1>
+						<p class="wpaia-section-desc" style="font-size:13px;"><?php echo esc_html( $conv->title ?: esc_html__( '(untitled)', 'wally' ) ); ?></p>
 					</div>
 					<div style="margin-left:auto;display:flex;gap:8px;">
 						<a href="<?php echo esc_url( $json_url ); ?>" class="wpaia-btn-outline">
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-							Export JSON
+							<?php echo esc_html__( 'Export JSON', 'wally' ); ?>
 						</a>
 						<button id="wpaia-copy-btn" type="button" class="wpaia-btn-outline" onclick="wpaiacopytranscript()">
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-							Copy as Text
+							<?php echo esc_html__( 'Copy as Text', 'wally' ); ?>
 						</button>
 					</div>
 				</div>
@@ -292,13 +292,13 @@ class AdminConversationsPage {
 				<div class="wpaia-card" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
 					<?php
 					$meta = [
-						'User'         => $username,
-						'Messages'     => count( $messages ),
-						'Total Tokens' => $total_tokens ? number_format( $total_tokens ) : '—',
-						'Started'      => date( 'M j, Y · H:i', strtotime( $conv->created_at ) ),
-						'Last Active'  => date( 'M j, Y · H:i', strtotime( $conv->updated_at ) ),
+						__( 'User', 'wally' )         => $username,
+						__( 'Messages', 'wally' )     => count( $messages ),
+						__( 'Total Tokens', 'wally' ) => $total_tokens ? number_format( $total_tokens ) : '—',
+						__( 'Started', 'wally' )      => date( 'M j, Y · H:i', strtotime( $conv->created_at ) ),
+						__( 'Last Active', 'wally' )  => date( 'M j, Y · H:i', strtotime( $conv->updated_at ) ),
 					];
-					if ( ! empty( $actions ) ) $meta['Tool Actions'] = count( $actions );
+					if ( ! empty( $actions ) ) $meta[ __( 'Tool Actions', 'wally' ) ] = count( $actions );
 					foreach ( $meta as $k => $v ) :
 					?>
 					<div style="display:flex;flex-direction:column;gap:3px;">
@@ -311,14 +311,14 @@ class AdminConversationsPage {
 				<!-- Messages -->
 				<div style="display:flex;flex-direction:column;gap:10px;">
 					<?php if ( empty( $messages ) ) : ?>
-						<p style="color:#A1A1AA;font-size:14px;font-style:italic;">No messages in this conversation.</p>
+						<p style="color:#A1A1AA;font-size:14px;font-style:italic;"><?php echo esc_html__( 'No messages in this conversation.', 'wally' ); ?></p>
 					<?php else : foreach ( $messages as $msg ) :
 						$is_user = $msg->role === 'user';
 					?>
 					<div class="wpaia-msg-card <?php echo $is_user ? 'wpaia-msg-user' : 'wpaia-msg-assistant'; ?>">
 						<div class="wpaia-msg-header">
 							<span class="wpaia-msg-role <?php echo $is_user ? 'wpaia-role-user' : 'wpaia-role-assistant'; ?>">
-								<?php echo $is_user ? 'User' : 'Assistant'; ?>
+								<?php echo $is_user ? esc_html__( 'User', 'wally' ) : esc_html__( 'Assistant', 'wally' ); ?>
 							</span>
 							<span class="wpaia-msg-meta">
 								<?php echo esc_html( date( 'M j, Y · H:i', strtotime( $msg->created_at ) ) ); ?>
@@ -335,15 +335,15 @@ class AdminConversationsPage {
 				<!-- Tool Actions -->
 				<?php if ( ! empty( $actions ) ) : ?>
 				<div>
-					<h2 class="wpaia-section-title" style="font-size:18px;margin-bottom:16px;">Tool Actions</h2>
+					<h2 class="wpaia-section-title" style="font-size:18px;margin-bottom:16px;"><?php echo esc_html__( 'Tool Actions', 'wally' ); ?></h2>
 					<div class="wpaia-table-wrap">
 						<table class="wpaia-table">
 							<thead>
 								<tr>
-									<th style="width:150px;">Time</th>
-									<th style="width:180px;">Tool</th>
-									<th style="width:90px;text-align:center;">Status</th>
-									<th>Input / Output</th>
+									<th style="width:150px;"><?php echo esc_html__( 'Time', 'wally' ); ?></th>
+									<th style="width:180px;"><?php echo esc_html__( 'Tool', 'wally' ); ?></th>
+									<th style="width:90px;text-align:center;"><?php echo esc_html__( 'Status', 'wally' ); ?></th>
+									<th><?php echo esc_html__( 'Input / Output', 'wally' ); ?></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -363,11 +363,11 @@ class AdminConversationsPage {
 									</td>
 									<td>
 										<details style="cursor:pointer;">
-											<summary style="font-size:12px;color:#71717A;cursor:pointer;">Input</summary>
+											<summary style="font-size:12px;color:#71717A;cursor:pointer;"><?php echo esc_html__( 'Input', 'wally' ); ?></summary>
 											<pre class="wpaia-pre"><?php echo esc_html( json_encode( json_decode( $action->tool_input ?: '{}' ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) ); ?></pre>
 										</details>
 										<details style="cursor:pointer;margin-top:4px;">
-											<summary style="font-size:12px;color:#71717A;cursor:pointer;">Output</summary>
+											<summary style="font-size:12px;color:#71717A;cursor:pointer;"><?php echo esc_html__( 'Output', 'wally' ); ?></summary>
 											<pre class="wpaia-pre"><?php echo esc_html( json_encode( json_decode( $action->tool_output ?: '{}' ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) ); ?></pre>
 										</details>
 									</td>
@@ -388,13 +388,13 @@ class AdminConversationsPage {
 			var btn = document.getElementById('wpaia-copy-btn');
 			var text = document.getElementById('wpaia-plain-transcript').value;
 			navigator.clipboard.writeText(text).then(function() {
-				btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
-				setTimeout(function() { btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy as Text'; }, 2000);
+				btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo esc_js( __( 'Copied!', 'wally' ) ); ?>';
+				setTimeout(function() { btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <?php echo esc_js( __( 'Copy as Text', 'wally' ) ); ?>'; }, 2000);
 			}).catch(function() {
 				var ta = document.getElementById('wpaia-plain-transcript');
 				ta.style.position = 'static'; ta.select(); document.execCommand('copy'); ta.style.position = 'absolute';
-				btn.textContent = '✓ Copied!';
-				setTimeout(function() { btn.textContent = '⎘ Copy as Text'; }, 2000);
+				btn.textContent = '<?php echo esc_js( __( 'Copied!', 'wally' ) ); ?>';
+				setTimeout(function() { btn.textContent = '<?php echo esc_js( __( 'Copy as Text', 'wally' ) ); ?>'; }, 2000);
 			});
 		}
 		</script>
@@ -551,7 +551,7 @@ class AdminConversationsPage {
 
 	private static function export_json( int $conv_id ) {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( 'Insufficient permissions.' );
+			wp_die( esc_html__( 'Insufficient permissions.', 'wally' ) );
 		}
 
 		global $wpdb;
@@ -563,7 +563,7 @@ class AdminConversationsPage {
 		$conv = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$conv_table} WHERE id = %d", $conv_id ), ARRAY_A );
 
 		if ( ! $conv ) {
-			wp_die( 'Conversation not found.' );
+			wp_die( esc_html__( 'Conversation not found.', 'wally' ) );
 		}
 
 		$messages = $wpdb->get_results( $wpdb->prepare(

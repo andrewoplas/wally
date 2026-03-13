@@ -132,7 +132,7 @@ class ToolExecutor {
 		$tool = $this->get_tool( $tool_name );
 		if ( ! $tool ) {
 			WallyLogger::error( "Unknown tool: {$tool_name}" );
-			return $this->fail( "Unknown tool: {$tool_name}", $tool_name, $input, $user_id, $conversation_id, $message_id );
+			return $this->fail( sprintf( __( 'Unknown tool: %s', 'wally' ), $tool_name ), $tool_name, $input, $user_id, $conversation_id, $message_id );
 		}
 
 		// 2. Validate input against JSON schema.
@@ -140,7 +140,7 @@ class ToolExecutor {
 		if ( ! $validation['valid'] ) {
 			WallyLogger::error( "Input validation failed for {$tool_name}", [ 'errors' => $validation['errors'] ] );
 			return $this->fail(
-				'Input validation failed: ' . implode( '; ', $validation['errors'] ),
+				sprintf( __( 'Input validation failed: %s', 'wally' ), implode( '; ', $validation['errors'] ) ),
 				$tool_name, $input, $user_id, $conversation_id, $message_id
 			);
 		}
@@ -152,7 +152,7 @@ class ToolExecutor {
 				'required' => $tool->get_required_capability(),
 			]);
 			return $this->deny(
-				"Insufficient permissions. Requires: {$tool->get_required_capability()}",
+				sprintf( __( 'Insufficient permissions. Requires: %s', 'wally' ), $tool->get_required_capability() ),
 				$tool_name, $input, $user_id, $conversation_id, $message_id
 			);
 		}
@@ -164,7 +164,7 @@ class ToolExecutor {
 				'action'  => $tool->get_action(),
 			]);
 			return $this->deny(
-				"Action '{$tool->get_action()}' is not permitted for your role.",
+				sprintf( __( "Action '%s' is not permitted for your role.", 'wally' ), $tool->get_action() ),
 				$tool_name, $input, $user_id, $conversation_id, $message_id
 			);
 		}
@@ -178,7 +178,7 @@ class ToolExecutor {
 				'user_id'         => $user_id,
 				'tool_name'       => $tool_name,
 				'tool_input'      => $input,
-				'tool_output'     => [ 'message' => 'Awaiting user confirmation.' ],
+				'tool_output'     => [ 'message' => __( 'Awaiting user confirmation.', 'wally' ) ],
 				'status'          => 'pending',
 			]);
 
@@ -188,7 +188,7 @@ class ToolExecutor {
 				'success'   => true,
 				'status'    => 'pending_confirmation',
 				'result'    => [
-					'message'   => 'This action requires confirmation before execution.',
+					'message'   => __( 'This action requires confirmation before execution.', 'wally' ),
 					'action_id' => $action_id,
 					'tool_name' => $tool_name,
 					'preview'   => $input,
@@ -218,7 +218,7 @@ class ToolExecutor {
 			return [
 				'success' => false,
 				'status'  => 'failed',
-				'result'  => [ 'error' => 'Action not found.' ],
+				'result'  => [ 'error' => __( 'Action not found.', 'wally' ) ],
 			];
 		}
 
@@ -227,7 +227,7 @@ class ToolExecutor {
 			return [
 				'success' => false,
 				'status'  => 'denied',
-				'result'  => [ 'error' => 'You can only confirm your own actions.' ],
+				'result'  => [ 'error' => __( 'You can only confirm your own actions.', 'wally' ) ],
 			];
 		}
 
@@ -236,7 +236,7 @@ class ToolExecutor {
 			return [
 				'success' => false,
 				'status'  => 'failed',
-				'result'  => [ 'error' => "Action is already {$action->status}." ],
+				'result'  => [ 'error' => sprintf( __( 'Action is already %s.', 'wally' ), $action->status ) ],
 			];
 		}
 
@@ -245,12 +245,12 @@ class ToolExecutor {
 			WallyLogger::error( "Tool '{$action->tool_name}' no longer registered for action {$action_id}" );
 			AuditLog::update_action( $action_id, [
 				'status'      => 'failed',
-				'tool_output' => [ 'error' => 'Tool no longer registered.' ],
+				'tool_output' => [ 'error' => __( 'Tool no longer registered.', 'wally' ) ],
 			]);
 			return [
 				'success' => false,
 				'status'  => 'failed',
-				'result'  => [ 'error' => 'Tool no longer registered.' ],
+				'result'  => [ 'error' => __( 'Tool no longer registered.', 'wally' ) ],
 			];
 		}
 
@@ -285,7 +285,7 @@ class ToolExecutor {
 			return [
 				'success' => false,
 				'status'  => 'failed',
-				'result'  => [ 'error' => 'Action not found.' ],
+				'result'  => [ 'error' => __( 'Action not found.', 'wally' ) ],
 			];
 		}
 
@@ -294,7 +294,7 @@ class ToolExecutor {
 			return [
 				'success' => false,
 				'status'  => 'denied',
-				'result'  => [ 'error' => 'You can only reject your own actions.' ],
+				'result'  => [ 'error' => __( 'You can only reject your own actions.', 'wally' ) ],
 			];
 		}
 
@@ -303,13 +303,13 @@ class ToolExecutor {
 			return [
 				'success' => false,
 				'status'  => 'failed',
-				'result'  => [ 'error' => "Action is already {$action->status}." ],
+				'result'  => [ 'error' => sprintf( __( 'Action is already %s.', 'wally' ), $action->status ) ],
 			];
 		}
 
 		AuditLog::update_action( $action_id, [
 			'status'      => 'cancelled',
-			'tool_output' => [ 'message' => 'Action rejected by user.' ],
+			'tool_output' => [ 'message' => __( 'Action rejected by user.', 'wally' ) ],
 		]);
 
 		WallyLogger::info( "Action {$action_id} ({$action->tool_name}) rejected by user {$user_id}" );
@@ -317,7 +317,7 @@ class ToolExecutor {
 		return [
 			'success'   => true,
 			'status'    => 'cancelled',
-			'result'    => [ 'message' => 'Action cancelled.' ],
+			'result'    => [ 'message' => __( 'Action cancelled.', 'wally' ) ],
 			'action_id' => $action_id,
 		];
 	}
@@ -436,7 +436,7 @@ class ToolExecutor {
 		if ( ! empty( $schema['required'] ) ) {
 			foreach ( $schema['required'] as $field ) {
 				if ( ! array_key_exists( $field, $input ) ) {
-					$errors[] = "Missing required field: {$field}";
+					$errors[] = sprintf( __( 'Missing required field: %s', 'wally' ), $field );
 				}
 			}
 		}
@@ -463,7 +463,7 @@ class ToolExecutor {
 			// Enum check.
 			if ( isset( $prop_schema['enum'] ) && ! in_array( $value, $prop_schema['enum'], true ) ) {
 				$allowed = implode( ', ', $prop_schema['enum'] );
-				$errors[] = "Field '{$key}' must be one of: {$allowed}";
+				$errors[] = sprintf( __( "Field '%1\$s' must be one of: %2\$s", 'wally' ), $key, $allowed );
 			}
 		}
 
@@ -493,7 +493,7 @@ class ToolExecutor {
 		};
 
 		if ( ! $valid ) {
-			return "Field '{$field}' must be of type {$expected}";
+			return sprintf( __( "Field '%1\$s' must be of type %2\$s", 'wally' ), $field, $expected );
 		}
 
 		return null;

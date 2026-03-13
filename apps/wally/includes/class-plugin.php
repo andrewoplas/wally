@@ -145,7 +145,7 @@ class Plugin {
 
         $wp_admin_bar->add_node([
             'id'    => 'wpaia-toggle',
-            'title' => '&#x1F4AC; Wally — AI Assistant',
+            'title' => '&#x1F4AC; ' . esc_html__( 'Wally — AI Assistant', 'wally' ),
             'href'  => '#',
             'meta'  => [
                 'onclick' => 'document.dispatchEvent(new Event("wpaia-toggle")); return false;',
@@ -174,11 +174,18 @@ class Plugin {
         $settings_url = admin_url( 'admin.php?page=wally' );
 
         printf(
-            '<div class="notice notice-success is-dismissible"><p><strong>Wally</strong> is active! '
-            . 'Your site has been scanned automatically. '
-            . '<a href="%s">Configure your API key and settings</a> to get started, '
-            . 'then click <strong>"Wally — AI Assistant"</strong> in the admin bar to open the chat.</p></div>',
-            esc_url( $settings_url )
+            '<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+            wp_kses(
+                sprintf(
+                    /* translators: 1: settings page URL */
+                    __( '<strong>Wally</strong> is active! Your site has been scanned automatically. <a href="%s">Configure your license key and settings</a> to get started, then click <strong>"Wally — AI Assistant"</strong> in the admin bar to open the chat.', 'wally' ),
+                    esc_url( $settings_url )
+                ),
+                [
+                    'strong' => [],
+                    'a'      => [ 'href' => [] ],
+                ]
+            )
         );
     }
 }

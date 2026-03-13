@@ -9,8 +9,8 @@ class AdminLogPage {
 	public static function register_menu() {
 		add_submenu_page(
 			null,
-			'AI Assistant Log',
-			'Audit Log',
+			esc_html__( 'AI Assistant Log', 'wally' ),
+			esc_html__( 'Audit Log', 'wally' ),
 			'manage_options',
 			'wpaia-audit-log',
 			[ self::class, 'render_page' ]
@@ -142,30 +142,30 @@ class AdminLogPage {
 			<nav class="wpaia-sidebar">
 				<a href="<?php echo esc_url( $settings_url ); ?>" class="wpaia-nav-item">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-					General
+					<?php echo esc_html__( 'General', 'wally' ); ?>
 				</a>
 				<a href="<?php echo esc_url( $settings_url . '#section-permissions' ); ?>" class="wpaia-nav-item">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-					Permissions
+					<?php echo esc_html__( 'Permissions', 'wally' ); ?>
 				</a>
 				<a href="<?php echo esc_url( $settings_url . '#section-site-profile' ); ?>" class="wpaia-nav-item">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-					Site Profile
+					<?php echo esc_html__( 'Site Profile', 'wally' ); ?>
 				</a>
 				<a href="<?php echo esc_url( $base_url ); ?>" class="wpaia-nav-item wpaia-nav-active">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-					Audit Log
+					<?php echo esc_html__( 'Audit Log', 'wally' ); ?>
 				</a>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=wpaia-conversations' ) ); ?>" class="wpaia-nav-item">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-					Conversations
+					<?php echo esc_html__( 'Conversations', 'wally' ); ?>
 				</a>
 			</nav>
 
 			<main class="wpaia-main">
 				<div style="display:flex;flex-direction:column;gap:6px;">
-					<h1 class="wpaia-section-title">Audit Log</h1>
-					<p class="wpaia-section-desc">Track all actions performed by the AI assistant, including tool executions and content changes.</p>
+					<h1 class="wpaia-section-title"><?php echo esc_html__( 'Audit Log', 'wally' ); ?></h1>
+					<p class="wpaia-section-desc"><?php echo esc_html__( 'Track all actions performed by the AI assistant, including tool executions and content changes.', 'wally' ); ?></p>
 				</div>
 
 				<!-- Filters -->
@@ -173,7 +173,7 @@ class AdminLogPage {
 					<input type="hidden" name="page" value="wpaia-audit-log" />
 
 					<select name="tool_name" class="wpaia-filter-select">
-						<option value="">All Tools</option>
+						<option value=""><?php echo esc_html__( 'All Tools', 'wally' ); ?></option>
 						<?php foreach ( $tool_names as $tn ) : ?>
 							<option value="<?php echo esc_attr( $tn ); ?>" <?php selected( $filters['tool_name'] ?? '', $tn ); ?>>
 								<?php echo esc_html( ucwords( str_replace( '_', ' ', $tn ) ) ); ?>
@@ -182,7 +182,7 @@ class AdminLogPage {
 					</select>
 
 					<select name="status" class="wpaia-filter-select">
-						<option value="">All Statuses</option>
+						<option value=""><?php echo esc_html__( 'All Statuses', 'wally' ); ?></option>
 						<?php foreach ( [ 'success', 'failed', 'pending', 'cancelled' ] as $st ) : ?>
 							<option value="<?php echo esc_attr( $st ); ?>" <?php selected( $filters['status'] ?? '', $st ); ?>>
 								<?php echo esc_html( ucfirst( $st ) ); ?>
@@ -190,18 +190,18 @@ class AdminLogPage {
 						<?php endforeach; ?>
 					</select>
 
-					<input type="number" name="user_id" placeholder="User ID"
+					<input type="number" name="user_id" placeholder="<?php echo esc_attr__( 'User ID', 'wally' ); ?>"
 					       value="<?php echo esc_attr( $filters['user_id'] ?? '' ); ?>"
 					       class="wpaia-filter-number" />
 
 					<input type="date" name="date_from" value="<?php echo esc_attr( $filters['date_from'] ?? '' ); ?>" class="wpaia-filter-date" />
-					<span class="wpaia-filter-sep">to</span>
+					<span class="wpaia-filter-sep"><?php echo esc_html__( 'to', 'wally' ); ?></span>
 					<input type="date" name="date_to" value="<?php echo esc_attr( $filters['date_to'] ?? '' ); ?>" class="wpaia-filter-date" />
 
-					<button type="submit" class="wpaia-btn-primary-sm">Filter</button>
-					<a href="<?php echo esc_url( $base_url ); ?>" class="wpaia-btn-outline-sm">Reset</a>
+					<button type="submit" class="wpaia-btn-primary-sm"><?php echo esc_html__( 'Filter', 'wally' ); ?></button>
+					<a href="<?php echo esc_url( $base_url ); ?>" class="wpaia-btn-outline-sm"><?php echo esc_html__( 'Reset', 'wally' ); ?></a>
 
-					<span class="wpaia-count-text"><?php echo esc_html( number_format( $total ) ); ?> entries found</span>
+					<span class="wpaia-count-text"><?php echo sprintf( esc_html( _n( '%s entry found', '%s entries found', $total, 'wally' ) ), esc_html( number_format( $total ) ) ); ?></span>
 				</form>
 
 				<!-- Table -->
@@ -209,19 +209,19 @@ class AdminLogPage {
 					<table class="wpaia-table">
 						<thead>
 							<tr>
-								<th style="width:50px;">ID</th>
-								<th style="width:150px;">Date</th>
-								<th style="width:90px;">User</th>
-								<th style="width:180px;">Tool</th>
-								<th style="width:90px;text-align:center;">Status</th>
-								<th>Input</th>
-								<th>Output</th>
+								<th style="width:50px;"><?php echo esc_html__( 'ID', 'wally' ); ?></th>
+								<th style="width:150px;"><?php echo esc_html__( 'Date', 'wally' ); ?></th>
+								<th style="width:90px;"><?php echo esc_html__( 'User', 'wally' ); ?></th>
+								<th style="width:180px;"><?php echo esc_html__( 'Tool', 'wally' ); ?></th>
+								<th style="width:90px;text-align:center;"><?php echo esc_html__( 'Status', 'wally' ); ?></th>
+								<th><?php echo esc_html__( 'Input', 'wally' ); ?></th>
+								<th><?php echo esc_html__( 'Output', 'wally' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php if ( empty( $items ) ) : ?>
 								<tr>
-									<td colspan="7" style="padding:40px;text-align:center;color:#A1A1AA;font-size:14px;">No actions found.</td>
+									<td colspan="7" style="padding:40px;text-align:center;color:#A1A1AA;font-size:14px;"><?php echo esc_html__( 'No actions found.', 'wally' ); ?></td>
 								</tr>
 							<?php else : foreach ( $items as $item ) :
 								$user_info = get_userdata( $item->user_id );
@@ -243,13 +243,13 @@ class AdminLogPage {
 								</td>
 								<td>
 									<details>
-										<summary style="font-size:12px;color:#71717A;cursor:pointer;">View</summary>
+										<summary style="font-size:12px;color:#71717A;cursor:pointer;"><?php echo esc_html__( 'View', 'wally' ); ?></summary>
 										<pre class="wpaia-pre"><?php echo esc_html( json_encode( json_decode( $item->tool_input ?: '{}' ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) ); ?></pre>
 									</details>
 								</td>
 								<td>
 									<details>
-										<summary style="font-size:12px;color:#71717A;cursor:pointer;">View</summary>
+										<summary style="font-size:12px;color:#71717A;cursor:pointer;"><?php echo esc_html__( 'View', 'wally' ); ?></summary>
 										<pre class="wpaia-pre"><?php echo esc_html( json_encode( json_decode( $item->tool_output ?: '{}' ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) ); ?></pre>
 									</details>
 								</td>
@@ -268,7 +268,7 @@ class AdminLogPage {
 				?>
 				<div class="wpaia-pagination">
 					<span class="wpaia-pagination-info">
-						Showing <?php echo esc_html( $start_item ); ?>–<?php echo esc_html( $end_item ); ?> of <?php echo esc_html( number_format( $total ) ); ?> entries
+						<?php echo sprintf( esc_html__( 'Showing %1$s–%2$s of %3$s entries', 'wally' ), esc_html( $start_item ), esc_html( $end_item ), esc_html( number_format( $total ) ) ); ?>
 					</span>
 					<div class="wpaia-pagination-pages">
 						<?php $prev = $page > 1 ? add_query_arg( array_merge( [ 'paged' => $page - 1 ], $pagination_args ), $base_url ) : ''; ?>

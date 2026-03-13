@@ -11,9 +11,9 @@
 - [x] App routes noindexed via `(app)/layout.tsx`
 - [x] Vercel Analytics added to `layout.tsx`
 - [ ] Add `NEXT_PUBLIC_SITE_URL=https://www.wallychat.com` to production environment variables
-- [ ] Create and upload OG image (`/public/site-og.png`, 1200×630px)
-- [ ] Add favicon files to `/public/` — `favicon.ico`, `favicon.svg`, `apple-icon.png`
-- [ ] Add per-page metadata overrides for blog posts
+- [x] Create and upload OG image (`/public/site-og.png`, 1200×630px)
+- [x] Add favicon files to `/public/` — `favicon.ico`, `favicon.svg`, `apple-icon.png`
+- [x] Add per-page metadata overrides for all public pages
 
 ### Google Search Console
 - [x] Add property for `wallychat.com`
@@ -59,10 +59,10 @@
 
 ## WordPress Plugin — wordpress.org Submission
 
-### Plugin Header (`wally.php`) — Fix Before Submission
-- [ ] Update `Plugin URI` from placeholder to `https://www.wallychat.com`
-- [ ] Update `Author` from "Your Name" to real name
-- [ ] Update `Author URI` from placeholder to real URL
+### Plugin Header (`wally.php`)
+- [x] Update `Plugin URI` to `https://www.wallychat.com`
+- [x] Update `Author` to real name (Andrew Oplas)
+- [x] Update `Author URI` to real URL (`https://andrewoplas.com`)
 
 ### Assets Required
 - [ ] Plugin icon: `assets/icon-128x128.png` and `assets/icon-256x256.png`
@@ -74,11 +74,11 @@
 - [ ] Wait for review (can take 1–4 weeks)
 - [ ] Once approved, set up SVN:
   - `trunk/` — current plugin code
-  - `tags/0.1.0/` — versioned release
+  - `tags/0.1.4/` — versioned release
   - `assets/` — icons, banners, screenshots
 
 ### readme.txt (Required by wordpress.org)
-- [ ] Create `readme.txt` in plugin root with:
+- [x] Create `readme.txt` in plugin root with:
   - `=== Wally ===` header
   - Contributors, Tags, Requires at least, Tested up to, Stable tag, License
   - Short description (150 chars max)
@@ -90,10 +90,10 @@
 
 ### Pre-Submission Checklist
 - [ ] Run Plugin Check plugin (wordpress.org/plugins/plugin-check/) on your site
-- [ ] Ensure external API calls are disclosed in readme.txt
-- [ ] Ensure plugin deactivation doesn't delete user data
-- [ ] All strings translatable via `__()`, `_e()`, `esc_html__()`, etc.
-- [ ] All inputs sanitized, all outputs escaped
+- [x] Ensure external API calls are disclosed in readme.txt
+- [x] Ensure plugin deactivation doesn't delete user data
+- [x] All strings translatable via `__()`, `_e()`, `esc_html__()`, etc.
+- [x] All inputs sanitized, all outputs escaped
 - [ ] No GPL-incompatible licenses in dependencies
 
 ---

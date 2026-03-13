@@ -46,6 +46,7 @@ if ( file_exists( WALLY_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
 
 // Boot the plugin
 add_action( 'plugins_loaded', function() {
+    load_plugin_textdomain( 'wally', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
     \Wally\Plugin::instance();
 });
 
