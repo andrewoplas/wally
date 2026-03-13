@@ -1,94 +1,52 @@
-## CookieYes (Cookie Law Info)
+# GDPR & Privacy Compliance Plugins
 
-### Settings
-- wp_options: `CookieLawInfo-0` through `CookieLawInfo-9` (individual settings), `cookielawinfo_options` (serialized)
-- Cookie scanner results stored in `cookielawinfo_*` option keys
-- Banner text, colors, and behavior configured via serialized options
+## When to Use
+- User mentions CookieYes, Complianz, Cookie Notice, GDPR, CCPA, or cookie consent
+- User asks about cookie banners, consent management, or privacy compliance
+- User wants to check or change cookie consent settings
 
-### Cookie Categories
-`necessary`, `functional`, `analytics`, `performance`, `advertisement`, `others`
+## Available Tools
+- `list_plugins` — detect which GDPR plugin is active
+- `get_option` — read consent plugin settings
+- `update_option` — change consent settings (requires confirmation)
 
-### Consent Detection
-```php
-// Detection
-class_exists('Cookie_Law_Info') // or defined('CLI_PLUGIN_DEVELOPMENT_MODE')
-// JavaScript API
-cli_show_cookiebar();
-cli_accept_cookie();
-window.cookielawinfo_get_categories(); // returns array of accepted categories
-```
+## Workflows
 
-### Consent Storage
-User consent stored in browser cookies: `CookieLawInfoConsent`, `cookielawinfo-checkbox-{category}` (set to "yes" or "no"). Optional server-side consent logging.
+### Detect Active Plugin
+1. Call `list_plugins`
+2. Look for: `cookie-law-info` (CookieYes), `complianz-gdpr`, `cookie-notice`
 
----
+### CookieYes — Read Settings
+1. Call `get_option` with key `cookielawinfo_options`
+2. Individual settings also in `CookieLawInfo-0` through `CookieLawInfo-9`
+3. Cookie categories: `necessary`, `functional`, `analytics`, `performance`, `advertisement`, `others`
 
-## Complianz (GDPR/CCPA)
+### Complianz — Read Settings
+1. Call `get_option` with key `cmplz_options`
+2. Call `get_option` with key `cmplz_banner_status`
+3. Cookie categories: `functional`, `statistics`, `marketing`, `preferences`
+4. Complianz auto-detects visitor region (EU/US/UK) and shows the appropriate banner type
 
-### Settings
-- wp_options: `cmplz_options` (main settings, serialized), `cmplz_banner_status`
-- All options prefixed `cmplz_*`
+### Cookie Notice — Read Settings
+1. Call `get_option` with key `cookie_notice_options`
+2. Key settings: `position`, `message`, `button_text`, `accept_text`, `refuse_text`, `cookie_expiry`
+3. Simple accept/refuse model — no granular cookie categories
 
-### Cookie Categories
-`functional`, `statistics`, `marketing`, `preferences`
+### Update Consent Banner Settings
+1. Identify the correct option key for the active plugin (see above)
+2. Call `update_option` with key and new value (requires confirmation)
+3. Warn user: "Changes to consent settings may affect compliance — review with your legal/privacy advisor."
 
-### Database Tables
-- `{prefix}cmplz_cookiebanner` — banner configurations (supports multiple banners)
-- `{prefix}cmplz_cookies` — scanned/registered cookies
+### Check Google Consent Mode Integration
+1. Call `get_option` with the plugin's settings key
+2. Most GDPR plugins support Google Consent Mode v2 (`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`)
 
-### Consent Detection
-```php
-// PHP
-cmplz_has_consent('statistics'); // returns bool
-cmplz_has_consent('marketing');
-// Detection
-defined('cmplz_premium') || class_exists('COMPLIANZ')
-```
-
-### Consent Storage
-Browser cookies prefixed `cmplz_*`: `cmplz_functional`, `cmplz_statistics`, `cmplz_marketing`, `cmplz_preferences`. Values: "allow" or "deny".
-
-### Hooks
-- `cmplz_before_cookie_banner` — action before banner renders
-- `cmplz_statistics` — action when statistics consent granted
-- `cmplz_marketing` — action when marketing consent granted
-
-### Geo-Based Detection
-Complianz detects visitor region (EU/US/UK) and shows the appropriate banner type (GDPR opt-in for EU, CCPA opt-out for US). Region stored in `cmplz_region` cookie.
-
----
-
-## Cookie Notice
-
-### Settings
-- wp_options: `cookie_notice_options` (serialized array)
-- Key sub-keys: `position`, `message`, `button_text`, `button_class`, `accept_text`, `refuse_text`, `revoke_text`, `cookie_name`, `cookie_value`, `cookie_expiry`, `script_placement`
-
-### Consent Model
-Simple accept/refuse model (no granular categories). Single cookie stores consent status.
-
-### Consent Detection
-```php
-// PHP
-Cookie_Notice()->get_status(); // check if user accepted
-// Detection
-class_exists('Cookie_Notice')
-```
-
-### JavaScript
-```js
-// Check acceptance via cookie
-document.cookie.includes('cn_cookies_accepted=true');
-```
-
-### Hooks
-- `cn_cookie_notice_output` — filter to customize banner HTML output
-
----
-
-## Common GDPR Patterns
-- All plugins store consent in browser cookies — server-side consent logs are optional.
-- Scripts conditionally loaded based on consent category (blocking `<script>` tags until consent).
-- Most support **Google Consent Mode v2** integration (analytics_storage, ad_storage, ad_user_data, ad_personalization).
-- After clearing cookies or cache, consent banners reappear for the user.
-- Do not programmatically grant consent or disable consent banners without explicit user confirmation.
+## Important Notes
+- Do NOT programmatically grant consent or disable consent banners without explicit user confirmation
+- Consent is stored in browser cookies — Wally has no access to visitor consent state
+- All plugins conditionally block scripts until consent is given — disabling the banner may violate GDPR/CCPA
+- CookieYes and Complianz offer granular per-category consent; Cookie Notice is simpler (accept/refuse only)
+- Complianz has geo-based detection: GDPR opt-in for EU, CCPA opt-out for US — stored in `cmplz_region` cookie
+- Cookie scanner results (what cookies the site sets) are stored in plugin-specific options — useful for auditing
+- After changing consent settings, clear page cache so updated banner is served to visitors
+- For banner design, cookie scanning, or compliance configuration, guide user to the plugin's admin page

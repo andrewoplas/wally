@@ -1,132 +1,62 @@
-## WP Mail SMTP
+# WP Mail SMTP & Email Delivery
 
-### Purpose
-Routes WordPress emails through proper SMTP or third-party email API providers instead of PHP's mail() function. Hooks into wp_mail() transparently.
+## When to Use
+- User mentions WP Mail SMTP, FluentSMTP, email delivery, or SMTP settings
+- User reports emails not being sent or delivered
+- User asks about email configuration, mailer settings, or email debugging
 
-### Settings Storage
-All settings stored in wp_options as serialized array under key `wp_mail_smtp`. Key sub-keys:
-- `mail.from_email` — forced "From" email address
-- `mail.from_name` — forced "From" name
-- `mail.mailer` — active mailer slug (see list below)
-- `mail.return_path` — whether to set return-path header to match from_email
-- `smtp.host`, `smtp.port`, `smtp.encryption` (none/ssl/tls), `smtp.auth` (true/false)
-- `smtp.user`, `smtp.pass` — SMTP credentials (encrypted in DB)
+## Available Tools
+- `list_plugins` — detect which email delivery plugin is active
+- `get_option` — read email plugin settings
+- `update_option` — change email settings (requires confirmation)
 
-### Available Mailers
-`mail` (PHP default), `smtp`, `gmail`, `outlook`, `amazonses`, `sendgrid`, `mailgun`, `postmark`, `sparkpost`, `sendinblue` (Brevo), `zoho`. Each mailer stores its own sub-keys under the main option (e.g., `gmail.client_id`, `sendgrid.api_key`, `mailgun.api_key`, `mailgun.domain`, `mailgun.region`).
+## Workflows
 
-### How It Works
-Replaces PHPMailer configuration via `wp_mail` filter and phpmailer_init action. Never call PHPMailer directly — always use `wp_mail()`.
-- `wp_mail($to, $subject, $message, $headers, $attachments)` — core function, unchanged API
-- Plugin intercepts via `phpmailer_init` hook to reconfigure transport
+### Detect Active Plugin
+1. Call `list_plugins`
+2. Look for: `wp-mail-smtp`, `fluent-smtp`
 
-### Email Logging (Pro)
-Table: `{prefix}wfsmtp_emails_log` — stores all sent/failed emails with to, subject, headers, status, date, mailer used, error message. Query via WPMailSMTP\Pro\Emails\Logs\Logs class.
+### WP Mail SMTP — Read Settings
+1. Call `get_option` with key `wp_mail_smtp`
+2. Key settings:
+   - `mail.from_email` — forced "From" email
+   - `mail.from_name` — forced "From" name
+   - `mail.mailer` — active mailer (smtp, gmail, sendgrid, mailgun, postmark, etc.)
+   - `mail.return_path` — return-path header enabled
+3. SMTP-specific: `smtp.host`, `smtp.port`, `smtp.encryption` (none/ssl/tls)
+4. Do NOT expose: `smtp.user`, `smtp.pass`, API keys for any mailer
 
-### Key Hooks
-- `wp_mail_smtp_providers_mailer_get_body` — filter outgoing email body per mailer
-- `wp_mail_smtp_mail_catcher_send_before` — fires before email is sent
-- `wp_mail_smtp_mail_catcher_send_after` — fires after email attempt (success or failure)
-- `wp_mail_smtp_options_set` — fires when settings are saved
-- `wp_mail_smtp_admin_area_enqueue_assets` — enqueue custom assets on plugin pages
+### FluentSMTP — Read Settings
+1. Call `get_option` with key `fluentmail_connections` — all configured mail connections
+2. Call `get_option` with key `fluentmail_general_settings` — general settings
+3. Key settings: `default_connection`, `log_emails`, `delete_logs_period`
+4. Do NOT expose: passwords, API keys, OAuth tokens
 
-### Debugging
-- `wp_mail_smtp_debug` option stores last debug output
-- Admin connection test: wp-admin > WP Mail SMTP > Tools > Email Test
-- Debug events log accessible under WP Mail SMTP > Tools > Debug Events
+### Check Active Mailer
+1. For WP Mail SMTP: read `mail.mailer` from `wp_mail_smtp` option
+2. For FluentSMTP: read `fluentmail_connections` to see configured providers
+3. Available mailers: `smtp`, `gmail`, `sendgrid`, `mailgun`, `postmark`, `sparkpost`, `sendinblue` (Brevo), `amazonses`, `outlook`
 
-### Retrieving Settings Programmatically
-```php
-$options = wp_mail_smtp()->get_providers()->get_options_all();
-// or
-$mailer = \WPMailSMTP\Options::init()->get('mail', 'mailer');
-$from   = \WPMailSMTP\Options::init()->get('mail', 'from_email');
-```
+### Update From Email/Name
+1. For WP Mail SMTP: `update_option` with key `wp_mail_smtp`, updating `mail.from_email` and/or `mail.from_name` (requires confirmation)
+2. For FluentSMTP: update within `fluentmail_connections` (requires confirmation)
+3. Warn user: "From email must match a verified domain on the sending provider (SPF/DKIM configured)"
 
-### Common Issues
-- Authentication failures — OAuth token expired (Gmail, Outlook) or incorrect API key
-- "From" email mismatch — sending provider rejects emails where from_email domain has no SPF/DKIM records
-- DNS records — SPF, DKIM, and DMARC must be configured on sending domain for deliverability
-- Port blocked — hosting providers may block port 25/465/587; use API-based mailers instead
+### When User Reports Email Issues
+1. Call `list_plugins` to check if an SMTP plugin is active
+2. If no SMTP plugin: tell user "WordPress uses PHP mail() by default, which is unreliable. Install WP Mail SMTP or FluentSMTP for proper email delivery."
+3. If plugin is active: read settings to verify configuration
+4. Common issues to mention:
+   - OAuth token expired (Gmail, Outlook) — re-authenticate in plugin settings
+   - API key incorrect — verify in plugin settings
+   - Port blocked by host — try API-based mailer instead of SMTP
+   - SPF/DKIM/DMARC not configured on sending domain
 
----
-
-## FluentSMTP
-
-### Purpose
-Free, open-source WordPress SMTP and email delivery plugin. Supports multiple mail connections with automatic fallback. Unlike WP Mail SMTP (freemium), FluentSMTP offers all features for free including email logging.
-
-### Settings Storage
-All connection settings stored in wp_options as serialized array under key `fluentmail_connections`. Each connection keyed by sender email address. Additional options:
-- `fluentmail_connections` — array of configured mailer connections (keyed by from_email)
-- `fluentmail_general_settings` — general settings including `default_connection`, `log_emails` (yes/no), `log_saved_interval_days`, `delete_logs_period`
-- `fluentmail_email_identity` — forced sender identity settings
-- `fluentmail_is_installed` — installation flag
-
-### Available Mailers (Connections)
-`smtp`, `ses` (Amazon SES), `sendgrid`, `mailgun`, `postmark`, `gmail` (Gmail API / OAuth), `outlook` (Microsoft 365 / OAuth), `sparkpost`, `elasticmail`, `sendinblue` (Brevo), `pepipost`. Each connection stores provider-specific credentials:
-- SMTP: `host`, `port`, `auth` (yes/no), `username`, `password`, `encryption` (none/ssl/tls)
-- SendGrid: `api_key`
-- Mailgun: `api_key`, `domain_name`, `region` (us/eu)
-- Amazon SES: `access_key`, `secret_key`, `region`
-- Postmark: `server_api_token`
-- Gmail API: `client_id`, `client_secret`, `auth_token` (OAuth)
-- Outlook: `client_id`, `client_secret`, `auth_token` (OAuth)
-
-### Multiple Connections & Fallback
-Unique feature: configure multiple SMTP/API connections. If the primary connection fails, FluentSMTP automatically tries the next connection. Connections can be mapped to specific sender email addresses — emails from `support@example.com` use one connection while `noreply@example.com` uses another.
-
-### Email Logging
-All sent emails logged in custom database table `{prefix}fsmtp_email_logs`. Key columns:
-- `id`, `to` (JSON array), `from`, `subject`, `body`, `status` (sent/failed/pending)
-- `response` (JSON — provider response), `extra` (JSON — headers, attachments info)
-- `created_at`, `updated_at`, `retries`
-Logs browsable in wp-admin > FluentSMTP > Email Logs with filtering by status, date, and search.
-
-### Dashboard & Reporting
-Built-in dashboard shows delivery statistics: total sent, failed, last 7 days chart. No external service or Pro version required.
-
-### Key Hooks
-```php
-// Before email is sent
-add_action( 'fluentmail_before_email_send', function( $phpMailer ) {} );
-
-// After email is sent (includes status)
-add_action( 'fluentmail_after_email_send', function( $logData, $response ) {}, 10, 2 );
-
-// After email log saved
-add_action( 'fluentmail_email_logged', function( $logId, $logData ) {}, 10, 2 );
-
-// Modify email before sending
-add_filter( 'fluentmail_email_data', function( $data ) { return $data; } );
-
-// Filter connections
-add_filter( 'fluentmail_connections', function( $connections ) { return $connections; } );
-```
-
-### WP-CLI Support
-```bash
-wp fluentmail test --to=user@example.com     # Send test email
-wp fluentmail info                            # Show active connection info
-```
-
-### Retrieving Settings Programmatically
-```php
-$settings = get_option('fluentmail_connections');
-$general  = get_option('fluentmail_general_settings');
-// or via FluentMail API
-$manager = FluentMail\App\Services\Mailer\Manager::getInstance();
-```
-
-### Detection
-```php
-defined('FLUENTMAIL')               // true if FluentSMTP is active
-defined('FLUENTMAIL_PLUGIN_VERSION') // version constant
-```
-
-### Key Differences from WP Mail SMTP
-- Completely free (no Pro version) — all features including email logging included
-- Multiple connections with automatic fallback (WP Mail SMTP: single connection in free, backup in Pro)
-- Open source on GitHub
-- Lighter weight with fewer admin pages
-- No email resend from logs (can be added via hooks)
+## Important Notes
+- SMTP credentials and API keys are sensitive — NEVER expose passwords, API keys, or OAuth tokens
+- WP Mail SMTP stores credentials encrypted in the database
+- FluentSMTP supports multiple connections with automatic fallback — unique feature vs WP Mail SMTP
+- FluentSMTP is fully free including email logging; WP Mail SMTP logs require Pro
+- For email test, debug logs, or re-authentication, guide user to the plugin's Tools page
+- DNS records (SPF, DKIM, DMARC) must be configured on the sending domain for reliable delivery
+- Wally cannot send test emails — guide user to WP Mail SMTP > Tools > Email Test

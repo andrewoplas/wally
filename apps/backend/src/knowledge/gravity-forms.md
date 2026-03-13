@@ -1,74 +1,40 @@
 # Gravity Forms
 
-## GFAPI Class (Primary PHP API)
+## When to Use
+- User asks about Gravity Forms or form entries/submissions
+- User wants to embed a Gravity Form on a page
+- User wants to check Gravity Forms settings or add-ons
+- Site has Gravity Forms active (check via `list_plugins` → look for `gravityforms`)
 
-```php
-GFAPI::get_form( $form_id );              // Returns form array or false
-GFAPI::get_forms( $active, $trash, $sort_column, $sort_dir ); // Returns array of forms
-GFAPI::get_entry( $entry_id );            // Returns entry array or WP_Error
-GFAPI::get_entries( $form_id, $search_criteria, $sorting, $paging ); // Returns entries array
-GFAPI::add_entry( $entry );               // Returns entry ID or WP_Error (does NOT trigger hooks)
-GFAPI::update_entry( $entry );            // Returns true or WP_Error
-GFAPI::delete_entry( $entry_id );         // Returns true or WP_Error
-```
+## Available Tools
+- `list_plugins` — check if Gravity Forms is installed and active
+- `create_post` / `update_post` — embed a Gravity Form on a page using shortcode
+- `search_content` — find pages that embed a specific form
+- `get_option` — read Gravity Forms settings (add-on configs use `gravityformsaddon_*` keys)
 
-## Form Object Structure
+## Workflows
 
-Key properties: `id`, `title`, `description`, `is_active`, `date_created`, `is_trash`, `fields` (array of field objects), `notifications` (assoc array), `confirmations` (assoc array).
+### Check if Gravity Forms is Active
+1. Call `list_plugins`
+2. Look for `gravityforms` — note: Gravity Forms is a premium plugin, not on WordPress.org
 
-Each field object has: `id`, `type`, `label`, `isRequired`, `choices` (for select/radio/checkbox), `inputs` (for compound fields like name/address), `formId`, `pageNumber`, `visibility`.
+### Embed a Gravity Form on a Page
+1. Ask the user for the form ID (Wally cannot list GF forms directly)
+2. Add the shortcode to the page content: `[gravityform id="5" title="true" description="true"]`
+3. For Gutenberg: wrap in shortcode block `<!-- wp:shortcode -->[gravityform id="5" title="true"]<!-- /wp:shortcode -->`
+4. Call `update_post` with the page ID and updated `content`
 
-## Field Types
+### Find Pages with Gravity Forms Embedded
+1. Call `search_content` with `keyword: 'gravityform'`
+2. Returns pages containing Gravity Forms shortcodes
 
-Standard: `text`, `textarea`, `select`, `multiselect`, `checkbox`, `radio`, `number`, `hidden`, `html`, `section`, `page`
-Advanced: `name`, `email`, `phone`, `address`, `website`, `date`, `time`, `fileupload`, `list`, `consent`, `captcha`
-Post: `post_title`, `post_body`, `post_category`, `post_image`, `post_custom_field`
-Pricing: `product`, `total`, `shipping`
+### Check Gravity Forms Add-on Settings
+1. Call `get_option` with keys prefixed `gravityformsaddon_` (e.g., `gravityformsaddon_gravityformsmailchimp_settings`)
 
-## Entry Object
-
-Properties: `id`, `form_id`, `date_created`, `is_starred`, `is_read`, `ip`, `source_url`, `status` (active/spam/trash), `created_by` (user ID).
-Field values keyed by field ID: `$entry['1']` for simple fields, `$entry['2.3']` for sub-fields (e.g., name prefix = `X.2`, first = `X.3`, last = `X.6`; address street = `X.1`, city = `X.3`, state = `X.4`, zip = `X.5`, country = `X.6`).
-
-## Key Hooks
-
-```php
-// After full submission (validation + notifications done)
-add_action( 'gform_after_submission', function( $entry, $form ) {}, 10, 2 );
-add_action( 'gform_after_submission_5', $callback, 10, 2 ); // form-specific (form ID 5)
-
-// Modify form before rendering
-add_filter( 'gform_pre_render', function( $form ) { return $form; } );
-
-// Custom validation
-add_filter( 'gform_validation', function( $validation_result ) { return $validation_result; } );
-
-// Before submission processing
-add_action( 'gform_pre_submission', function( $form ) {} );
-
-// After entry is created in DB (before notifications)
-add_action( 'gform_entry_created', function( $entry, $form ) {}, 10, 2 );
-
-// Modify notifications
-add_filter( 'gform_notification', function( $notification, $form, $entry ) { return $notification; }, 10, 3 );
-
-// Modify confirmation
-add_filter( 'gform_confirmation', function( $confirmation, $form, $entry ) { return $confirmation; }, 10, 3 );
-```
-
-## Notifications & Confirmations
-
-Notifications are per-form, stored inside the form object. Default sends to `{admin_email}` on `form_submission`. Supports merge tags like `{all_fields}`, `{form_title}`, `{entry_id}`, `{field_id:1}`.
-
-Confirmations support three types: `message` (inline text), `page` (redirect to WP page), `redirect` (external URL). Each has `id`, `name`, `isDefault`, `type`, `message`/`url`/`pageId`.
-
-## Database Tables
-
-- `wp_gf_form` -- form ID, title, active/trash status
-- `wp_gf_form_meta` -- serialized form object (fields, notifications, confirmations)
-- `wp_gf_entry` -- entry records with form_id, date, status, IP, user
-- `wp_gf_entry_meta` -- field values stored as entry_id + meta_key (field ID) + meta_value
-
-## Settings & Add-ons
-
-Global settings stored in `wp_options` as `gravityformsaddon_*` keys. Common add-ons: PayPal, Stripe, Mailchimp, Zapier, HubSpot, Slack, Twilio. Add-on feeds are stored in `wp_gf_addon_feed` table.
+## Important Notes
+- Wally cannot list, create, edit, or delete Gravity Forms — guide user to **Forms** in the WordPress admin menu
+- Wally cannot view or manage form entries/submissions — guide user to **Forms > Entries**
+- Gravity Forms is a premium plugin — it must be purchased and uploaded manually; `install_plugin` does not work
+- Gravity Forms stores data in custom tables (`wp_gf_form`, `wp_gf_entry`, `wp_gf_entry_meta`), not accessible via Wally tools
+- Shortcode format: `[gravityform id="X" title="true" description="true"]`
+- Form notifications and confirmations must be configured in the Forms admin

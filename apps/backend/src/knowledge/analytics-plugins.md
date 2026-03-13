@@ -1,62 +1,56 @@
-## WordPress Analytics & Tracking Plugins
+# WordPress Analytics & Tracking Plugins
 
-### Site Kit by Google
-- **Settings**: wp_options keys prefixed `googlesitekit_*`.
-- **Key options**:
-  - `googlesitekit_active_modules` — enabled modules array (e.g., `search-console`, `analytics-4`, `adsense`, `pagespeed-insights`, `tagmanager`)
-  - `googlesitekit_analytics-4_settings` — GA4 property ID, measurement ID, web data stream ID
-  - `googlesitekit_search-console_settings` — connected property URL
-  - `googlesitekit_adsense_settings` — AdSense account/client ID
-  - `googlesitekit_tagmanager_settings` — GTM container ID
-- **Connection**: OAuth via Google — credentials in `googlesitekit_credentials` option. Connection status in `googlesitekit_connected_proxy_url`.
-- **Data caching**: API responses cached in transients prefixed `googlesitekit_`. Dashboard widget data refreshed on admin load.
-- **REST API**: `/google-site-kit/v1/` — modules, settings, and data endpoints.
-- **Functions**: `Google\Site_Kit\Modules\Analytics_4\Analytics_4` class manages GA4 config. Module access via `Google\Site_Kit\Core\Modules\Modules::get_module($slug)`.
-- **Permissions**: Requires `googlesitekit_manage_options` capability (mapped to `manage_options` by default).
+## When to Use
+- User mentions Site Kit, MonsterInsights, GTM4WP, PixelYourSite, Google Analytics, or Tag Manager
+- User asks about analytics, tracking, conversion pixels, or measurement IDs
+- User wants to check or change analytics/tracking configuration
 
-### MonsterInsights
-- **Settings**: wp_options keys prefixed `monsterinsights_*`.
-- **Key options**:
-  - `monsterinsights_site_profile` — serialized array with `ua` (UA ID), `v4` (GA4 measurement ID), `viewname`, `ua_name`
-  - `monsterinsights_tracking_mode` — tracking method (typically `gtag`)
-  - `monsterinsights_events_mode` — event tracking method (`js` or `php`)
-  - `monsterinsights_db_version` — tracks schema version
-  - `monsterinsights_over_time` — first install timestamp
-- **Post-level**: `_monsterinsights_skip_tracking` postmeta (1 = exclude post from tracking).
-- **Functions**: `monsterinsights_get_ua()` — returns active tracking ID. `MonsterInsights()` — main singleton. `MonsterInsights()->auth` — authentication and license data.
-- **Reports**: Dashboard reports cached in transients prefixed `monsterinsights_report_`. Data fetched from Google API via `MonsterInsights_Report` subclasses.
-- **Popular Posts**: `MonsterInsights_Popular_Posts` class. Inline/widget/products modes. Cached in `monsterinsights_popular_posts_cache_*` transients.
-- **Hooks**: `monsterinsights_tracking_before`, `monsterinsights_tracking_after`, `monsterinsights_frontend_tracking_options`.
+## Available Tools
+- `list_plugins` — detect which analytics plugin is active
+- `get_option` — read analytics plugin settings and tracking IDs
+- `update_option` — change analytics settings (requires confirmation)
 
-### GTM4WP (Google Tag Manager for WordPress)
-- **Settings**: wp_options key `gtm4wp-options` (serialized array).
-- **Key settings**:
-  - `gtm-code` — container ID (e.g., `GTM-XXXXX`)
-  - `gtm-container-placement` — placement: `0` (footer), `1` (manually coded), `2` (header with `wp_body_open`)
-  - `gtm-datalayer-variable-name` — dataLayer variable name (default: `dataLayer`)
-  - `gtm-env-gtm-auth`, `gtm-env-gtm-preview` — environment parameters
-- **DataLayer**: Events pushed via `wp_head`/`wp_footer`. Custom events include `gtm4wp.addProductToCartEEC`, `gtm4wp.productClickEEC`, `gtm4wp.checkoutStepEEC`, `gtm4wp.orderCompletedEEC`.
-- **WooCommerce**: Auto-pushes Enhanced E-commerce events (product impressions, clicks, add-to-cart, checkout steps, purchases) when WooCommerce integration enabled.
-- **Hooks**: `gtm4wp_compile_datalayer` filter — modify dataLayer output. `gtm4wp_add_global_vars` — add custom JS variables.
-- **Constants**: `GTM4WP_OPTION_GTM_CODE`, `GTM4WP_OPTION_GTM_PLACEMENT` — used internally for option keys.
+## Workflows
 
-### PixelYourSite
-- **Settings**: wp_options keys prefixed `pys_*`.
-- **Key options**:
-  - `pys_core` — serialized main settings (general config, GDPR consent, event enrichment)
-  - `pys_facebook` — Facebook Pixel ID, access token, event settings, custom audiences
-  - `pys_google_analytics` — GA4 measurement ID, event settings
-  - `pys_pinterest` — Pinterest Tag ID and event config
-  - `pys_tiktok` — TikTok Pixel ID and settings
-- **Auto-tracked events**: PageView, ViewContent, AddToCart, InitiateCheckout, Purchase — fired automatically based on page context.
-- **WooCommerce integration**: Conversion tracking for add-to-cart, checkout, and purchase events. Value and currency passed to all pixels.
-- **Custom events**: Stored in `pys_events` postmeta. Also configurable globally via admin UI (click triggers, URL triggers, CSS selector triggers).
-- **GDPR/Consent**: Built-in consent mode integrates with CookieYes, CookieBot, Complianz via `pys_core` settings.
-- **Functions**: `PYS()->getRegisteredPixels()` — returns active pixel instances. `EventsManager::addEvents()` — programmatic event registration.
+### Detect Active Analytics Plugin
+1. Call `list_plugins`
+2. Look for: `google-site-kit`, `google-analytics-for-wordpress` (MonsterInsights), `duracelltomi-google-tag-manager` (GTM4WP), `pixelyoursite`
 
-### Common Patterns
-- Analytics plugins inject tracking scripts via `wp_head` or `wp_footer`. Clearing page cache after config changes ensures updated tracking code is served.
-- GA4 measurement IDs follow format `G-XXXXXXXXXX`. Legacy UA IDs follow `UA-XXXXXXXX-X`.
-- GTM container IDs follow format `GTM-XXXXXX`. When GTM is used, individual tracking pixels are typically managed inside GTM rather than via separate plugins.
-- Most plugins exclude logged-in admins/editors from tracking by default — check plugin settings if admin pageviews seem missing.
-- WooCommerce e-commerce tracking requires explicit integration toggles in each plugin — it is not automatic on install.
+### Site Kit by Google — Check Configuration
+1. Call `get_option` with key `googlesitekit_active_modules` — enabled modules
+2. Call `get_option` with key `googlesitekit_analytics-4_settings` — GA4 property/measurement ID
+3. Call `get_option` with key `googlesitekit_search-console_settings` — Search Console property
+4. Call `get_option` with key `googlesitekit_tagmanager_settings` — GTM container ID
+
+### MonsterInsights — Check Tracking ID
+1. Call `get_option` with key `monsterinsights_site_profile`
+2. Contains `v4` (GA4 measurement ID) and `ua` (legacy UA ID)
+3. Call `get_option` with key `monsterinsights_tracking_mode` — tracking method
+
+### GTM4WP — Check Container ID
+1. Call `get_option` with key `gtm4wp-options`
+2. Key sub-keys: `gtm-code` (container ID like `GTM-XXXXX`), `gtm-container-placement`
+
+### PixelYourSite — Check Pixel IDs
+1. Call `get_option` with key `pys_facebook` — Facebook Pixel ID
+2. Call `get_option` with key `pys_google_analytics` — GA4 measurement ID
+3. Call `get_option` with key `pys_pinterest` — Pinterest Tag ID
+4. Call `get_option` with key `pys_tiktok` — TikTok Pixel ID
+5. Call `get_option` with key `pys_core` — general settings and GDPR consent config
+
+### Update Analytics Settings
+1. Identify the correct option key for the active plugin (see above)
+2. Call `update_option` with key and new value (requires confirmation)
+3. Remind user to clear page cache after changes so updated tracking code is served
+
+### Exclude a Post from MonsterInsights Tracking
+1. Call `update_post` with the post ID and `meta: { _monsterinsights_skip_tracking: '1' }`
+
+## Important Notes
+- GA4 measurement IDs follow format `G-XXXXXXXXXX`; GTM container IDs follow `GTM-XXXXXX`
+- When GTM is active, individual tracking pixels are typically managed inside GTM, not via separate plugins
+- Most analytics plugins exclude logged-in admins/editors from tracking by default
+- WooCommerce e-commerce tracking requires explicit integration toggles in each plugin — not automatic
+- Site Kit requires Google OAuth connection — Wally can read settings but cannot initiate the OAuth flow
+- PixelYourSite has built-in GDPR consent mode — check `pys_core` settings for consent configuration
+- Do NOT expose API keys or access tokens (e.g., Site Kit credentials, Facebook access tokens)

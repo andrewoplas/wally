@@ -1,84 +1,63 @@
-## The Events Calendar
+# The Events Calendar
 
-### Post Types
-- `tribe_events` — events
-- `tribe_venue` — venues (linked to events)
-- `tribe_organizer` — organizers (linked to events)
+## When to Use
+- User mentions The Events Calendar, events, venues, organizers, or event tickets
+- User wants to create, list, or manage events on their site
+- User asks about event categories, dates, or calendar settings
 
-### Event Meta Keys
-- `_EventStartDate`, `_EventEndDate` — local datetime (`Y-m-d H:i:s`)
-- `_EventStartDateUTC`, `_EventEndDateUTC` — UTC datetime
-- `_EventDuration` — duration in seconds
-- `_EventAllDay` — "yes" if all-day event
-- `_EventTimezone` — timezone string (e.g., "America/New_York")
-- `_EventVenueID` — linked venue post ID
-- `_EventOrganizerID` — linked organizer post ID
-- `_EventURL` — external event URL
-- `_EventCost`, `_EventCurrencySymbol`, `_EventCurrencyCode`, `_EventCurrencyPosition`
-- `_EventShowMap`, `_EventShowMapLink` — map display toggles
+## Available Tools
+- `list_plugins` — detect if The Events Calendar is active
+- `list_posts` — list events, venues, or organizers by post type
+- `get_post` — get event details including date/venue meta
+- `create_post` — create a new event (basic fields; dates via meta)
+- `update_post` — update event details and meta
+- `delete_post` — delete an event (requires confirmation)
+- `search_content` — search across event content
+- `get_option` — read calendar settings
 
-### Venue Meta Keys
-`_VenueAddress`, `_VenueCity`, `_VenueCountry`, `_VenueProvince`, `_VenueState`, `_VenueZip`, `_VenuePhone`, `_VenueURL`
+## Workflows
 
-### Organizer Meta Keys
-`_OrganizerPhone`, `_OrganizerEmail`, `_OrganizerWebsite`
+### Detect Plugin
+1. Call `list_plugins`
+2. Look for: `the-events-calendar`
 
-### Taxonomies
-- `tribe_events_cat` — event categories
-- Standard `post_tag` — event tags (shared with posts)
+### List Upcoming Events
+1. Call `list_posts` with `post_type: 'tribe_events'`
+2. Events include meta: `_EventStartDate`, `_EventEndDate`, `_EventVenueID`
 
-### Reading/Writing Events
-```php
-// Query events (date-aware WP_Query wrapper)
-$events = tribe_get_events([
-  'start_date'   => '2024-01-01',
-  'end_date'     => '2024-12-31',
-  'eventDisplay' => 'list', // past, upcoming, list, month, day
-  'posts_per_page' => 10,
-]);
-// Get single event
-$event = tribe_get_event($post_id);
-// ORM builder (newer versions)
-$events = tribe_events()->where('starts_after', 'now')->all();
-// Write via postmeta
-update_post_meta($post_id, '_EventStartDate', '2024-06-15 09:00:00');
-update_post_meta($post_id, '_EventEndDate', '2024-06-15 17:00:00');
-update_post_meta($post_id, '_EventVenueID', $venue_id);
-```
+### Get Event Details
+1. Call `get_post` with the event ID
+2. Key meta fields: `_EventStartDate`, `_EventEndDate`, `_EventAllDay`, `_EventVenueID`, `_EventOrganizerID`, `_EventURL`, `_EventCost`
 
-### Settings in wp_options
-- `tribe_events_calendar_options` (serialized) — main settings
-  - `eventsSlug` — URL base (default: "events")
-  - `singleEventSlug` — single event slug
-  - `defaultCurrencySymbol` — default currency symbol
-  - `stylesheet_option` — "full", "skeleton", or "tribe" CSS mode
+### Create an Event
+1. Call `create_post` with `post_type: 'tribe_events'`, `title`, `content` (description), `status: 'publish'`
+2. Set dates via `meta`: `_EventStartDate: '2024-06-15 09:00:00'`, `_EventEndDate: '2024-06-15 17:00:00'`
+3. Optionally set `_EventVenueID` and `_EventOrganizerID` (must be existing venue/organizer post IDs)
+4. Tell user: "Event created. Verify the dates and venue in Events > Edit."
 
-### Template Overrides
-Theme can override templates by copying from `plugins/the-events-calendar/src/views/` to `theme/tribe-events/`. Key templates: `default-template.php`, `list.php`, `month.php`, `single-event.php`.
+### Update Event Date/Time
+1. Call `update_post` with the event ID and `meta: { _EventStartDate: 'YYYY-MM-DD HH:MM:SS', _EventEndDate: 'YYYY-MM-DD HH:MM:SS' }`
 
-### Hooks
-- `tribe_events_before_html`, `tribe_events_after_html` — wrap event output
-- `tribe_events_single_event_before_the_content` — before single event content
-- `tribe_template_pre_html` — filter any tribe template before render
-- `tribe_events_pre_get_posts` — modify event queries
+### List Venues
+1. Call `list_posts` with `post_type: 'tribe_venue'`
+2. Venue meta: `_VenueAddress`, `_VenueCity`, `_VenueState`, `_VenueCountry`
 
-### REST API
-Base: `/wp-json/tribe/events/v1/`
-- `GET /events` — list events (params: `start_date`, `end_date`, `categories`, `page`, `per_page`)
-- `GET /events/{id}` — single event
-- `GET /venues`, `GET /venues/{id}` — venues
-- `GET /organizers`, `GET /organizers/{id}` — organizers
+### List Organizers
+1. Call `list_posts` with `post_type: 'tribe_organizer'`
+2. Organizer meta: `_OrganizerPhone`, `_OrganizerEmail`, `_OrganizerWebsite`
 
-### iCal Export
-- All events: `/events/?ical=1`
-- Per-event iCal link available on single event pages
-- Subscribe URL: `/events/?ical=1&tribe_display=list`
+### Create a Venue
+1. Call `create_post` with `post_type: 'tribe_venue'`, `title` (venue name)
+2. Set address via `meta`: `_VenueAddress`, `_VenueCity`, `_VenueState`, `_VenueCountry`, `_VenueZip`
 
-### Event Tickets (Separate Plugin)
-Event Tickets / Event Tickets Plus adds: `tribe_tickets`, `tribe_rsvp` post types. Ticket meta prefixed `_tribe_tickets_*`. Attendee tracking via `{prefix}tec_attendees` table.
+### Read Calendar Settings
+1. Call `get_option` with key `tribe_events_calendar_options`
+2. Key settings: `eventsSlug` (URL base), `defaultCurrencySymbol`, `stylesheet_option`
 
-### Detection
-```php
-defined('TRIBE_EVENTS_FILE') // true if The Events Calendar is active
-class_exists('Tribe__Events__Main') // alternative check
-```
+## Important Notes
+- Events use post type `tribe_events`; venues use `tribe_venue`; organizers use `tribe_organizer`
+- Date format must be `Y-m-d H:i:s` (e.g., `2024-06-15 09:00:00`)
+- Event categories use taxonomy `tribe_events_cat` — not standard WordPress categories
+- Tickets (Event Tickets plugin) use separate post types — not manageable via standard tools
+- For recurring events, ticket sales, or calendar display settings, guide user to Events admin
+- The Events Calendar has its own REST API at `/wp-json/tribe/events/v1/` but Wally uses WordPress tools instead

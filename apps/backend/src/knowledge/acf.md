@@ -1,45 +1,87 @@
-## Advanced Custom Fields (ACF)
+# Advanced Custom Fields (ACF)
 
-### ACF Free vs Pro
-- **ACF Free**: Field groups, field values (post/term/user), all field types, meta queries
-- **ACF Pro** (adds): Repeater, Flexible Content, Gallery, Clone, Options Pages, ACF Blocks, **Custom Post Types** (6.1+), **Custom Taxonomies** (6.1+)
+## When to Use
+- User wants to manage ACF field groups, custom post types, or custom taxonomies
+- User wants to read or update ACF field values on posts, terms, users, or options pages
+- Site has ACF active (check via `list_plugins` → look for `advanced-custom-fields` or `acf`)
 
-### Custom Post Types (ACF Pro 6.1+)
-ACF Pro can register custom post types via the UI (ACF → Post Types). These are stored as WP posts of type `acf-post-type`. Use the `acf_list_post_types` tool to list them — it returns each post type's key, slug, labels, icon, supports, and active status. You can create, update, and delete ACF post types with the corresponding tools. The post type key is typically `post_type_<slug>` (e.g., `post_type_podcast`).
+## Available Tools
+- `acf_list_field_groups` — list all ACF field groups
+- `acf_get_field_group` — get a field group's full details (including field definitions)
+- `acf_create_field_group` — create a new field group
+- `acf_update_field_group` — update a field group
+- `acf_delete_field_group` — delete a field group (requires confirmation)
+- `acf_list_post_types` — list ACF-registered custom post types (ACF Pro 6.1+)
+- `acf_get_post_type` — get ACF post type details
+- `acf_create_post_type` — create a custom post type via ACF
+- `acf_update_post_type` — update an ACF custom post type
+- `acf_delete_post_type` — delete an ACF custom post type (requires confirmation)
+- `acf_list_taxonomies` — list ACF-registered custom taxonomies
+- `acf_get_taxonomy` — get ACF taxonomy details
+- `acf_create_taxonomy` — create a custom taxonomy via ACF
+- `acf_update_taxonomy` — update an ACF custom taxonomy
+- `acf_delete_taxonomy` — delete an ACF custom taxonomy (requires confirmation)
+- `acf_get_post_fields` — get ACF field values for a post
+- `acf_update_post_fields` — update ACF field values on a post
+- `acf_get_term_fields` — get ACF field values for a taxonomy term
+- `acf_update_term_fields` — update ACF field values on a term
+- `acf_get_user_fields` — get ACF field values for a user
+- `acf_update_user_fields` — update ACF field values on a user
+- `acf_list_options_pages` — list ACF options pages
+- `acf_get_option_field` — get a single ACF options page field value
+- `acf_update_option_field` — update a single ACF options page field value
+- `list_plugins` — check if ACF or ACF Pro is active
 
-### Custom Taxonomies (ACF Pro 6.1+)
-Similar to post types, ACF Pro can register custom taxonomies via the UI (ACF → Taxonomies). Use `acf_list_taxonomies` to list them. Each taxonomy has a key (e.g., `taxonomy_podcast_category`), a slug, labels, attached post types, and an active status. Taxonomies can be hierarchical (category-like) or flat (tag-like).
+## Workflows
 
-### Field Groups
-Field groups define which custom fields appear on edit screens. Each group has:
-- A **key** (e.g., `group_60a7b3c4d5e6f`) and **title**
-- **Location rules** controlling where fields appear (e.g., post_type == product)
-- **Fields** — ordered list of field definitions, each with a label, name, type, and settings
-Use `acf_list_field_groups` to list all groups, `acf_get_field_group` for full details including all field definitions.
+### Check if ACF is Active
+1. Call `list_plugins`
+2. Look for `advanced-custom-fields` (free) or `advanced-custom-fields-pro` (Pro)
+3. ACF Pro is required for custom post types, custom taxonomies, repeater/flexible content fields, and options pages
 
-### Reading Fields
-- get_field($selector, $post_id) — returns formatted value (e.g., image field returns array with url, alt, etc.)
-- get_field_object($selector, $post_id) — returns full field config including type, choices, label
-- Raw meta: get_post_meta($post_id, $field_name, true) — returns unformatted value (e.g., image field returns just attachment ID)
+### List All Field Groups
+1. Call `acf_list_field_groups`
+2. Returns all field groups with their ID, title, and location rules
 
-### Writing Fields
-- update_field($selector, $value, $post_id) — preferred method, handles formatting
-- update_post_meta($post_id, $field_name, $value) — works but bypasses ACF formatting
+### Get Field Group Details (including all fields)
+1. Call `acf_get_field_group` with the field group ID
+2. Returns field definitions: label, name, type, and settings for each field
 
-### Field Types
-text, textarea, number, range, email, url, password, image, file, wysiwyg, oembed, gallery, select, checkbox, radio, button_group, true_false, link, post_object, page_link, relationship, taxonomy, user, date_picker, date_time_picker, time_picker, color_picker, message, accordion, tab, group, repeater, flexible_content, clone.
+### Read ACF Field Values on a Post
+1. Call `acf_get_post_fields` with the post ID
+2. Returns all ACF field values for that post, keyed by field name
 
-### Complex Field Types
-- **Repeater**: returns array of rows. Each row is an associative array of sub-fields. Access: get_field('repeater_name') returns [['sub_field_1' => 'val', ...], ...]
-- **Group**: returns associative array. Access: get_field('group_name') returns ['sub_field_1' => 'val', ...]
-- **Flexible Content**: returns array of layouts with 'acf_fc_layout' key. Access: get_field('flex_name') returns [['acf_fc_layout' => 'layout_name', 'field' => 'val'], ...]
-- **Relationship/Post Object**: returns WP_Post objects (or array of them)
-- **Image**: returns array (url, id, alt, title, sizes) or just ID depending on return format setting
-- **Gallery**: returns array of image arrays
+### Update ACF Field Values on a Post
+1. Call `acf_update_post_fields` with the post ID and field values as a key→value object
+2. Requires confirmation for writes
 
-### ACF in Meta Queries
-ACF fields are stored as regular postmeta. You can query them with WP_Query meta_query:
-'meta_query' => [['key' => 'fan_love_type', 'value' => 'tweet', 'compare' => '=']]
+### Read / Update Term Fields
+1. Call `acf_get_term_fields` with the term ID and taxonomy
+2. Call `acf_update_term_fields` to update (requires confirmation)
 
-### Options Pages (Pro)
-ACF can store fields on options pages (site-wide, not per-post). Read with get_field('field_name', 'option'). Use `acf_list_options_pages` to discover registered options pages, `acf_get_options_fields` to read their values, and `acf_update_options_field` to change a value.
+### Read / Update User Fields
+1. Call `acf_get_user_fields` with the user ID
+2. Call `acf_update_user_fields` to update (requires confirmation)
+
+### Read / Update Options Page Fields
+1. Call `acf_list_options_pages` to find the options page name
+2. Call `acf_get_option_field` with the page name and field name
+3. Call `acf_update_option_field` to update (requires confirmation)
+
+### List ACF Custom Post Types (Pro)
+1. Call `acf_list_post_types`
+2. Returns all ACF-registered custom post types with key, slug, labels, and active status
+
+### Create a Custom Post Type (Pro)
+1. Call `acf_create_post_type` with `post_type` key, `label`, `singular_label`, and any other settings
+
+### List ACF Custom Taxonomies (Pro)
+1. Call `acf_list_taxonomies`
+2. Returns all ACF-registered taxonomies with key, slug, labels, and attached post types
+
+## Important Notes
+- Custom post types and custom taxonomies via ACF require ACF Pro 6.1+
+- Repeater, Flexible Content, and Gallery fields are also ACF Pro only
+- `acf_update_post_fields` writes values directly; the LLM should use field names (not keys) when possible
+- Options page fields store site-wide data — always confirm before updating these
+- ACF field names are the snake_case identifiers (e.g., `hero_title`), not the labels (e.g., "Hero Title")

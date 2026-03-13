@@ -1,76 +1,64 @@
-## WordPress Caching Plugins
+# WordPress Caching Plugins
 
-### WP Rocket
-- **Settings**: wp_options key `wp_rocket_settings` (serialized array). Sub-keys: `cache_mobile`, `do_caching_mobile_files`, `minify_css`, `minify_js`, `cdn`, `cdn_cnames`, `lazyload`, `preload`.
-- **Cache location**: `wp-content/cache/wp-rocket/{domain}/` — static HTML files organized by URL path.
-- **Config files**: `wp-content/wp-rocket-config/` — per-domain PHP config.
-- **Purge functions**:
-  - `rocket_clean_domain()` — purge entire cache
-  - `rocket_clean_post($post_id)` — purge single post/page cache
-  - `rocket_clean_home()` — purge homepage cache
-  - `rocket_clean_files($urls)` — purge specific URLs
-  - `rocket_clean_minify()` — purge minified CSS/JS
-- **Hooks**: `after_rocket_clean_domain`, `after_rocket_clean_post`, `before_rocket_clean_domain`, `rocket_rucss_after_clearing_usedcss`.
-- **Advanced**: wp-content/advanced-cache.php drop-in handles early page caching.
+## When to Use
+- User mentions WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed Cache, WP Fastest Cache, Autoptimize, WP-Optimize, or Perfmatters
+- User asks about caching, page speed, minification, or performance optimization
+- User wants to check or change caching/performance settings
+- User reports stale content (may need cache purge guidance)
 
-### W3 Total Cache
-- **Settings**: wp_options keys prefixed `w3tc_*`. Master config in `wp-content/w3tc-config/master.php`.
-- **Cache location**: `wp-content/cache/` with subdirectories for page, minify, object, db.
-- **Purge functions**:
-  - `w3tc_flush_all()` — purge everything
-  - `w3tc_flush_post($post_id)` — purge single post
-  - `w3tc_flush_url($url)` — purge specific URL
-  - `w3tc_dbcache_flush()` — flush database cache
-  - `w3tc_objectcache_flush()` — flush object cache
-  - `w3tc_minify_flush()` — flush minified files
-- **Hooks**: `w3tc_flush_all`, `w3tc_flush_post`.
+## Available Tools
+- `list_plugins` — detect which caching plugin is active
+- `get_option` — read caching plugin settings
+- `update_option` — change caching settings (requires confirmation)
 
-### WP Super Cache
-- **Settings**: `wp-content/wp-cache-config.php` (PHP file, not DB). Some settings in wp_options as `ossdl*` (CDN), `super_cache_*`.
-- **Cache location**: `wp-content/cache/supercache/{domain}/` for supercache mode, `wp-content/cache/wp-cache-*` for WP-Cache mode.
-- **Purge functions**:
-  - `wp_cache_clear_cache()` — purge all
-  - `wp_cache_post_change($post_id)` — purge single post
-  - `prune_super_cache($dir, true)` — delete cache directory
-- **Plugin slug**: `wp-super-cache/wp-cache.php`.
+## Workflows
 
-### LiteSpeed Cache
-- **Settings**: wp_options keys prefixed `litespeed.*` (e.g., `litespeed.conf.cache`, `litespeed.conf.optm-css_min`).
-- **Purge via actions** (no direct function calls):
-  - `do_action('litespeed_purge_all')` — purge all
-  - `do_action('litespeed_purge_post', $post_id)` — purge single post
-  - `do_action('litespeed_purge_url', $url)` — purge specific URL
-  - `do_action('litespeed_purge_blog')` — purge current blog
-- **Mechanism**: Uses `X-LiteSpeed-Purge` response headers — requires LiteSpeed web server.
-- **Cache location**: Server-level (not in wp-content for page cache). CSS/JS optimizations in `wp-content/litespeed/`.
+### Detect Active Caching Plugin
+1. Call `list_plugins`
+2. Look for: `wp-rocket`, `w3-total-cache`, `wp-super-cache`, `litespeed-cache`, `wp-fastest-cache`, `autoptimize`, `wp-optimize`, `perfmatters`
 
-### WP Fastest Cache
-- **Settings**: wp_options key `WpFastestCache` (serialized). Key settings: wpFastestCacheStatus (on/off), wpFastestCacheMobile, wpFastestCacheMinifyHtml, wpFastestCacheMinifyCss, wpFastestCacheMinifyJs, wpFastestCacheCombineCss, wpFastestCacheCombineJs, wpFastestCacheLazyLoad, wpFastestCachePreload.
-- **Cache location**: `wp-content/cache/all/` for page cache, `wp-content/cache/wpfc-minified/` for minified assets.
-- **Purge functions**: `wpfc_clear_all_cache()` function via global $wp_fastest_cache. Or `do_action('wpfc_clear_all_cache')`.
-- **Plugin slug**: `wp-fastest-cache/wpFastestCache.php`.
+### WP Rocket — Read Settings
+1. Call `get_option` with key `wp_rocket_settings`
+2. Key sub-keys: `cache_mobile`, `minify_css`, `minify_js`, `cdn`, `lazyload`, `preload`
 
-### Autoptimize
-- **Settings**: wp_options keys prefixed `autoptimize_*`. Key: autoptimize_html (minify HTML), autoptimize_js (optimize JS), autoptimize_css (optimize CSS), autoptimize_cdn_url (CDN base URL), autoptimize_imgopt_*.
-- **Cache location**: `wp-content/cache/autoptimize/` for minified/combined CSS and JS.
-- **Purge**: `autoptimize_flush_pagecache()`, or via `Autoptimize_Cache::clear_all()`. Hook: `autoptimize_action_cachepurged`.
-- **API filter**: `autoptimize_filter_css_exclude` and `autoptimize_filter_js_exclude` to exclude specific files.
+### W3 Total Cache — Read Settings
+1. Call `get_option` with keys prefixed `w3tc_*`
+2. Master config is file-based (`wp-content/w3tc-config/master.php`) — not fully readable via `get_option`
 
-### WP-Optimize
-- **Settings**: wp_options key `wpo_*`. Key: wpo_cache_config (page cache settings), wpo_minify_config (minification), wpo_images_config.
-- **Features**: Database optimization (clean revisions, spam, transients), page caching, image compression, minification.
-- **Purge**: `WP_Optimize()->get_page_cache()->purge()` or `wpo_cache_flush()`.
-- **Database cleanup**: `WP_Optimize()->get_optimizer()->do_optimization($optimization_id)` — IDs: revisions, auto_drafts, trashed_posts, spam_comments, unapproved_comments, expired_transients, orphaned_postmeta.
+### WP Super Cache — Read Settings
+1. Settings are file-based (`wp-content/wp-cache-config.php`) — limited access via `get_option`
+2. Some CDN settings available: `get_option` with keys prefixed `ossdl*`
 
-### Perfmatters
-- **Settings**: wp_options key `perfmatters_options` (serialized array). Key settings: disable_emojis, disable_dashicons, disable_xmlrpc, disable_google_maps, lazy_loading (native/js), preload, cdn_url, local_analytics (host GA locally), script_manager.
-- **Script Manager**: Per-page/post script/style disabling. Settings stored in postmeta `perfmatters_script_manager_settings`.
-- **Functions**: Limited public API. Settings accessed via `get_option('perfmatters_options')`.
+### LiteSpeed Cache — Read Settings
+1. Call `get_option` with keys prefixed `litespeed.*`
+2. Example: `litespeed.conf.cache` (cache enabled), `litespeed.conf.optm-css_min` (CSS minify)
 
-### Object Caching (Redis / Memcached)
-- Drop-in file: `wp-content/object-cache.php` (provided by Redis Object Cache, W3TC, or LiteSpeed).
-- **Functions**: `wp_cache_get($key, $group)`, `wp_cache_set($key, $data, $group, $expire)`, `wp_cache_delete($key, $group)`, `wp_cache_flush()`.
-- Check if available: `wp_using_ext_object_cache()` returns true if persistent object cache is active.
+### WP Fastest Cache — Read Settings
+1. Call `get_option` with key `WpFastestCache`
+2. Key settings: `wpFastestCacheStatus`, `wpFastestCacheMobile`, `wpFastestCacheMinifyHtml`
 
-### Common Pattern
-After any content change (post update, option change, menu save), always purge relevant cache. All caching plugins hook into `save_post`, `edit_post`, `delete_post`, and `update_option` to auto-purge. For manual purges after programmatic changes, call the appropriate plugin-specific flush function. Check which caching plugin is active before calling its functions — use `is_plugin_active()` or `function_exists()`.
+### Autoptimize — Read Settings
+1. Call `get_option` with keys prefixed `autoptimize_*`
+2. Key: `autoptimize_html`, `autoptimize_js`, `autoptimize_css`, `autoptimize_cdn_url`
+
+### WP-Optimize — Read Settings
+1. Call `get_option` with keys prefixed `wpo_*`
+2. Key: `wpo_cache_config`, `wpo_minify_config`
+
+### Perfmatters — Read Settings
+1. Call `get_option` with key `perfmatters_options`
+2. Key settings: `disable_emojis`, `disable_dashicons`, `lazy_loading`, `cdn_url`
+
+### Update Caching Settings
+1. Identify the correct option key for the active plugin (see above)
+2. Call `update_option` with key and new value (requires confirmation)
+3. Warn user that content may appear stale until cache is cleared
+
+## Important Notes
+- Wally cannot purge caches directly — guide user to the plugin's admin "Clear Cache" button
+- After any content change via Wally, caching plugins auto-purge the affected post's cache (via `save_post` hook)
+- For site-wide cache clears (after settings changes), user must purge manually from the plugin's admin UI
+- WP Rocket and LiteSpeed use `advanced-cache.php` drop-in — do not modify this file
+- Object caching (Redis/Memcached) uses `wp-content/object-cache.php` — check with `get_site_info`
+- Some settings are file-based (W3TC, WP Super Cache) — not fully manageable via `get_option`/`update_option`
+- Multiple caching plugins should NOT be active simultaneously — check `list_plugins` and warn if duplicates found

@@ -1,96 +1,82 @@
-## Rank Math SEO Plugin
+# Rank Math SEO
 
-### Meta Data Storage
-Rank Math stores SEO data as postmeta with prefix `rank_math_`. Key meta keys:
-- `rank_math_title` — custom SEO title (supports variables like `%title% %sep% %sitename%`)
-- `rank_math_description` — custom meta description
-- `rank_math_focus_keyword` — primary focus keyword (comma-separated for multiple)
-- `rank_math_canonical_url` — canonical URL override
-- `rank_math_robots` — array of robots directives (index, noindex, nofollow, etc.)
-- `rank_math_facebook_title` — Open Graph title
-- `rank_math_facebook_description` — Open Graph description
-- `rank_math_facebook_image` — Open Graph image URL
-- `rank_math_twitter_title` — Twitter/X card title
-- `rank_math_twitter_use_facebook` — "on" to reuse Facebook OG data for Twitter
+## When to Use
+- User wants to set or update SEO title, meta description, or focus keyword on a post/page
+- User asks about Rank Math SEO settings, sitemap, redirections, or schema
+- Site has Rank Math active (check via `list_plugins` → look for `seo-by-rank-math`)
 
-### Reading/Writing SEO Data
-```php
-// Read
-get_post_meta($post_id, 'rank_math_title', true);
-get_post_meta($post_id, 'rank_math_description', true);
-get_post_meta($post_id, 'rank_math_focus_keyword', true);
-// Write
-update_post_meta($post_id, 'rank_math_title', 'New SEO Title');
-update_post_meta($post_id, 'rank_math_description', 'New description');
-update_post_meta($post_id, 'rank_math_robots', ['index', 'follow']);
-```
+## Available Tools
+- `list_plugins` — check if Rank Math SEO (free or Pro) is active
+- `get_post` — read a post's current SEO meta values
+- `update_post` — set Rank Math SEO meta fields on a post via the `meta` parameter
+- `list_posts` — find posts to update SEO data on
+- `search_content` — find posts by content/title
+- `get_option` — read Rank Math plugin settings
+- `update_option` — update Rank Math settings (requires confirmation)
 
-### SEO Score
-- `rank_math_seo_score` — numeric SEO score (0-100) stored as postmeta
+## Workflows
 
-### Important Filters
-- `rank_math/frontend/title` — filter the title tag output
-- `rank_math/frontend/description` — filter the meta description
-- `rank_math/frontend/keywords` — filter meta keywords (defaults to focus keywords)
-- `rank_math/frontend/robots` — filter robots meta array (e.g., add 'noindex')
-- `rank_math/json_ld` — modify the full JSON-LD structured data output
-- `rank_math/sitemap/entry` — filter individual sitemap entries
-- `rank_math/settings/snippet/type` — set default schema type per post type
+### Check if Rank Math is Active
+1. Call `list_plugins`
+2. Look for `seo-by-rank-math` (free) or `seo-by-rank-math-pro` (Pro)
 
-### Settings in wp_options
-- `rank-math-options-general` — general plugin settings and module toggles
-- `rank-math-options-titles` — title/description templates, robots defaults per post type
-- `rank-math-options-sitemap` — sitemap configuration
+### Read SEO Data for a Post
+1. Call `get_post` with the post ID
+2. Check the `meta` section for `rank_math_title`, `rank_math_description`, `rank_math_focus_keyword`
 
-### Modules
-Rank Math uses a modular architecture. Key modules: Analytics, SEO Analysis, Sitemap, Schema (Rich Snippets), Redirections, 404 Monitor, Local SEO, WooCommerce, Instant Indexing.
+### Set SEO Title and Meta Description
+1. Find the post ID with `list_posts` or `search_content` if needed
+2. Call `update_post` with `id` and:
+   ```
+   meta: {
+     rank_math_title: '<SEO title>',
+     rank_math_description: '<meta description>'
+   }
+   ```
+3. Requires confirmation for meta updates
 
-### Schema / Rich Snippets
-Built-in schema types: Article, Product, FAQ, HowTo, Recipe, Event, Course, Book, Music, Video, Person, Review, Service, Software, Local Business. Customize via `rank_math/json_ld` filter or `rank_math/snippet/rich_snippet_{type}_entity` filters.
+### Set Focus Keyword
+1. Call `update_post` with `id` and `meta: { rank_math_focus_keyword: '<keyword>' }`
+2. For multiple keywords (Rank Math supports this free), use comma-separated: `'keyword1, keyword2'`
 
-### Template Variables
-Use in title/description templates: `%title%`, `%excerpt%`, `%seo_title%`, `%seo_description%`, `%url%`, `%date%`, `%modified%`, `%category%`, `%tag%`, `%post_thumbnail%`, `%sitename%`, `%sep%`
+### Set Canonical URL
+1. Call `update_post` with `id` and `meta: { rank_math_canonical_url: 'https://example.com/page/' }`
 
-### Redirections
-Rank Math has a built-in redirection manager. Redirections stored in `{prefix}rank_math_redirections` table. Types: 301 (permanent), 302 (temporary), 307, 410 (gone), 451.
+### Set Robots Directives
+1. Call `update_post` with `meta: { rank_math_robots: ['noindex', 'nofollow'] }` to noindex a page
+2. Default: `['index', 'follow']`
 
-### 404 Monitor
-Tracks 404 errors in `{prefix}rank_math_404_log` table. Can auto-create redirections from detected 404s.
+### Set Open Graph Data
+1. Call `update_post` with:
+   ```
+   meta: {
+     rank_math_facebook_title: '<OG title>',
+     rank_math_facebook_description: '<OG desc>'
+   }
+   ```
 
-### Detecting Rank Math
-```php
-defined('RANK_MATH_VERSION') // true if Rank Math is active
-class_exists('RankMath') // alternative check
-```
+### Check Rank Math Settings
+1. Call `get_option` with key `rank-math-options-general` for general settings and module toggles
+2. Call `get_option` with key `rank-math-options-titles` for title/description templates per post type
+3. Call `get_option` with key `rank-math-options-sitemap` for sitemap configuration
 
-### Key Differences from Yoast
-- Meta prefix: `rank_math_` vs `_yoast_wpseo_`
-- Title variables: `%title%` vs `%%title%%` (single vs double percent)
-- Built-in redirections and 404 monitor (Yoast requires separate plugin)
-- Modular architecture with toggleable features
-- Multiple focus keywords in free version
+## Rank Math Post Meta Keys
+| Data | Meta Key |
+|------|---------|
+| SEO title | `rank_math_title` |
+| Meta description | `rank_math_description` |
+| Focus keyword(s) | `rank_math_focus_keyword` |
+| Canonical URL | `rank_math_canonical_url` |
+| Robots directives | `rank_math_robots` (array) |
+| OG title | `rank_math_facebook_title` |
+| OG description | `rank_math_facebook_description` |
+| OG image URL | `rank_math_facebook_image` |
+| Twitter title | `rank_math_twitter_title` |
 
----
-
-## Rank Math SEO Pro
-
-**Plugin slug**: `seo-by-rank-math-pro/rank-math-pro.php`. Extends the free Rank Math SEO plugin with advanced features.
-
-### Pro Features
-- **Advanced Schema Generator** — custom schema types beyond the built-in set, with full JSON-LD editing.
-- **News Sitemap** — Google News compatible sitemap for news publishers.
-- **Video Sitemap** — dedicated video sitemap for video-rich content.
-- **Local SEO Module** — supports multiple business locations with individual schema markup.
-- **WooCommerce SEO** — advanced product schema, category optimization, and product filter SEO.
-- **Google Analytics & Search Console Integration** — view analytics data directly in the WordPress dashboard.
-- **Content AI Credits** — AI-powered content suggestions and optimization recommendations.
-- **Keyword Tracking** — track keyword rankings over time.
-
-### Settings Storage
-Pro settings are stored in the same `rank-math-options-*` options as the free version with additional keys. License and connection data is stored in the `rank_math_connect_data` option.
-
-### Detecting Rank Math SEO Pro
-```php
-defined('RANK_MATH_PRO_FILE') // true if Rank Math Pro is active
-class_exists('RankMathPro\\Plugin') // alternative check
-```
+## Important Notes
+- SEO titles support Rank Math variables: `%title%`, `%sep%`, `%sitename%`, `%excerpt%` (single `%`, unlike Yoast's `%%`)
+- Rank Math includes a built-in redirect manager (free) — guide user to Rank Math > Redirections for managing 301/302 redirects
+- Rank Math's sitemap is at `/sitemap.xml` — no tool needed; give the user the URL
+- Schema/Rich Snippets configuration must be done via Rank Math > Schema in the admin panel — Wally cannot set schema type via tools
+- The 404 Monitor logs are in Rank Math > 404 Monitor — guide user there to review missing pages
+- Rank Math Pro is required for advanced schema, Google Analytics integration, and keyword tracking

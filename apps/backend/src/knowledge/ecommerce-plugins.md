@@ -1,64 +1,64 @@
-## E-commerce & Membership Plugins (Non-WooCommerce)
+# E-commerce & Membership Plugins (Non-WooCommerce)
 
-Note: WooCommerce has its own dedicated knowledge file. This covers Easy Digital Downloads, MemberPress, and LearnDash.
+## When to Use
+- User mentions Easy Digital Downloads (EDD), MemberPress, or LearnDash
+- User wants to manage digital products, memberships, or courses
+- User asks about downloads, subscriptions, enrollments, or LMS content
+- Note: WooCommerce has its own dedicated knowledge file
 
-### Easy Digital Downloads (EDD)
-- **Products**: Post type `download`. Supports categories (`download_category`) and tags (`download_tag`).
-- **Key product meta**:
-  - `edd_price` — single price (simple pricing)
-  - `edd_variable_prices` — serialized array of price options (variable pricing)
-  - `_edd_download_files` — serialized array of downloadable file attachments
-  - `_edd_download_limit` — max download attempts per purchase
-  - `_edd_product_type` — 'default' or 'bundle'
-  - `_edd_bundled_products` — array of download IDs (if bundle)
-  - `_thumbnail_id` — featured image
-- **Orders (EDD 3.0+)**: Custom tables `{prefix}edd_orders`, `{prefix}edd_order_items`, `{prefix}edd_order_addresses`, `{prefix}edd_order_adjustments`. Pre-3.0 used post type `edd_payment`.
-- **Functions**:
-  - `edd_get_download($id)` — returns EDD_Download object
-  - `edd_get_order($id)` — returns EDD\Orders\Order object (3.0+)
-  - `edd_get_payment($id)` — returns EDD_Payment object (legacy, still works)
-  - `edd_get_cart_contents()` — current cart items
-  - `edd_get_orders(['status' => 'complete', 'number' => 10])` — query orders (3.0+)
-  - `edd_update_order($id, $data)` — update order fields
-- **Settings**: wp_options key `edd_settings` (serialized array). Access via `edd_get_option($key)`.
-- **Key settings keys**: `purchase_page` (checkout page ID), `success_page` (confirmation page ID), `currency`, `currency_position`, `test_mode`.
-- **Hooks**: `edd_complete_purchase`, `edd_insert_payment`, `edd_update_payment_status`, `edd_after_download_content`.
+## Available Tools
+- `list_plugins` — detect which e-commerce/membership plugin is active
+- `list_posts` — list products, memberships, or courses by post type
+- `get_post` — get details of a specific product, membership, or course
+- `create_post` — create new products, memberships, or courses (basic fields only)
+- `update_post` — update titles, content, status
+- `delete_post` — delete items (requires confirmation)
+- `search_content` — search across product/course content
+- `get_option` — read plugin settings
 
-### MemberPress
-- **Memberships**: Post type `memberpressproduct` — each membership level is a post. Price, period, and access rules defined in postmeta.
-- **Transactions**: Post type `mepr-transaction` — individual payment records.
-- **Subscriptions**: Custom table `{prefix}mepr_subscriptions` — recurring subscription records.
-- **Rules**: Post type `memberpressrule` — access rules that protect content. Rules link memberships to content via conditions (post, page, category, tag, custom URI, partial).
-- **Key classes**:
-  - `MeprUser($user_id)` — extends WP_User with membership methods: `active_product_subscriptions()`, `is_already_subscribed_to($product_id)`, `lifetime_value()`
-  - `MeprTransaction` — `get_one($id)`, `get_all_by_user_id($user_id)`, statuses: pending, complete, failed, refunded
-  - `MeprSubscription` — `get_one($id)`, `get_all_by_user_id($user_id)`, statuses: active, suspended, cancelled
-  - `MeprProduct($post_id)` — membership level: `$product->price`, `$product->period`, `$product->period_type`
-- **Settings**: wp_options key `mepr_options` (serialized). Access via `MeprOptions::fetch()`. Key sub-keys: `account_page_id`, `login_page_id`, `thankyou_page_id`.
-- **Hooks**: `mepr-txn-store`, `mepr-event-transaction-completed`, `mepr-account-is-active`, `mepr_subscription_transition_status`.
+## Workflows
 
-### LearnDash
-- **Custom post types**:
-  - `sfwd-courses` — courses
-  - `sfwd-lessons` — lessons (belong to a course)
-  - `sfwd-topic` — topics (belong to a lesson)
-  - `sfwd-quiz` — quizzes (can attach to course, lesson, or topic)
-  - `sfwd-certificates` — certificate templates
-  - `sfwd-assignment` — student assignments
-- **Course structure**: Courses contain lessons, lessons contain topics. Hierarchy managed via postmeta (`course_id`, `lesson_id`) and `{prefix}learndash_course_steps` meta.
-- **User progress**: Stored in usermeta key `_sfwd-course_progress` (serialized). Also `_sfwd-quizzes` for quiz results. Activity tracked in `{prefix}learndash_user_activity` and `{prefix}learndash_user_activity_meta` tables.
-- **Functions**:
-  - `learndash_get_course_steps($course_id)` — ordered array of all step IDs
-  - `learndash_user_get_enrolled_courses($user_id)` — courses user is enrolled in
-  - `learndash_get_course_progress($user_id, $course_id)` — user's progress in course
-  - `learndash_is_course_complete($user_id, $course_id)` — boolean completion check
-  - `learndash_process_mark_complete($user_id, $post_id)` — mark step complete
-  - `sfwd_lms_has_access($post_id, $user_id)` — check if user can access content
-- **Settings**: wp_options keys prefixed `learndash_settings_*` (e.g., `learndash_settings_courses_cpt`, `learndash_settings_quizzes_cpt`). Per-course/lesson settings in postmeta as `_sfwd-courses` or `_sfwd-lessons` (serialized).
-- **Hooks**: `learndash_course_completed`, `learndash_lesson_completed`, `learndash_quiz_completed`, `learndash_update_course_access`.
+### Detect Active Plugin
+1. Call `list_plugins`
+2. Look for: `easy-digital-downloads`, `memberpress`, `sfwd-lms` (LearnDash)
 
-### Common Patterns
-- All three plugins use Custom Post Types for their primary content (products, memberships, courses).
-- Transactions and subscriptions may use CPTs (EDD legacy, MemberPress) or custom tables (EDD 3.0+).
-- User-specific data (enrollments, purchases, progress) is typically stored in usermeta or custom tables.
-- Always use the plugin's API functions rather than direct database queries — data structures change between major versions.
+### Easy Digital Downloads — List Products
+1. Call `list_posts` with `post_type: 'download'`
+2. Products have categories (`download_category`) and tags (`download_tag`)
+3. Pricing meta (`edd_price`) may appear in post meta
+
+### Easy Digital Downloads — Read Settings
+1. Call `get_option` with key `edd_settings`
+2. Key settings: `currency`, `test_mode`, `purchase_page`, `success_page`
+
+### MemberPress — List Memberships
+1. Call `list_posts` with `post_type: 'memberpressproduct'`
+2. Each membership level is a post with pricing in postmeta
+
+### MemberPress — List Access Rules
+1. Call `list_posts` with `post_type: 'memberpressrule'`
+2. Rules link memberships to protected content
+
+### MemberPress — Read Settings
+1. Call `get_option` with key `mepr_options`
+2. Key settings: `account_page_id`, `login_page_id`, `thankyou_page_id`
+
+### LearnDash — List Courses
+1. Call `list_posts` with `post_type: 'sfwd-courses'`
+
+### LearnDash — List Lessons for a Course
+1. Call `list_posts` with `post_type: 'sfwd-lessons'`, `meta_key: 'course_id'`, `meta_value: '<course_id>'`
+
+### LearnDash — List Quizzes
+1. Call `list_posts` with `post_type: 'sfwd-quiz'`
+
+### LearnDash — Read Settings
+1. Call `get_option` with key starting with `learndash_settings_*`
+2. Example: `learndash_settings_courses_cpt` for course settings
+
+## Important Notes
+- All three plugins use Custom Post Types — accessible via `list_posts` with the right `post_type`
+- Pricing, inventory, and payment data are stored in postmeta — some fields may not be writable via Wally
+- Orders and transactions use custom tables (EDD 3.0+) or CPTs — not directly manageable via Wally
+- User progress, enrollments, and subscriptions are in usermeta or custom tables — guide user to admin for these
+- For payment gateway configuration, guide user to each plugin's admin settings page

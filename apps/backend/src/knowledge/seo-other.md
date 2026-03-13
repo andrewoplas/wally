@@ -1,210 +1,87 @@
-## All in One SEO (AIOSEO)
+# Other SEO Plugins
 
-### Meta Data Storage
-AIOSEO stores SEO data in a custom table `{prefix}aioseo_posts` (not just postmeta). Key columns:
-- `post_id`, `title`, `description`, `keywords`, `canonical_url`
-- `og_title`, `og_description`, `og_image`, `og_article_tags`
-- `twitter_title`, `twitter_description`, `twitter_image`
-- `robots_noindex`, `robots_nofollow`, `robots_default` (boolean flags)
-- `focus_keyphrase`, `keyphrases` (JSON — primary + additional)
-- `seo_score`, `schema` (JSON — structured data config)
-- Compatibility postmeta keys with `_aioseo_*` prefix also exist
+## When to Use
+- User asks about All in One SEO (AIOSEO) or SEOPress
+- User wants to set SEO title, meta description, or Open Graph data on a post (and the site uses AIOSEO or SEOPress)
+- User asks about sitemap configuration for these plugins
+- For Yoast SEO, see `yoast-seo.md`; for Rank Math, see `rank-math.md`
 
-### Reading/Writing SEO Data
-```php
-// Via model (preferred)
-$aioseoPost = AIOSEO\Plugin\Common\Models\Post::getPost($post_id);
-$aioseoPost->title = 'New Title';
-$aioseoPost->save();
-// Via helper
-aioseo()->meta->title->getTitle($post);
-aioseo()->meta->description->getDescription($post);
-// Via postmeta (compatibility)
-get_post_meta($post_id, '_aioseo_title', true);
-update_post_meta($post_id, '_aioseo_title', 'New Title');
-```
+## Available Tools
+- `list_plugins` — check which SEO plugin is active
+- `get_post` — read a post's SEO meta values
+- `update_post` — set SEO meta fields via the `meta` parameter
+- `get_option` — read SEO plugin settings
+- `update_option` — update SEO plugin settings (requires confirmation)
 
-### Settings in wp_options
-- `aioseo_options` — main settings (JSON string)
-- `aioseo_options_dynamic` — dynamic/computed settings
-- `aioseo_options_localized` — localized strings config
+## Workflows
 
-### Database Tables
-- `{prefix}aioseo_posts` — per-post SEO data (primary storage)
-- `{prefix}aioseo_notifications` — admin notifications
-- `{prefix}aioseo_cache` — internal caching
+### Identify Which SEO Plugin is Active
+1. Call `list_plugins`
+2. Look for:
+   - All in One SEO: `all-in-one-seo-pack`
+   - SEOPress: `wp-seopress`
+   - Yoast SEO: `wordpress-seo` (see `yoast-seo.md`)
+   - Rank Math: `seo-by-rank-math` (see `rank-math.md`)
 
-### Hooks
-- `aioseo_title` — filter the title tag output
-- `aioseo_description` — filter the meta description
-- `aioseo_schema_output` — modify JSON-LD schema output
-- `aioseo_robots_meta` — filter robots meta directives
+### Set SEO Data with AIOSEO
+1. Call `update_post` with `id` and:
+   ```
+   meta: {
+     _aioseo_title: '<SEO title>',
+     _aioseo_description: '<meta description>'
+   }
+   ```
+2. AIOSEO also stores data in its own `aioseo_posts` table — postmeta compatibility keys work for setting values
 
-### Sitemaps & Schema
-- Sitemap URL: `/sitemap.xml`, configurable per post type/taxonomy
-- Schema types stored in `aioseo_posts.schema` column as JSON
-- Built-in types: Article, WebPage, Product, FAQ, Recipe, etc.
+### Set SEO Data with SEOPress
+1. Call `update_post` with `id` and:
+   ```
+   meta: {
+     _seopress_titles_title: '<SEO title>',
+     _seopress_titles_desc: '<meta description>'
+   }
+   ```
 
-### Detection
-```php
-defined('AIOSEO_VERSION') // true if AIOSEO is active
-```
+### Set Open Graph Data with SEOPress
+1. Call `update_post` with:
+   ```
+   meta: {
+     _seopress_social_fb_title: '<OG title>',
+     _seopress_social_fb_desc: '<OG description>'
+   }
+   ```
 
-### Key Difference from Yoast
-AIOSEO stores data in its own table (`aioseo_posts`) rather than relying solely on postmeta. Uses `aioseo_` prefix. Title variables use `#title`, `#separator`, `#site_title` syntax.
+### Check AIOSEO Settings
+1. Call `get_option` with key `aioseo_options` — returns main settings as JSON
 
----
+### Check SEOPress Settings
+1. Call `get_option` with key `seopress_titles_option` — title templates
+2. Call `get_option` with key `seopress_social_option` — social/OG defaults
 
-## SEOPress
+## Meta Key Reference
 
-### Meta Data Storage
-SEOPress stores SEO data as standard postmeta with `_seopress_` prefix:
-- `_seopress_titles_title` — SEO title
-- `_seopress_titles_desc` — meta description
-- `_seopress_social_fb_title`, `_seopress_social_fb_desc`, `_seopress_social_fb_img` — Open Graph
-- `_seopress_social_twitter_title`, `_seopress_social_twitter_desc` — Twitter card
-- `_seopress_robots_canonical` — canonical URL override
-- `_seopress_robots_index` — "yes" to noindex
-- `_seopress_analysis_target_kw` — focus keyword
-- `_seopress_analysis_score` — SEO score
+### AIOSEO
+| Data | Meta Key |
+|------|---------|
+| SEO title | `_aioseo_title` |
+| Meta description | `_aioseo_description` |
+| Focus keyphrase | `_aioseo_keyphrases` (JSON) |
+| Canonical URL | `_aioseo_canonical_url` |
 
-### Reading/Writing SEO Data
-```php
-// Read via postmeta
-get_post_meta($post_id, '_seopress_titles_title', true);
-get_post_meta($post_id, '_seopress_titles_desc', true);
-// Write
-update_post_meta($post_id, '_seopress_titles_title', 'New Title');
-update_post_meta($post_id, '_seopress_robots_index', ''); // empty = index
-// Via service (frontend rendering)
-seopress_get_service('TitleMeta')->getValue();
-seopress_get_service('DescriptionMeta')->getValue();
-```
+### SEOPress
+| Data | Meta Key |
+|------|---------|
+| SEO title | `_seopress_titles_title` |
+| Meta description | `_seopress_titles_desc` |
+| Focus keyword | `_seopress_analysis_target_kw` |
+| Canonical URL | `_seopress_robots_canonical` |
+| Noindex | `_seopress_robots_index` (`yes` = noindex) |
+| OG title | `_seopress_social_fb_title` |
+| OG description | `_seopress_social_fb_desc` |
 
-### Settings in wp_options
-- `seopress_titles_option` — title/meta templates per post type
-- `seopress_social_option` — social profiles, OG defaults
-- `seopress_xml_sitemap_option` — sitemap configuration
-- `seopress_advanced_option` — advanced/misc settings
-- `seopress_pro_option` — Pro features (schemas, redirects, etc.)
-
-### Hooks
-- `seopress_titles_title` — filter the title tag
-- `seopress_titles_desc` — filter the meta description
-- `seopress_sitemaps_xml_single` — filter sitemap entries
-
-### Sitemaps
-- URL: `/sitemaps.xml` (note: plural, different from Yoast/AIOSEO)
-- Per post type: `/sitemaps/{posttype}-sitemap.xml`
-
-### Detection
-```php
-defined('SEOPRESS_VERSION') // true if SEOPress is active
-```
-
----
-
-## XML Sitemap Generator for Google (Google XML Sitemaps)
-
-### Purpose
-One of the oldest WordPress sitemap plugins (by Arne Brachhold, now maintained by Jeherve). Generates XML sitemaps following the sitemap.org protocol to help search engines (Google, Bing, Yahoo) discover and index site content.
-
-### Settings Storage
-All settings stored in wp_options under key `sm_options` (serialized). Key sub-keys:
-- `sm_b_ping` — ping search engines on update (true/false)
-- `sm_b_stats` — allow anonymous statistics (true/false)
-- `sm_b_pingmsn` — ping Bing on update (true/false)
-- `sm_b_memory` — PHP memory limit override
-- `sm_b_time` — PHP time limit override
-- `sm_b_style_default` — use default XSLT stylesheet (true/false)
-- `sm_in_home` — include homepage (true/false)
-- `sm_in_posts` — include standard posts (true/false)
-- `sm_in_pages` — include pages (true/false)
-- `sm_in_cats` — include category archives (true/false)
-- `sm_in_arch` — include date archives (true/false)
-- `sm_in_auth` — include author archives (true/false)
-- `sm_in_tags` — include tag archives (true/false)
-- `sm_in_tax` — array of additional taxonomy slugs to include
-- `sm_in_customtypes` — array of custom post type slugs to include
-- `sm_in_lastmod` — include last modification time (true/false)
-- `sm_cf_home` — change frequency for homepage (always/hourly/daily/weekly/monthly/yearly/never)
-- `sm_cf_posts` — change frequency for posts
-- `sm_cf_pages` — change frequency for pages
-- `sm_cf_cats` — change frequency for categories
-- `sm_cf_arch` — change frequency for archives
-- `sm_cf_auth` — change frequency for author pages
-- `sm_cf_tags` — change frequency for tag pages
-- `sm_pr_home` — priority for homepage (0.0–1.0)
-- `sm_pr_posts` — priority for posts
-- `sm_pr_posts_min` — minimum priority for posts
-- `sm_pr_pages` — priority for pages
-- `sm_pr_cats` — priority for categories
-- `sm_pr_arch` — priority for archives
-- `sm_pr_auth` — priority for author pages
-- `sm_pr_tags` — priority for tag pages
-
-### Sitemap Output
-- **Default URL**: `sitemap.xml` at site root (e.g., `https://example.com/sitemap.xml`)
-- **Index sitemap**: For large sites, creates a sitemap index with child sitemaps (`sitemap-pt-post-2024-01.xml`, `sitemap-pt-page-2024-01.xml`, etc.)
-- **Generation mode**: Dynamic (virtual — served via WordPress rewrite rules) or static (writes physical XML files to disk). Dynamic is default and recommended.
-- **XSLT stylesheet**: Applies an XSLT stylesheet for human-readable browser display
-
-### Key Hooks
-
-```php
-// Add custom URLs to the sitemap
-add_action( 'sm_buildmap', function() {
-    $generatorObject = &GoogleSitemapGenerator::GetInstance();
-    if ( $generatorObject != null ) {
-        $generatorObject->AddUrl(
-            'https://example.com/custom-page/',
-            time(),                    // last modified timestamp
-            'weekly',                  // change frequency
-            0.5                        // priority
-        );
-    }
-});
-
-// Shortcut to add a single URL
-do_action( 'sm_addurl', array(
-    'loc'        => 'https://example.com/my-page/',
-    'lastmod'    => time(),
-    'changefreq' => 'monthly',
-    'priority'   => 0.5,
-));
-
-// Trigger sitemap rebuild programmatically
-do_action( 'sm_rebuild' );
-
-// Filter post priority calculation
-add_filter( 'sm_post_priority', function( $priority, $post_id, $post ) {
-    return $priority;
-}, 10, 3 );
-
-// Filter post change frequency
-add_filter( 'sm_post_changefreq', function( $freq, $post_id ) {
-    return $freq;
-}, 10, 2 );
-```
-
-### Custom Post Type & Taxonomy Support
-Custom post types and taxonomies can be included via settings (checkboxes in admin) or programmatically:
-```php
-// The plugin auto-detects public custom post types and taxonomies
-// and displays them as options in Settings > XML-Sitemap
-```
-
-### Search Engine Notification
-On content update, the plugin pings:
-- Google: `https://www.google.com/webmasters/tools/ping?sitemap=URL`
-- Bing: `https://www.bing.com/ping?sitemap=URL`
-Pinging can be disabled via `sm_b_ping` and `sm_b_pingmsn` options.
-
-### Detection
-```php
-class_exists( 'GoogleSitemapGenerator' )  // true if XML Sitemap Generator is active
-defined( 'SM_SITEMAPURL' )                // alternative check
-```
-
-### Key Difference from Yoast/AIOSEO Sitemaps
-This is a standalone sitemap plugin — it does not handle meta tags, schema, or any other SEO features. Useful when the active SEO plugin lacks sitemap functionality or when you want independent sitemap control. If Yoast or AIOSEO is active, their built-in sitemaps should be used instead to avoid conflicts (multiple sitemap plugins can cause duplicate sitemaps).
+## Important Notes
+- AIOSEO title variables use `#title`, `#separator`, `#site_title` syntax (different from Yoast's `%%` and Rank Math's `%`)
+- SEOPress sitemap is at `/sitemaps.xml` (plural) — different from Yoast/Rank Math/AIOSEO which use `/sitemap_index.xml` or `/sitemap.xml`
+- Only ONE SEO plugin should be active at a time — multiple SEO plugins conflict with each other
+- Schema/structured data configuration must be done in the plugin's admin panel — Wally cannot set schema types via tools
+- Google XML Sitemaps is a standalone sitemap plugin (no meta/schema) — settings in `get_option` key `sm_options`

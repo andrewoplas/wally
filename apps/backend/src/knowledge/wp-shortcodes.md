@@ -1,119 +1,62 @@
-# WordPress Shortcode API Reference
+# WordPress Shortcodes
 
-## Registration
+## When to Use
+- User asks about shortcodes, how to use them, or which shortcodes are available
+- User wants to find where a shortcode is used in content
+- User asks about shortcode output issues or broken shortcodes
 
-```php
-add_shortcode( 'my_shortcode', 'my_shortcode_callback' );
+## Key Patterns
 
-function my_shortcode_callback( $atts, $content = null, $tag = '' ) {
-    // $atts    -- array of attributes (or empty string if none)
-    // $content -- text between opening/closing tags (null for self-closing)
-    // $tag     -- the shortcode name itself
-    return '<div>output</div>';  // MUST return, never echo
-}
+### What Shortcodes Are
+Shortcodes are `[bracketed_tags]` in post content that WordPress replaces with dynamic output at render time. They are registered by plugins and themes.
+
+### Common Shortcode Formats
+```
+[shortcode]                              — self-closing
+[shortcode attr="value" flag]            — with attributes
+[shortcode]inner content[/shortcode]     — enclosing
 ```
 
-**Usage in content:**
-```
-[my_shortcode]                              <!-- self-closing -->
-[my_shortcode attr="value" flag]            <!-- with attributes -->
-[my_shortcode]inner content[/my_shortcode]  <!-- enclosing -->
-```
+### Shortcode Storage
+- Shortcodes appear in `post_content` as plain text brackets: `[contact-form-7 id="123"]`
+- In Gutenberg, they use the Shortcode block: `<!-- wp:shortcode -->[my_shortcode]<!-- /wp:shortcode -->`
+- In Elementor, shortcodes go in a Shortcode widget
 
-## Attribute Handling
+### Finding Shortcodes in Content
+Use `search_content` to find posts containing specific shortcodes. Search for the shortcode tag name (e.g., `contact-form-7`, `gallery`, `woocommerce_cart`).
 
-```php
-function my_shortcode_callback( $atts, $content = null ) {
-    $atts = shortcode_atts(
-        [
-            'title'  => 'Default Title',   // defaults
-            'count'  => 5,
-            'type'   => 'grid',
-        ],
-        $atts,
-        'my_shortcode'  // $tag -- enables the shortcode_atts_{$tag} filter
-    );
+### Common Plugin Shortcodes
+| Plugin | Example Shortcodes |
+|--------|-------------------|
+| Contact Form 7 | `[contact-form-7 id="123"]` |
+| WooCommerce | `[woocommerce_cart]`, `[woocommerce_checkout]`, `[products]` |
+| Gravity Forms | `[gravityform id="1"]` |
+| Slider Revolution | `[rev_slider alias="name"]` |
+| TablePress | `[table id=1]` |
 
-    // Access as: $atts['title'], $atts['count'], $atts['type']
-    return "<h2>{$atts['title']}</h2>";
-}
-```
+### Replacing Shortcodes in Content
+Use `replace_content` to update shortcode attributes (e.g., changing an ID). Be careful — shortcode syntax must remain valid after replacement.
 
-**Note:** Attribute names are always lowercased by WordPress. `[shortcode MyAttr="val"]` becomes `$atts['myattr']`.
+## Workflows
 
-## Nested Shortcodes
+### Find All Posts Using a Specific Shortcode
+1. Call `search_content` with the shortcode tag as the search term (e.g., `contact-form-7`)
+2. Report matching posts to the user
 
-```php
-function wrapper_shortcode( $atts, $content = null ) {
-    // Process shortcodes inside this shortcode's content
-    return '<div class="wrapper">' . do_shortcode( $content ) . '</div>';
-}
-add_shortcode( 'wrapper', 'wrapper_shortcode' );
-```
+### Update a Shortcode Across the Site
+1. Call `search_content` to find all posts containing the shortcode
+2. Call `replace_content` with the old shortcode string and new shortcode string (requires confirmation)
+3. Verify with another `search_content` that the replacement worked
 
-**Usage:** `[wrapper][inner_shortcode][/wrapper]`
+## Relevant Wally Tools
+- `search_content` — find posts containing specific shortcodes
+- `replace_content` — update shortcode text across posts (requires confirmation)
+- `get_post` — view a specific post's content to see its shortcodes
+- `list_plugins` — check if the plugin providing the shortcode is active
 
-**Limitation:** WordPress does not support self-nesting: `[wrapper][wrapper]...[/wrapper][/wrapper]` will not work. Different shortcode names can nest freely.
-
-## Output Buffering Pattern
-
-When including template files or using functions that echo, use output buffering:
-
-```php
-function my_template_shortcode( $atts ) {
-    $atts = shortcode_atts( [ 'id' => 0 ], $atts );
-    ob_start();
-    include plugin_dir_path( __FILE__ ) . 'templates/my-template.php';
-    return ob_get_clean();
-}
-```
-
-## Checking & Removing Shortcodes
-
-```php
-shortcode_exists( 'my_shortcode' );         // bool: is this tag registered?
-has_shortcode( $content, 'my_shortcode' );   // bool: does content contain this shortcode?
-
-remove_shortcode( 'my_shortcode' );          // Unregister a specific shortcode
-remove_all_shortcodes();                     // Unregister all (rarely used)
-```
-
-## Processing Shortcodes
-
-```php
-// Apply shortcodes to a string (same as what WP does on post_content)
-$output = do_shortcode( '[my_shortcode attr="val"]' );
-
-// Strip all shortcode tags from content (removes the shortcode, keeps inner content)
-$clean = strip_shortcodes( $content );
-
-// Get regex pattern that matches registered shortcodes
-$pattern = get_shortcode_regex( [ 'my_shortcode' ] );
-```
-
-## Shortcodes in Widgets & Other Contexts
-
-- Text widgets process shortcodes by default since WP 4.9.
-- In Gutenberg, use the **Shortcode block** (`<!-- wp:shortcode -->[my_shortcode]<!-- /wp:shortcode -->`).
-- To apply shortcodes to custom fields or other strings: `echo do_shortcode( get_post_meta( $id, 'my_field', true ) );`
-
-## Hooks
-
-```php
-// Modify a specific shortcode's attributes after merging with defaults
-add_filter( 'shortcode_atts_my_shortcode', function( $out, $pairs, $atts, $tag ) {
-    // $out   -- merged attributes
-    // $pairs -- defaults defined in shortcode_atts()
-    // $atts  -- raw user attributes
-    return $out;
-}, 10, 4 );
-```
-
-## Gotchas
-
-- **Always return, never echo.** Echoing will output content in the wrong position on the page.
-- **Attribute values are strings.** `[shortcode count="5"]` gives `$atts['count'] === '5'` (string, not int). Cast as needed.
-- **Empty `$atts` can be an empty string**, not an array, when no attributes are passed. `shortcode_atts()` handles this, but direct access to `$atts['key']` before `shortcode_atts()` may fail.
-- **Square brackets in content** can break parsing. Use `[[shortcode]]` to escape (outputs literal `[shortcode]`).
-- **Shortcodes in excerpts** are stripped by default via `wp_trim_excerpt()`. They only run in `the_content`.
-- **Execution order:** Shortcodes run after `wpautop` (auto paragraph), which can wrap shortcode output in `<p>` tags. To avoid, use `remove_filter('the_content', 'wpautop')` or return block-level HTML.
+## Important Notes
+- Wally cannot register, modify, or remove shortcode handlers — that's PHP code
+- If a shortcode shows as plain text `[like_this]`, the plugin providing it is likely inactive — check with `list_plugins`
+- Shortcode attribute names are always lowercased by WordPress
+- Shortcodes in excerpts are stripped by default — they only render in full content
+- Broken shortcode output is usually caused by: missing plugin, changed shortcode ID, or invalid nesting

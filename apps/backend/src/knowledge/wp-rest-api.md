@@ -1,154 +1,50 @@
-# WordPress REST API Reference
+# WordPress REST API
 
-## Default Endpoints (namespace: `wp/v2`)
+## When to Use
+- User asks about REST API endpoints, custom routes, or API authentication
+- User asks how WordPress content is accessed programmatically
+- User wants to understand how Wally's tool system interacts with WordPress
 
-| Endpoint | Methods | Description |
-|---|---|---|
-| `/wp/v2/posts` | GET, POST | List/create posts |
-| `/wp/v2/posts/<id>` | GET, PUT, PATCH, DELETE | Single post CRUD |
-| `/wp/v2/pages` | GET, POST | List/create pages |
-| `/wp/v2/pages/<id>` | GET, PUT, PATCH, DELETE | Single page CRUD |
-| `/wp/v2/media` | GET, POST | List/upload media |
-| `/wp/v2/users` | GET, POST | List/create users |
-| `/wp/v2/users/me` | GET, PUT, PATCH, DELETE | Current user |
-| `/wp/v2/categories` | GET, POST | Taxonomies |
-| `/wp/v2/tags` | GET, POST | Taxonomies |
-| `/wp/v2/comments` | GET, POST | Comments |
-| `/wp/v2/settings` | GET, PUT, PATCH | Site settings |
-| `/wp/v2/plugins` | GET, POST | Plugin management |
-| `/wp/v2/search` | GET | Search across types |
-| `/wp/v2/types` | GET | Post types |
-| `/wp/v2/statuses` | GET | Post statuses |
-| `/wp/v2/taxonomies` | GET | Taxonomies list |
+## Key Patterns
+
+### Wally Uses the REST API Internally
+Wally's WordPress plugin registers its own REST endpoints and executes tools via the REST API. All Wally tools (e.g., `list_posts`, `get_option`, `update_post`) are PHP handlers called through this system.
+
+### Default Endpoints (wp/v2 namespace)
+- `/wp/v2/posts`, `/wp/v2/pages` — content CRUD
+- `/wp/v2/media` — media library
+- `/wp/v2/users` — user management
+- `/wp/v2/categories`, `/wp/v2/tags` — taxonomies
+- `/wp/v2/comments` — comments
+- `/wp/v2/settings` — site settings
+- `/wp/v2/plugins` — plugin management
+- `/wp/v2/search` — cross-type search
 
 Custom post types registered with `'show_in_rest' => true` get `/wp/v2/{rest_base}` automatically.
 
-## register_rest_route()
+### Authentication Methods
+- **Nonce (cookie-based)**: For logged-in users within wp-admin. Uses `X-WP-Nonce` header with `wp_create_nonce('wp_rest')`.
+- **Application Passwords (WP 5.6+)**: Basic auth for external/headless integrations.
 
-```php
-register_rest_route( string $route_namespace, string $route, array $args, bool $override = false );
-```
+### Key Rules for Custom Routes
+- Register routes inside `rest_api_init` hook (not `init`)
+- Every route MUST have a `permission_callback` (required since WP 5.5)
+- Namespace format: `vendor/v1` — always version the API
+- `_fields=id,title` limits response fields for performance
+- `_embed` inlines linked resources (author, featured media)
+- Internal requests: `rest_do_request()` — no HTTP overhead
 
-Must be called inside `rest_api_init` hook:
+### Response Patterns
+- Success: `new WP_REST_Response($data, 200)`
+- Error: `new WP_Error('code', 'message', ['status' => 404])`
+- `rest_ensure_response()` wraps arrays/WP_Error appropriately
 
-```php
-add_action( 'rest_api_init', function() {
-    register_rest_route( 'myplugin/v1', '/items', [
-        [
-            'methods'             => WP_REST_Server::READABLE,   // GET
-            'callback'            => 'get_items_handler',
-            'permission_callback' => 'check_permissions',
-            'args'                => [
-                'page' => [
-                    'required'          => false,
-                    'default'           => 1,
-                    'type'              => 'integer',
-                    'validate_callback' => function($v) { return is_numeric($v); },
-                    'sanitize_callback' => 'absint',
-                ],
-            ],
-        ],
-        [
-            'methods'             => WP_REST_Server::CREATABLE,  // POST
-            'callback'            => 'create_item_handler',
-            'permission_callback' => 'check_admin_permissions',
-            'args'                => $schema_args,
-        ],
-        'schema' => 'get_item_schema',
-    ]);
+## Relevant Wally Tools
+- `get_site_info` — returns site URL, WP version, permalink structure (REST API context)
+- `list_posts` / `get_post` — access content that REST API exposes
+- `list_plugins` — check plugin status (REST API endpoint exists for this)
 
-    // Route with URL parameter
-    register_rest_route( 'myplugin/v1', '/items/(?P<id>[\d]+)', [
-        'args' => [
-            'id' => [ 'type' => 'integer', 'required' => true ],
-        ],
-        [
-            'methods'  => WP_REST_Server::EDITABLE,    // POST, PUT, PATCH
-            'callback' => 'update_item_handler',
-            'permission_callback' => 'check_permissions',
-        ],
-        [
-            'methods'  => WP_REST_Server::DELETABLE,   // DELETE
-            'callback' => 'delete_item_handler',
-            'permission_callback' => 'check_admin_permissions',
-        ],
-    ]);
-});
-```
-
-**Method constants:** `WP_REST_Server::READABLE` (GET), `CREATABLE` (POST), `EDITABLE` (POST/PUT/PATCH), `DELETABLE` (DELETE), `ALLMETHODS`.
-
-## WP_REST_Request
-
-```php
-function my_handler( WP_REST_Request $request ) {
-    $id     = $request['id'];                        // URL param or body
-    $id     = $request->get_param( 'id' );           // Same as above
-    $params = $request->get_params();                 // All params merged
-    $body   = $request->get_body();                   // Raw body string
-    $json   = $request->get_json_params();            // Parsed JSON body
-    $query  = $request->get_query_params();           // GET params only
-    $body_p = $request->get_body_params();            // POST params only
-    $files  = $request->get_file_params();            // $_FILES
-    $header = $request->get_header( 'X-Custom' );    // Single header
-    $method = $request->get_method();                 // HTTP method
-    $route  = $request->get_route();                  // Matched route
-}
-```
-
-## WP_REST_Response
-
-```php
-// Simple response
-return new WP_REST_Response( $data, 200 );
-
-// With headers
-$response = new WP_REST_Response( $data, 200 );
-$response->header( 'X-Total', $total );
-$response->header( 'X-TotalPages', $pages );
-
-// Error response
-return new WP_Error( 'not_found', 'Item not found', [ 'status' => 404 ] );
-
-// rest_ensure_response() wraps mixed data
-return rest_ensure_response( $data );  // Converts arrays/WP_Error appropriately
-```
-
-## Authentication
-
-**Nonce (cookie-based, for logged-in users):**
-```php
-// Localize nonce to JS
-wp_localize_script( 'my-script', 'myApi', [
-    'nonce'   => wp_create_nonce( 'wp_rest' ),
-    'restUrl' => rest_url( 'myplugin/v1/' ),
-]);
-
-// JS fetch
-fetch( myApi.restUrl + 'items', {
-    headers: { 'X-WP-Nonce': myApi.nonce }
-});
-```
-
-**Application Passwords (WP 5.6+):** Basic auth with `username:application_password`. For external/headless integrations.
-
-## Permission Callbacks
-
-```php
-'permission_callback' => function( WP_REST_Request $request ) {
-    return current_user_can( 'edit_posts' );       // Capability check
-}
-// Public endpoint:
-'permission_callback' => '__return_true'
-```
-
-**IMPORTANT:** Every route MUST have a `permission_callback`. Omitting it triggers a `_doing_it_wrong` notice since WP 5.5.
-
-## Gotchas
-
-- `rest_api_init` fires on every REST request; use it (not `init`) for route registration.
-- Internal requests: `rest_do_request( new WP_REST_Request(...) )` -- no HTTP overhead.
-- Check `$response->is_error()` after `rest_do_request()`.
-- Query param `_fields=id,title` limits response fields for performance.
-- `_embed` query param inlines linked resources (author, featured media).
-- Namespace format: `vendor/v1` -- always version your API.
+## Important Notes
+- Wally cannot register custom REST routes or modify existing ones — it uses the plugin's built-in endpoints
+- REST API must be enabled for Wally to function — some security plugins disable it
+- If user reports "REST API blocked," check security plugin settings via `get_option`

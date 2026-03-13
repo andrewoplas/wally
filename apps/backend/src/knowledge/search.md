@@ -1,35 +1,49 @@
-## Search & Replace
+# Search & Replace
 
-### Search Architecture
-WordPress content can live in multiple locations:
-1. **post_content** (wp_posts.post_content) — standard Gutenberg/classic editor content
-2. **Elementor _elementor_data** (wp_postmeta) — JSON-encoded page builder data
-3. **Post meta** (wp_postmeta) — ACF fields, custom fields, SEO meta
-4. **Options** (wp_options) — site-wide settings, widget content
-5. **Term meta** (wp_termmeta) — taxonomy term custom fields
+## When to Use
+- User wants to find text across posts, pages, or custom post types
+- User wants to replace text (a URL, phrase, company name) across site content
+- User wants to find or replace text inside Elementor pages
+- User asks about bulk content changes
 
-### Search Strategy
-When user asks to find/replace text:
-1. First search post_content (standard content)
-2. Then search _elementor_data (Elementor pages)
-3. If targeting specific fields, search postmeta directly
-4. Report ALL locations where the text was found before replacing
+## Available Tools
+- `search_content` — search post titles and content across post types
+- `replace_content` — find and replace text across posts/pages (requires confirmation)
+- `elementor_search_content` — search within Elementor page builder widget data
+- `elementor_replace_content` — replace text inside Elementor pages (requires confirmation)
 
-### Replace Safety
-- Always do a dry run first to show matches before making changes
-- For post_content: direct string replacement, then wp_update_post()
-- For Elementor: JSON decode > recursive tree search > replace in settings > JSON encode > update_post_meta > clear CSS cache
-- Case sensitivity matters — offer both options
-- Regex support is powerful but dangerous — validate patterns before executing
+## Workflows
 
-### WP_Query Search
-The 's' parameter in WP_Query searches post_title and post_content. It does NOT search:
-- Post meta values
-- Elementor data
-- Taxonomy term names
-- Comments
-For comprehensive search, must query postmeta separately.
+### Find Text Across Site Content
+1. Call `search_content` with `keyword: '<text to find>'`
+2. Optionally filter by `post_type` (default: post and page)
+3. Report title, ID, and URL of each matching post to the user
 
-### Database-Level Search
-For complex patterns, use $wpdb->get_results() with LIKE or REGEXP:
-$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->posts} WHERE post_content LIKE %s", '%' . $wpdb->esc_like($search) . '%'))
+### Find Text in Elementor Pages
+1. Call `elementor_search_content` with `search: '<text to find>'`
+2. Returns Elementor pages that contain the text in widget/element data
+
+### Replace Text in Standard Content
+1. First call `search_content` to confirm where the text exists
+2. Show the user what will be changed and ask for confirmation
+3. Call `replace_content` with `old_text: '<find>'` and `new_text: '<replace>'`
+4. Optionally scope with `post_type` to limit to posts or pages
+
+### Replace Text in Elementor Pages
+1. First call `elementor_search_content` to preview matches
+2. Show the user what will be changed and confirm
+3. Call `elementor_replace_content` with `old_text: '<find>'` and `new_text: '<replace>'`
+4. After replacing, call `elementor_clear_css_cache` to refresh Elementor styles
+
+### Comprehensive Find and Replace (Standard + Elementor)
+1. Call `search_content` for standard content matches
+2. Call `elementor_search_content` for Elementor content matches
+3. Report ALL matches from both before replacing
+4. Run `replace_content` then `elementor_replace_content` after confirmation
+
+## Important Notes
+- Always show the user what will change before replacing — `replace_content` requires confirmation
+- `search_content` searches title and post_content only — not post meta, taxonomy names, or options
+- For settings/options containing the old text, use `get_option` / `update_option` separately
+- Wally does not support regex in replace — use exact text matches
+- If replacing a URL sitewide, also check `get_option` for `siteurl`, `home`, and plugin-specific option keys

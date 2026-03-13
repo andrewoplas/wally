@@ -1,28 +1,54 @@
-## Plugin Management
+# Plugins
 
-### Plugin File Paths
-WordPress identifies plugins by their file path relative to wp-content/plugins/. Format: "slug/slug.php" (e.g., "akismet/akismet.php") or "single-file.php" for single-file plugins.
+## When to Use
+- User wants to list, install, activate, deactivate, update, or delete plugins
+- User asks what plugins are installed or currently active
+- User asks whether a specific plugin is installed or has updates available
 
-### Operations
-- activate_plugin($plugin) — activates, fires activation hook
-- deactivate_plugins($plugin) — deactivates, fires deactivation hook (note: plural function name)
-- delete_plugins([$plugin]) — deletes files; must deactivate first; fires uninstall hook if defined
-- install_plugin_install_status() — check install status before installing
+## Available Tools
+- `list_plugins` — list all installed plugins (name, status, version, update_available)
+- `install_plugin` — install from WordPress.org by slug (requires confirmation)
+- `activate_plugin` — activate an installed plugin by slug (requires confirmation)
+- `deactivate_plugin` — deactivate a plugin by slug (requires confirmation)
+- `update_plugin` — update a plugin to latest version by slug (requires confirmation)
+- `delete_plugin` — delete a deactivated plugin by slug (requires confirmation)
 
-### Installation from WordPress.org
-Uses Plugin_Upgrader class and plugins_api() to search and install:
-1. plugins_api('plugin_information', ['slug' => $slug]) — get plugin details
-2. Plugin_Upgrader->install($download_url) — download and install
-3. activate_plugin($plugin_path) — activate after install
+## Workflows
 
-### Common Plugin Slugs
-Popular plugins use predictable slugs: wordpress-seo (Yoast), woocommerce, contact-form-7, elementor, advanced-custom-fields, wpforms-lite, all-in-one-seo-pack, wordfence, wp-super-cache, really-simple-ssl.
+### List All Plugins
+1. Call `list_plugins`
+2. Returns name, active/inactive status, version, and whether an update is available
 
-### Must-Use Plugins
-Located in wp-content/mu-plugins/. Always active, cannot be deactivated via admin. Not managed through standard plugin APIs.
+### Check if a Plugin is Active
+1. Call `list_plugins`
+2. Find the plugin by name and check its `status` field
 
-### Plugin Updates
-Check: get_plugin_updates(). Update via Plugin_Upgrader->upgrade($plugin_path). Always deactivate before major updates if there's risk of fatal errors.
+### Install and Activate a Plugin
+1. Call `install_plugin` with `slug: '<plugin-slug>'` (requires confirmation)
+2. After install, call `activate_plugin` with `slug: '<plugin-slug>'` (requires confirmation)
 
-### Plugin Data
-Plugins often store data in wp_options or custom tables. Deactivation typically preserves data; uninstall/deletion should clean up via uninstall.php or register_uninstall_hook().
+Common slugs: `woocommerce`, `contact-form-7`, `elementor`, `wordpress-seo`, `advanced-custom-fields`, `wordfence`, `wp-super-cache`, `really-simple-ssl`
+
+### Deactivate a Plugin
+1. Call `list_plugins` to confirm the plugin slug and that it is active
+2. Call `deactivate_plugin` with `slug: '<plugin-slug>'` (requires confirmation)
+
+### Update a Plugin
+1. Call `list_plugins` to check which plugins have `update_available: true`
+2. Call `update_plugin` with `slug: '<plugin-slug>'` (requires confirmation)
+
+### Update All Plugins with Updates Available
+1. Call `list_plugins` to get the full list
+2. For each plugin with `update_available: true`, call `update_plugin` with its slug (each requires confirmation)
+
+### Delete a Plugin
+1. If plugin is active, call `deactivate_plugin` first (requires confirmation)
+2. Call `delete_plugin` with `slug: '<plugin-slug>'` (requires confirmation)
+3. Warn the user: deletion removes plugin files and may erase settings/data
+
+## Important Notes
+- All plugin actions require user confirmation before executing
+- Plugins must be deactivated before they can be deleted
+- `install_plugin` only works for plugins on WordPress.org — premium plugins must be uploaded manually via Plugins > Add New
+- Plugin slugs are lowercase with hyphens (e.g., `contact-form-7`, not `Contact Form 7`)
+- Must-use plugins (in mu-plugins/) are always active and cannot be managed via these tools

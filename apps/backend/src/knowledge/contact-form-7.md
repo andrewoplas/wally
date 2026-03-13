@@ -1,111 +1,47 @@
 # Contact Form 7
 
-## Form Storage
+## When to Use
+- User asks about contact forms or Contact Form 7
+- User wants to find, embed, or check the status of a CF7 form
+- User wants to check CF7 settings or spam filtering configuration
+- Site has CF7 active (check via `list_plugins` → look for `contact-form-7`)
 
-Forms are stored as the custom post type `wpcf7_contact_form` in `wp_posts`. Form markup, mail settings, and messages are stored as post meta. List all forms:
+## Available Tools
+- `list_plugins` — check if Contact Form 7 is installed and active
+- `list_posts` with `post_type: 'wpcf7_contact_form'` — list all CF7 forms
+- `get_post` — get a CF7 form's details by ID
+- `create_post` / `update_post` — embed a CF7 form on a page using the shortcode block
+- `search_content` — find pages that already embed a specific form
+- `get_option` — read CF7 global settings
 
-```php
-$forms = WPCF7_ContactForm::find(); // Returns array of WPCF7_ContactForm objects
-$form  = WPCF7_ContactForm::get_instance( $id ); // Single form by ID
-```
+## Workflows
 
-## WPCF7_ContactForm Class
+### Check if CF7 is Active
+1. Call `list_plugins`
+2. Look for `contact-form-7`
 
-```php
-$form = WPCF7_ContactForm::get_instance( 123 );
-$form->id();                    // Post ID
-$form->title();                 // Form title
-$form->get_properties();        // Array: form, mail, mail_2, messages, additional_settings
-$form->set_properties( $props );
-$form->save();
+### List All Contact Forms
+1. Call `list_posts` with `post_type: 'wpcf7_contact_form'`
+2. Returns form IDs and titles
 
-// Properties structure:
-// 'form'     => HTML form template with tags
-// 'mail'     => array( subject, sender, body, recipient, additional_headers, attachments, use_html )
-// 'mail_2'   => secondary mail (autoresponder), same structure
-// 'messages' => array of validation/success messages keyed by message ID
-```
+### Embed a CF7 Form on a Page
+1. Find the form ID using `list_posts` with `post_type: 'wpcf7_contact_form'`
+2. Add the shortcode to the page content:
+   - For Gutenberg: use a shortcode block `<!-- wp:shortcode -->[contact-form-7 id="123" title="Contact Form"]<!-- /wp:shortcode -->`
+   - For Elementor: use `elementor_add_section` or `elementor_update_widget` with a shortcode widget
+3. Call `update_post` to add the shortcode to the page's `content`
 
-## Shortcode
+### Find Pages Embedding a Specific Form
+1. Call `search_content` with `keyword: 'contact-form-7'` or the form's shortcode ID
+2. Returns pages that contain the CF7 shortcode
 
-```
-[contact-form-7 id="123" title="Contact Form"]
-```
+### Check CF7 Settings
+1. Call `get_option` with key `wpcf7`
+2. Returns global CF7 configuration
 
-Also available as a Gutenberg block and via `wpcf7_contact_form_tag_func()`.
-
-## Form Tags (Field Types)
-
-`text`, `text*` (required), `email`, `email*`, `url`, `tel`, `textarea`, `date`, `number`, `range`, `drop-down menu` (select), `checkboxes`, `radio`, `acceptance`, `quiz`, `file` (upload), `submit`, `hidden`
-
-Tag syntax in form template: `[text* your-name placeholder "Name"]`, `[email* your-email]`, `[select menu-item "Choice 1" "Choice 2"]`
-
-## Mail Template
-
-Uses `[field-name]` placeholders matching form tag names. Example:
-
-```
-Subject: New inquiry from [your-name]
-Body: [your-message]
-From: [your-name] <[your-email]>
-```
-
-### Special Mail Tags
-
-`[_site_title]`, `[_site_url]`, `[_post_title]`, `[_post_url]`, `[_serial_number]`, `[_date]`, `[_time]`, `[_remote_ip]`, `[_user_agent]`, `[_url]`, `[_post_id]`, `[_post_name]`, `[_post_author]`, `[_post_author_email]`
-
-## Key Hooks
-
-```php
-// Before mail is sent (access/modify submission data)
-add_action( 'wpcf7_before_send_mail', function( $contact_form, &$abort, $submission ) {
-    $data = $submission->get_posted_data();
-}, 10, 3 );
-
-// After mail sent successfully
-add_action( 'wpcf7_mail_sent', function( $contact_form ) {} );
-
-// When mail fails
-add_action( 'wpcf7_mail_failed', function( $contact_form ) {} );
-
-// Custom field validation (per field type)
-add_filter( 'wpcf7_validate_text*', function( $result, $tag ) {
-    $value = isset( $_POST[$tag->name] ) ? $_POST[$tag->name] : '';
-    if ( strlen( $value ) < 3 ) {
-        $result->invalidate( $tag, 'Too short.' );
-    }
-    return $result;
-}, 10, 2 );
-
-// Custom spam check
-add_filter( 'wpcf7_spam', function( $spam ) { return $spam; } );
-```
-
-## Submission Object
-
-```php
-$submission = WPCF7_Submission::get_instance();
-$submission->get_posted_data();           // All submitted data as array
-$submission->get_posted_data( 'field' );  // Single field value
-$submission->get_status();                // 'mail_sent', 'mail_failed', 'validation_failed', 'spam'
-$submission->uploaded_files();            // Array of uploaded file paths
-```
-
-## REST API
-
-Endpoint: `/wp-json/contact-form-7/v1/contact-forms/`
-- `GET /contact-forms/` -- list all forms
-- `GET /contact-forms/{id}` -- single form
-- `POST /contact-forms/{id}/feedback` -- submit form (AJAX submission endpoint)
-
-## AJAX Submission
-
-Default behavior. Returns JSON with `status`, `message`, `posted_data_hash`, `invalid_fields`. Frontend JS (`wp-content/plugins/contact-form-7/includes/js/`) handles display.
-
-## Spam Filtering
-
-Built-in support for Akismet, reCAPTCHA v3, Cloudflare Turnstile. Custom spam filtering via `wpcf7_spam` filter. Disallowed list checked via `wpcf7_disallowed_list` filter.
-
-## Configuration Storage
-
-Global settings in `wp_options` key `wpcf7`. Per-form properties stored as post meta on the `wpcf7_contact_form` post. Flamingo plugin can log submissions to the database (CF7 does not store submissions by default).
+## Important Notes
+- CF7 does NOT store form submissions by default — submissions are only emailed; recommend the Flamingo plugin for database storage
+- Wally cannot create or edit CF7 form fields/templates — guide user to **Contact > Contact Forms** in WordPress admin
+- Wally cannot configure mail recipients, spam filtering, or reCAPTCHA — guide user to edit the form in the CF7 admin
+- CF7 shortcode format: `[contact-form-7 id="123" title="Contact Form"]`
+- CF7 forms are stored as post type `wpcf7_contact_form` — use this in `list_posts`

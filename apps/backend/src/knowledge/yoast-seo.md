@@ -1,89 +1,72 @@
-## Yoast SEO Plugin
+# Yoast SEO
 
-### Meta Data Storage
-Yoast stores SEO data as postmeta with prefix `_yoast_wpseo_`. Key meta keys:
-- `_yoast_wpseo_title` — custom SEO title (supports variables like `%%title%% %%sep%% %%sitename%%`)
-- `_yoast_wpseo_metadesc` — custom meta description
-- `_yoast_wpseo_focuskw` — primary focus keyword
-- `_yoast_wpseo_canonical` — canonical URL override
-- `_yoast_wpseo_opengraph-title` — Open Graph title
-- `_yoast_wpseo_opengraph-description` — Open Graph description
-- `_yoast_wpseo_opengraph-image` — Open Graph image URL
-- `_yoast_wpseo_twitter-title` — Twitter/X card title
-- `_yoast_wpseo_twitter-description` — Twitter/X card description
+## When to Use
+- User wants to set or update SEO title, meta description, or focus keyword on a post/page
+- User asks about Yoast SEO settings, sitemap, or Open Graph data
+- User wants to check or update schema/JSON-LD settings
+- Site has Yoast SEO active (check via `list_plugins` → look for `wordpress-seo`)
 
-### Reading/Writing SEO Data
-```php
-// Read
-get_post_meta($post_id, '_yoast_wpseo_title', true);
-get_post_meta($post_id, '_yoast_wpseo_metadesc', true);
-// Write
-update_post_meta($post_id, '_yoast_wpseo_title', 'New SEO Title');
-update_post_meta($post_id, '_yoast_wpseo_metadesc', 'New description');
-// Canonical via API
-YoastSEO()->meta->for_current_page()->canonical;
-```
+## Available Tools
+- `list_plugins` — check if Yoast SEO (free or premium) is active
+- `get_post` — read a post's current SEO meta values
+- `update_post` — set Yoast SEO meta fields on a post via the `meta` parameter
+- `list_posts` — find posts to update SEO data on
+- `search_content` — find posts by content/title
+- `get_option` — read Yoast SEO plugin settings
+- `update_option` — update Yoast SEO settings (requires confirmation)
 
-### Content Analysis Scores
-- `_yoast_wpseo_linkdex` — SEO score (0-100)
-- `_yoast_wpseo_content_score` — readability score (0-100)
+## Workflows
 
-### Important Filters
-- `wpseo_title` — filter the `<title>` tag output
-- `wpseo_metadesc` — filter the meta description output
-- `wpseo_canonical` — filter or remove the canonical URL (return `false` to remove)
-- `wpseo_opengraph_title` — filter Open Graph title
-- `wpseo_opengraph_desc` — filter Open Graph description
-- `wpseo_opengraph_image` — filter Open Graph image
-- `wpseo_schema_graph` — modify the full JSON-LD schema @graph array
+### Check if Yoast SEO is Active
+1. Call `list_plugins`
+2. Look for `wordpress-seo` (free) or `wordpress-seo-premium` (Premium)
 
-### Settings in wp_options
-- `wpseo` — general plugin settings
-- `wpseo_titles` — title templates and meta robots per post type/taxonomy
-- `wpseo_social` — social profiles, Open Graph and Twitter defaults
-- `wpseo_xml` — XML sitemap configuration
+### Read SEO Data for a Post
+1. Call `get_post` with the post ID
+2. Check the `meta` section for `_yoast_wpseo_title`, `_yoast_wpseo_metadesc`, `_yoast_wpseo_focuskw`
 
-### XML Sitemaps
-- Index: `/sitemap_index.xml`
-- Per post type: `/post-sitemap.xml`, `/page-sitemap.xml`, `/{cpt}-sitemap.xml`
-- Taxonomy: `/category-sitemap.xml`, `/post_tag-sitemap.xml`
+### Set SEO Title and Meta Description
+1. Find the post ID with `list_posts` or `search_content` if needed
+2. Call `update_post` with `id` and:
+   ```
+   meta: {
+     _yoast_wpseo_title: '<SEO title>',
+     _yoast_wpseo_metadesc: '<meta description>'
+   }
+   ```
+3. Requires confirmation for meta updates
 
-### Schema / JSON-LD
-Yoast auto-generates structured data using `@graph` with entities: Organization, WebSite, WebPage, Article, BreadcrumbList, Person. Customize via `wpseo_schema_graph` filter or individual `wpseo_schema_{type}` filters.
+### Set Focus Keyword
+1. Call `update_post` with `id` and `meta: { _yoast_wpseo_focuskw: '<keyword>' }`
 
-### Breadcrumbs
-- Template function: `yoast_breadcrumb('<p>', '</p>')` or `WPSEO_Breadcrumbs::breadcrumb()`
-- Enable in Yoast SEO > Settings > Breadcrumbs
-- Schema BreadcrumbList is auto-included when enabled
+### Set Canonical URL
+1. Call `update_post` with `id` and `meta: { _yoast_wpseo_canonical: 'https://example.com/page/' }`
 
-### Detecting Yoast
-```php
-defined('WPSEO_VERSION') // true if Yoast is active
-function_exists('wpseo_init') // alternative check
-```
+### Set Open Graph Data
+1. Call `update_post` with `meta: { _yoast_wpseo_opengraph-title: '<OG title>', _yoast_wpseo_opengraph-description: '<OG desc>' }`
 
----
+### Check Yoast Settings
+1. Call `get_option` with key `wpseo` for general settings
+2. Call `get_option` with key `wpseo_titles` for title templates per post type
+3. Call `get_option` with key `wpseo_social` for social/Open Graph defaults
 
-## Yoast SEO Premium
+## Yoast SEO Post Meta Keys
+| Data | Meta Key |
+|------|---------|
+| SEO title | `_yoast_wpseo_title` |
+| Meta description | `_yoast_wpseo_metadesc` |
+| Focus keyword | `_yoast_wpseo_focuskw` |
+| Canonical URL | `_yoast_wpseo_canonical` |
+| OG title | `_yoast_wpseo_opengraph-title` |
+| OG description | `_yoast_wpseo_opengraph-description` |
+| OG image URL | `_yoast_wpseo_opengraph-image` |
+| Twitter title | `_yoast_wpseo_twitter-title` |
+| Twitter description | `_yoast_wpseo_twitter-description` |
 
-**Plugin slug**: `wordpress-seo-premium/wp-seo-premium.php`. Extends the free Yoast SEO plugin with advanced features.
-
-### Premium Features
-- **Redirect Manager** — create and manage redirects (301, 302, 307, 410, 451). Redirects stored in the `wpseo_redirect` option (serialized array). Automatic redirect prompts on slug changes.
-- **Internal Linking Suggestions** — suggests related posts/pages to link to while editing content.
-- **Social Previews** — live previews for Facebook and Twitter/X sharing appearance.
-- **Content Insights** — shows the most-used words in your content to verify topic focus.
-- **SEO Workouts** — guided workflows for improving SEO (orphaned content, cornerstone content).
-- **IndexNow Integration** — automatically pings search engines when content is published or updated.
-- **AI Title & Description Generation** — generates SEO titles and meta descriptions using AI.
-
-### Settings Storage
-Premium settings are stored in the same `wpseo*` options as the free version with additional keys. License data is stored in `yoast_premium_*` options.
-
-### Premium-Specific Filter
-- `wpseo_premium_post_redirect_slug_change` — filter whether to create a redirect when a post slug changes.
-
-### Detecting Yoast SEO Premium
-```php
-defined('WPSEO_PREMIUM_FILE') // true if Yoast SEO Premium is active
-```
+## Important Notes
+- SEO titles support Yoast variables: `%%title%%`, `%%sep%%`, `%%sitename%%`, `%%page%%`
+- If the user asks to update SEO data for many posts at once, process them one at a time with `update_post`
+- Yoast's sitemap is at `/sitemap_index.xml` — no tool needed to view it; give the user the URL
+- Redirect management requires Yoast SEO Premium — guide user to Yoast > Redirects for free alternatives
+- For bulk SEO audits or schema customization, guide user to the Yoast SEO admin panel
+- `wpseo_xml` option controls sitemap settings; `wpseo_social` controls Open Graph/Twitter defaults

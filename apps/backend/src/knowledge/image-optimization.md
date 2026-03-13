@@ -1,35 +1,57 @@
-## WordPress Image Optimization Plugins
+# Image Optimization Plugins
 
-### Smush (WP Smush)
-- **Settings**: wp_options key `wp-smush-settings` (serialized). Sub-keys: `auto` (auto-smush on upload), `lossy` (lossy compression), `strip_exif`, `resize` (enable resize), `resize_sizes` (array with width/height max dimensions), `lazy_load`, `webp`, `backup` (keep originals).
-- **Per-image data**: `wp-smush-image-stats` postmeta (savings per image — bytes_saved, size_before, size_after), `wp-smushed-image-id` postmeta.
-- **Bulk smush**: Progress tracked in wp_options as `wp-smush-bulk_sent` and `wp-smush-bulk_received`.
-- **CDN**: Optional Smush CDN serves optimized images via CDN. Status in `wp-smush-cdn_status` option.
-- **Functions**: `WP_Smush::get_instance()`, `$smush->core->mod->smush->smush_file($file_path)`.
-- **Detection**: `defined('WP_SMUSH_VERSION')` or `class_exists('WP_Smush')`.
+## When to Use
+- User mentions Smush, EWWW, ShortPixel, WebP, AVIF, or image compression
+- User asks about image optimization, page speed, or large image files
+- User wants to check or change image optimization settings
 
-### EWWW Image Optimizer
-- **Settings**: wp_options keys prefixed `ewww_image_optimizer_*`. Key options: `ewww_image_optimizer_cloud_key` (API key), `ewww_image_optimizer_jpg_level` (compression level: 10=none, 20=lossless, 30=lossy, 40=max), `ewww_image_optimizer_png_level`, `ewww_image_optimizer_webp` (WebP conversion), `ewww_image_optimizer_lazy_load`, `ewww_image_optimizer_resize_existing`, `ewww_image_optimizer_maxmediawidth`, `ewww_image_optimizer_maxmediaheight`.
-- **Custom table**: `{prefix}ewwwio_images` — columns: path, gallery, image_size, orig_size, results, converted, webp_size, backup. Optimization data tracked per file here, not in postmeta.
-- **WebP conversion**: Creates `.webp` files alongside originals. Served via rewrite rules or `<picture>` tags.
-- **Functions**: `ewww_image_optimizer_single_auto($id, $meta)`, `ewwwio_get_option($option_name)`.
-- **Detection**: `defined('EWWW_IMAGE_OPTIMIZER_VERSION')`.
+## Available Tools
+- `list_plugins` — detect which image optimization plugin is active
+- `get_option` — read optimization plugin settings
+- `update_option` — change optimization settings (requires confirmation)
+- `get_site_health` — check for image-related performance issues
 
-### ShortPixel Image Optimizer
-- **Settings**: wp_options key `wp-short-pixel-options` (serialized). Sub-keys: `apiKey`, `compressionType` (lossy/glossy/lossless), `resizeImages`, `resizeWidth`, `resizeHeight`, `createWebp`, `createAvif`, `backupImages`.
-- **Per-image data**: `_shortpixel_status` postmeta, `_shortpixel_meta` postmeta (serialized — original size, optimized size, compression type).
-- **Custom table**: `{prefix}shortpixel_meta` — tracks optimization status for files outside media library.
-- **Detection**: `defined('SHORTPIXEL_IMAGE_OPTIMISER_VERSION')`.
+## Workflows
 
-### Converter for Media (WebP/AVIF)
-- **Settings**: wp_options key `webpc_settings` (serialized). Sub-keys: `output_formats` (array: webp, avif), `conversion_method` (gd/imagick), `quality_webp` (1-100), `quality_avif` (1-100), `dirs` (directories to convert).
-- **Converted files**: Stored alongside originals in uploads/ with `.webp`/`.avif` extensions.
-- **Delivery**: Uses `.htaccess` or nginx rewrite rules to serve converted format when browser supports it.
-- **Detection**: `defined('WEBPC_VERSION')`.
+### Detect Active Plugin
+1. Call `list_plugins`
+2. Look for: `wp-smushit` (Smush), `ewww-image-optimizer`, `shortpixel-image-optimiser`, `webp-converter-for-media` (Converter for Media)
 
-### Common Patterns
-- All image optimization plugins hook into `wp_handle_upload` and `wp_generate_attachment_metadata` to auto-optimize on upload.
-- WebP/AVIF served via server rewrite rules or `<picture>` tags — no URL changes needed in content.
-- Bulk optimization available for existing media library images. Long-running process uses AJAX or background cron.
-- Original files optionally backed up (usually in a parallel directory structure). Restoring originals reverses optimization.
-- After changing compression settings, re-optimizing existing images requires a bulk run — settings only affect new uploads automatically.
+### Smush — Read Settings
+1. Call `get_option` with key `wp-smush-settings`
+2. Key settings: `auto` (auto-optimize on upload), `lossy` (lossy compression), `strip_exif`, `lazy_load`, `webp`, `backup` (keep originals)
+3. CDN status: `get_option` with key `wp-smush-cdn_status`
+
+### EWWW — Read Settings
+1. Call `get_option` with keys prefixed `ewww_image_optimizer_*`:
+   - `ewww_image_optimizer_jpg_level` — compression level (10=none, 20=lossless, 30=lossy, 40=max)
+   - `ewww_image_optimizer_webp` — WebP conversion enabled
+   - `ewww_image_optimizer_lazy_load` — lazy loading enabled
+2. Do NOT expose `ewww_image_optimizer_cloud_key` (API key)
+
+### ShortPixel — Read Settings
+1. Call `get_option` with key `wp-short-pixel-options`
+2. Key settings: `compressionType` (lossy/glossy/lossless), `createWebp`, `createAvif`, `backupImages`
+3. Do NOT expose `apiKey`
+
+### Converter for Media — Read Settings
+1. Call `get_option` with key `webpc_settings`
+2. Key settings: `output_formats` (webp, avif), `quality_webp`, `quality_avif`
+
+### Update Optimization Settings
+1. Identify the correct option key for the active plugin (see above)
+2. Call `update_option` with key and new value (requires confirmation)
+3. Warn user: "Changing settings only affects new uploads. To re-optimize existing images, run a bulk optimization from the plugin's admin page."
+
+### Check Image Performance
+1. Call `get_site_health` for performance recommendations
+2. Call `list_plugins` to verify an optimization plugin is active
+
+## Important Notes
+- Wally cannot trigger bulk optimization — guide user to the plugin's admin page (Media > Smush, Media > EWWW, etc.)
+- API keys (EWWW cloud key, ShortPixel API key) are sensitive — do NOT expose them
+- Changing compression settings only affects new uploads — existing images need a bulk re-optimization run
+- WebP/AVIF files are served via server rewrite rules — no URL changes needed in content
+- All plugins hook into uploads to auto-optimize — ensure `auto` setting is enabled for hands-off optimization
+- Original images can be backed up for restoration — check `backup` setting in each plugin
+- Multiple image optimization plugins should NOT be active simultaneously — check `list_plugins` and warn if duplicates found

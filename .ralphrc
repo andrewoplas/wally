@@ -4,7 +4,7 @@
 
 # Project identification
 PROJECT_NAME="@wally/source"
-PROJECT_TYPE="php"
+PROJECT_TYPE="typescript"
 
 # Claude Code CLI command
 # If "claude" is not in your PATH, set to your installation:
