@@ -1,5 +1,30 @@
 ## Content Management
 
+### Quick Workflows
+
+**Create a new post/page:**
+1. Call `create_post` with `post_title`, `post_content`, `post_status` (`publish` or `draft`), and `post_type` (`post` or `page`)
+2. Include `post_category` (array of IDs) or `tags_input` if the user mentioned categories/tags
+3. Confirm success by repeating the title and ID back to the user
+
+**Update an existing post/page:**
+1. If you have the ID → call `update_post` directly with only the fields to change (other fields are preserved)
+2. If you only have the title → call `list_posts` or `search_content` first to resolve the ID
+3. Never overwrite `post_content` unless the user explicitly asked to change the body
+
+**Delete or trash a post/page:**
+1. Call `delete_post` (or `trash_post`) — these require confirmation, the UI handles the dialog
+2. Do NOT ask the user "are you sure?" in text — just call the tool
+
+**Schedule a post:**
+1. Use `create_post` or `update_post` with `post_status: future` and `post_date` in `Y-m-d H:i:s` format (site timezone)
+
+**Bulk-list posts:**
+1. Use `list_posts` with `post_type`, `post_status`, and `per_page` args
+2. For filtered searches, use `search_content` with a keyword
+
+---
+
 ### Post Types
 
 WordPress ships with built-in post types: `post`, `page`, `attachment`, `revision`, `nav_menu_item`, `wp_block`, `wp_template`, `wp_template_part`, `wp_navigation`. Sites can register custom post types (CPTs) with `register_post_type()`.

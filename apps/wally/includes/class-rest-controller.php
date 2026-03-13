@@ -205,14 +205,8 @@ class RestController {
 			);
 		}
 
-		$stream_enabled = (bool) get_option( 'wally_stream_responses', true );
-		$stream         = $stream_enabled && (bool) $request->get_param( 'stream' );
-
-		if ( $stream ) {
-			return $this->handle_chat_stream( $request );
-		}
-
-		return $this->handle_chat_json( $request );
+		// Always use streaming — the Agent SDK architecture requires SSE for tool callbacks.
+		return $this->handle_chat_stream( $request );
 	}
 
 	/**
@@ -278,13 +272,6 @@ class RestController {
 			'content'         => $message,
 		]);
 
-		// Build a history that includes the current message, used for tool-result calls
-		// so the LLM has full context of why it called each tool.
-		$history_with_current = array_merge(
-			$conversation_history,
-			[ [ 'role' => 'user', 'content' => $message ] ]
-		);
-
 		// 4. Prepare backend connection info.
 		$backend_url      = rtrim( WALLY_DEFAULT_BACKEND_URL, '/' );
 		$license_key_enc  = get_option( 'wally_license_key', '' );
@@ -321,7 +308,13 @@ class RestController {
 		$result = $this->stream_backend_sse(
 			$backend_url . '/chat',
 			$chat_payload,
-			$license_key
+			$license_key,
+			[
+				'executor'        => ToolExecutor::instance(),
+				'user_id'         => $user_id,
+				'conversation_id' => $conversation_id,
+				'backend_url'     => $backend_url,
+			]
 		);
 
 		if ( is_wp_error( $result ) ) {
@@ -331,114 +324,10 @@ class RestController {
 			die();
 		}
 
-		$accumulated_text   = $result['text'];
-		$tool_calls         = $result['tool_calls'];
-		$total_token_count += ( $result['token_usage']['input_tokens'] ?? 0 ) + ( $result['token_usage']['output_tokens'] ?? 0 );
+		$accumulated_text  = $result['text'];
+		$total_token_count = ( $result['token_usage']['input_tokens'] ?? 0 ) + ( $result['token_usage']['output_tokens'] ?? 0 );
 
-		// 7. Tool execution loop (up to 10 iterations).
-		$executor     = ToolExecutor::instance();
-		$confirmation = null;
-		$max_loops    = 10;
-
-		for ( $loop = 0; $loop < $max_loops && ! empty( $tool_calls ); $loop++ ) {
-			$this->send_sse_event([
-				'type'  => 'tool_start',
-				'tools' => array_map( fn( $tc ) => $tc['tool'] ?? '', $tool_calls ),
-			]);
-
-			$tool_results = [];
-
-			foreach ( $tool_calls as $tc ) {
-				$tool_name = $tc['tool'] ?? '';
-				$input     = $tc['input'] ?? [];
-				$call_id   = $tc['tool_call_id'] ?? '';
-
-				$exec_result = $executor->execute( $tool_name, $input, $user_id, $conversation_id );
-
-				// Handle confirmation flow.
-				if ( isset( $exec_result['status'] ) && 'pending_confirmation' === $exec_result['status'] ) {
-					$confirmation = $exec_result['result'];
-					$this->send_sse_event([
-						'type'         => 'confirmation',
-						'action_id'    => $confirmation['action_id'] ?? null,
-						'tool_name'    => $tool_name,
-						'preview'      => $confirmation['preview'] ?? $input,
-					]);
-					$tool_results[] = [
-						'tool_call_id' => $call_id,
-						'tool_name'    => $tool_name,
-						'result'       => 'Action requires user confirmation. Awaiting approval.',
-						'is_error'     => false,
-					];
-					continue;
-				}
-
-				// Fix 2: Store a compact tool result summary in conversation history
-				// so subsequent requests have readable context (not truncated raw JSON).
-				if ( $exec_result['success'] && is_array( $exec_result['result'] ?? null ) ) {
-					$summary = ResultSummarizer::summarize( $tool_name, $exec_result['result'] );
-					$wpdb->insert( $msg_table, [
-						'conversation_id' => $conversation_id,
-						'role'            => 'assistant',
-						'content'         => '[Tool: ' . $tool_name . '] ' . $summary,
-					]);
-
-					// Fix 1: Keep in-memory action list up to date so subsequent
-					// tool-result calls include actions from the current turn.
-					$recent_actions[] = AuditLog::format_action_summary([
-						'tool_name'  => $tool_name,
-						'tool_input' => wp_json_encode( $input ),
-						'status'     => 'success',
-						'created_at' => current_time( 'mysql' ),
-					]);
-					if ( count( $recent_actions ) > 15 ) {
-						array_shift( $recent_actions );
-					}
-				}
-
-				$tool_results[] = [
-					'tool_call_id' => $call_id,
-					'tool_name'    => $tool_name,
-					'result'       => $exec_result['result'] ?? $exec_result,
-					'is_error'     => ! ( $exec_result['success'] ?? true ),
-				];
-			}
-
-			// Notify frontend that tools finished executing.
-			$this->send_sse_event([
-				'type'    => 'tool_end',
-				'results' => array_map( fn( $tr ) => [
-					'tool_name' => $tr['tool_name'],
-					'is_error'  => $tr['is_error'],
-				], $tool_results ),
-			]);
-
-			// Send tool results back to backend and stream its response.
-			$result = $this->stream_backend_sse(
-				$backend_url . '/tool-result',
-				[
-					'conversation_history' => $history_with_current,
-					'site_profile'         => $site_profile,
-					'tool_definitions'     => $tool_definitions,
-					'tool_results'         => $tool_results,
-					'pending_tool_calls'   => $tool_calls,
-					'recent_actions'       => $recent_actions,
-				],
-				$license_key
-			);
-
-			if ( is_wp_error( $result ) ) {
-				$accumulated_text .= "\n\nI executed the tools but couldn't get a follow-up response.";
-				$this->send_sse_event( [ 'type' => 'token', 'content' => "\n\nI executed the tools but couldn't get a follow-up response." ] );
-				break;
-			}
-
-			$accumulated_text   .= $result['text'];
-			$tool_calls          = $result['tool_calls'];
-			$total_token_count  += ( $result['token_usage']['input_tokens'] ?? 0 ) + ( $result['token_usage']['output_tokens'] ?? 0 );
-		}
-
-		// 8. Store assistant response with token count for budget tracking.
+		// 7. Store assistant response with token count for budget tracking.
 		if ( $accumulated_text ) {
 			$wpdb->insert( $msg_table, [
 				'conversation_id' => $conversation_id,
@@ -453,249 +342,6 @@ class RestController {
 		// 9. Finalize stream.
 		$this->send_sse_event( [ 'type' => 'done' ] );
 		die();
-	}
-
-	/**
-	 * Non-streaming JSON chat handler (fallback).
-	 */
-	private function handle_chat_json( $request ) {
-		global $wpdb;
-
-		$message         = $request->get_param( 'message' );
-		$conversation_id = $request->get_param( 'conversation_id' );
-		$user_id         = get_current_user_id();
-
-		$conv_table = $wpdb->prefix . 'wally_conversations';
-		$msg_table  = $wpdb->prefix . 'wally_messages';
-
-		if ( $conversation_id ) {
-			$conv = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT id FROM {$conv_table} WHERE id = %d AND user_id = %d",
-					$conversation_id, $user_id
-				)
-			);
-			if ( ! $conv ) {
-				$conversation_id = null;
-			}
-		}
-
-		if ( ! $conversation_id ) {
-			$wpdb->insert( $conv_table, [
-				'user_id' => $user_id,
-				'title'   => mb_substr( $message, 0, 100 ),
-			]);
-			$conversation_id = (int) $wpdb->insert_id;
-		}
-
-		// Build history BEFORE storing current message to avoid duplicates.
-		$history_rows = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT role, content FROM {$msg_table}
-				 WHERE conversation_id = %d
-				 ORDER BY created_at DESC, id DESC
-				 LIMIT %d",
-				$conversation_id, self::HISTORY_LIMIT
-			)
-		);
-
-		$conversation_history = [];
-		foreach ( array_reverse( $history_rows ) as $row ) {
-			$conversation_history[] = [
-				'role'    => $row->role,
-				'content' => $row->content,
-			];
-		}
-
-		$wpdb->insert( $msg_table, [
-			'conversation_id' => $conversation_id,
-			'role'            => 'user',
-			'content'         => $message,
-		]);
-
-		$backend_url      = rtrim( WALLY_DEFAULT_BACKEND_URL, '/' );
-		$license_key_enc  = get_option( 'wally_license_key', '' );
-		$license_key      = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
-		$site_profile     = SiteScanner::get_profile();
-		$custom_prompt    = get_option( 'wally_custom_prompt', '' );
-		$tool_definitions = ToolExecutor::instance()->get_tool_definitions();
-
-		// Fix 1: Fetch recent actions for action memory injection.
-		$recent_actions = $this->get_recent_action_summaries( $conversation_id );
-
-		$chat_payload = [
-			'message'              => $message,
-			'conversation_history' => $conversation_history,
-			'site_profile'         => $site_profile,
-			'tool_definitions'     => $tool_definitions,
-			'recent_actions'       => $recent_actions,
-		];
-		if ( $custom_prompt ) {
-			$chat_payload['custom_system_prompt'] = $custom_prompt;
-		}
-
-		$backend_response = $this->backend_request_buffered( $backend_url . '/chat', $chat_payload, $license_key );
-
-		if ( is_wp_error( $backend_response ) ) {
-			return rest_ensure_response([
-				'reply'           => 'Sorry, I could not connect to the AI service. ' . $backend_response->get_error_message(),
-				'conversation_id' => $conversation_id,
-			]);
-		}
-
-		$events            = $this->parse_sse( $backend_response );
-		$reply_text        = '';
-		$tool_calls        = [];
-		$confirmation      = null;
-		$total_token_count = 0;
-
-		foreach ( $events as $event ) {
-			if ( 'token' === $event['type'] ) {
-				$reply_text .= $event['content'] ?? '';
-			} elseif ( 'tool_call' === $event['type'] ) {
-				$tool_calls[] = $event;
-			} elseif ( 'usage' === $event['type'] ) {
-				$total_token_count += (int) ( $event['input_tokens'] ?? 0 ) + (int) ( $event['output_tokens'] ?? 0 );
-			}
-		}
-
-		if ( ! empty( $tool_calls ) ) {
-			$result = $this->process_tool_calls_json(
-				$tool_calls, $user_id, $conversation_id, $backend_url, $license_key,
-				array_merge( $conversation_history, [ [ 'role' => 'user', 'content' => $message ] ] ),
-				$site_profile, $tool_definitions, $reply_text, $recent_actions
-			);
-			$reply_text         = $result['reply'];
-			$confirmation       = $result['confirmation'];
-			$total_token_count += $result['token_count'];
-		}
-
-		if ( $reply_text ) {
-			$wpdb->insert( $msg_table, [
-				'conversation_id' => $conversation_id,
-				'role'            => 'assistant',
-				'content'         => $reply_text,
-				'token_count'     => $total_token_count,
-			]);
-		}
-
-		$wpdb->update( $conv_table, [ 'updated_at' => current_time( 'mysql' ) ], [ 'id' => $conversation_id ] );
-
-		$response = [
-			'reply'           => $reply_text ?: 'I processed your request but had no text response.',
-			'conversation_id' => $conversation_id,
-		];
-
-		if ( $confirmation ) {
-			$response['confirmation'] = $confirmation;
-		}
-
-		return rest_ensure_response( $response );
-	}
-
-	/**
-	 * Tool execution loop for the JSON (non-streaming) path.
-	 */
-	private function process_tool_calls_json(
-		array $tool_calls, int $user_id, int $conversation_id,
-		string $backend_url, string $license_key,
-		array $conversation_history, array $site_profile, array $tool_definitions,
-		string $accumulated_text, array $recent_actions = []
-	): array {
-		global $wpdb;
-		$msg_table         = $wpdb->prefix . 'wally_messages';
-		$executor          = ToolExecutor::instance();
-		$confirmation      = null;
-		$max_loops         = 10;
-		$total_token_count = 0;
-
-		for ( $loop = 0; $loop < $max_loops; $loop++ ) {
-			$tool_results = [];
-
-			foreach ( $tool_calls as $tc ) {
-				$tool_name = $tc['tool'] ?? '';
-				$input     = $tc['input'] ?? [];
-				$call_id   = $tc['tool_call_id'] ?? '';
-
-				$exec_result = $executor->execute( $tool_name, $input, $user_id, $conversation_id );
-
-				if ( isset( $exec_result['status'] ) && 'pending_confirmation' === $exec_result['status'] ) {
-					$confirmation = $exec_result['result'];
-					$tool_results[] = [
-						'tool_call_id' => $call_id,
-						'tool_name'    => $tool_name,
-						'result'       => 'Action requires user confirmation. Awaiting approval.',
-						'is_error'     => false,
-					];
-					continue;
-				}
-
-				// Fix 2: Store compact tool result summary in conversation history.
-				if ( $exec_result['success'] && is_array( $exec_result['result'] ?? null ) ) {
-					$summary = ResultSummarizer::summarize( $tool_name, $exec_result['result'] );
-					$wpdb->insert( $msg_table, [
-						'conversation_id' => $conversation_id,
-						'role'            => 'assistant',
-						'content'         => '[Tool: ' . $tool_name . '] ' . $summary,
-					]);
-
-					// Fix 1: Keep in-memory action list current for this loop.
-					$recent_actions[] = AuditLog::format_action_summary([
-						'tool_name'  => $tool_name,
-						'tool_input' => wp_json_encode( $input ),
-						'status'     => 'success',
-						'created_at' => current_time( 'mysql' ),
-					]);
-					if ( count( $recent_actions ) > 15 ) {
-						array_shift( $recent_actions );
-					}
-				}
-
-				$tool_results[] = [
-					'tool_call_id' => $call_id,
-					'tool_name'    => $tool_name,
-					'result'       => $exec_result['result'] ?? $exec_result,
-					'is_error'     => ! ( $exec_result['success'] ?? true ),
-				];
-			}
-
-			$response = $this->backend_request_buffered( $backend_url . '/tool-result', [
-				'conversation_history' => $conversation_history,
-				'site_profile'         => $site_profile,
-				'tool_definitions'     => $tool_definitions,
-				'tool_results'         => $tool_results,
-				'pending_tool_calls'   => $tool_calls,
-				'recent_actions'       => $recent_actions,
-			], $license_key );
-
-			if ( is_wp_error( $response ) ) {
-				$accumulated_text .= "\n\nI executed the tools but couldn't get a follow-up response.";
-				break;
-			}
-
-			$events     = $this->parse_sse( $response );
-			$tool_calls = [];
-
-			foreach ( $events as $event ) {
-				if ( 'token' === $event['type'] ) {
-					$accumulated_text .= $event['content'] ?? '';
-				} elseif ( 'tool_call' === $event['type'] ) {
-					$tool_calls[] = $event;
-				} elseif ( 'usage' === $event['type'] ) {
-					$total_token_count += (int) ( $event['input_tokens'] ?? 0 ) + (int) ( $event['output_tokens'] ?? 0 );
-				}
-			}
-
-			if ( empty( $tool_calls ) ) {
-				break;
-			}
-		}
-
-		return [
-			'reply'        => $accumulated_text,
-			'confirmation' => $confirmation,
-			'token_count'  => $total_token_count,
-		];
 	}
 
 	// ─── Action Memory Helpers ──────────────────────────────────────────
@@ -812,17 +458,23 @@ class RestController {
 	}
 
 	/**
-	 * Stream SSE from backend, forwarding tokens to browser in real-time.
+	 * Stream SSE from backend, forwarding tokens to the browser in real-time.
 	 *
-	 * Uses cURL with CURLOPT_WRITEFUNCTION to process chunks as they arrive.
-	 * Token events are forwarded immediately; tool_call events are collected.
+	 * In the Agent SDK architecture the backend runs the full agentic loop.
+	 * When it emits a `tool_call` event the plugin executes the WordPress tool
+	 * immediately (while the cURL connection stays open) and POSTs the result
+	 * back to the backend via `/api/v1/tool-callback`.  The backend unblocks and
+	 * continues streaming — no separate `/tool-result` round-trip is needed.
 	 *
-	 * @param string $url         Backend endpoint URL.
-	 * @param array  $payload     Request body.
-	 * @param string $license_key License key for auth.
-	 * @return array|\WP_Error { text: string, tool_calls: array } or WP_Error.
+	 * @param string $url          Backend endpoint URL.
+	 * @param array  $payload      Request body.
+	 * @param string $license_key  License key for auth.
+	 * @param array  $tool_context Optional: { executor, user_id, conversation_id, backend_url }.
+	 *                             When empty, tool_call events are forwarded to the browser only
+	 *                             (e.g. title-generation calls that carry no tools).
+	 * @return array|\WP_Error { text: string, token_usage: array } or WP_Error.
 	 */
-	private function stream_backend_sse( string $url, array $payload, string $license_key ) {
+	private function stream_backend_sse( string $url, array $payload, string $license_key, array $tool_context = [] ) {
 		$url_check = $this->validate_backend_url( $url );
 		if ( is_wp_error( $url_check ) ) {
 			return $url_check;
@@ -832,7 +484,6 @@ class RestController {
 		$buffer           = '';
 		$raw_body         = '';
 		$accumulated_text = '';
-		$tool_calls       = [];
 		$token_usage      = [ 'input_tokens' => 0, 'output_tokens' => 0 ];
 		$curl_error       = null;
 
@@ -855,7 +506,9 @@ class RestController {
 			],
 			CURLOPT_TIMEOUT        => self::BACKEND_TIMEOUT,
 			CURLOPT_RETURNTRANSFER => false,
-			CURLOPT_WRITEFUNCTION  => function ( $ch, $chunk ) use ( &$buffer, &$raw_body, &$accumulated_text, &$tool_calls, &$token_usage, $controller ) {
+			CURLOPT_WRITEFUNCTION  => function ( $ch, $chunk ) use ( &$buffer, &$raw_body, &$accumulated_text, &$token_usage, $controller, $tool_context, $license_key ) {
+				global $wpdb;
+
 				// Capture raw body for error diagnostics.
 				$raw_body .= $chunk;
 				$buffer   .= $chunk;
@@ -884,7 +537,69 @@ class RestController {
 							break;
 
 						case 'tool_call':
-							$tool_calls[] = $event;
+							// Forward to frontend for status display.
+							$controller->send_sse_event( $event );
+
+							if ( empty( $tool_context ) ) {
+								break; // No execution context (e.g. title generation).
+							}
+
+							$call_id   = $event['tool_call_id'] ?? '';
+							$tool_name = $event['tool'] ?? '';
+							$input     = is_array( $event['input'] ?? null ) ? $event['input'] : [];
+
+							if ( ! $call_id || ! $tool_name ) {
+								break;
+							}
+
+							/** @var ToolExecutor $executor */
+							$executor    = $tool_context['executor'];
+							$tc_user_id  = $tool_context['user_id'];
+							$tc_conv_id  = $tool_context['conversation_id'];
+							$tc_backend  = $tool_context['backend_url'];
+
+							$exec_result = $executor->execute( $tool_name, $input, $tc_user_id, $tc_conv_id );
+
+							if ( isset( $exec_result['status'] ) && 'pending_confirmation' === $exec_result['status'] ) {
+								// Store call_id in a transient so confirm_action() can POST the callback later.
+								$action_id = $exec_result['result']['action_id'] ?? null;
+								if ( $action_id ) {
+									set_transient( 'wally_call_id_' . $action_id, $call_id, 2 * HOUR_IN_SECONDS );
+								}
+
+								$controller->send_sse_event([
+									'type'      => 'confirmation',
+									'action_id' => $action_id,
+									'tool_name' => $tool_name,
+									'preview'   => $exec_result['result']['preview'] ?? $input,
+								]);
+
+								// Post intermediate callback — Claude continues with "pending_confirmation" context.
+								$controller->post_tool_callback( $call_id, [
+									'success' => true,
+									'data'    => [
+										'status'    => 'pending_confirmation',
+										'action_id' => $action_id,
+										'message'   => 'The user has been asked to confirm this action.',
+									],
+								], $tc_backend, $license_key );
+							} else {
+								// Store compact tool result summary in conversation history.
+								if ( $exec_result['success'] && is_array( $exec_result['result'] ?? null ) ) {
+									$summary = ResultSummarizer::summarize( $tool_name, $exec_result['result'] );
+									$wpdb->insert( $wpdb->prefix . 'wally_messages', [
+										'conversation_id' => $tc_conv_id,
+										'role'            => 'assistant',
+										'content'         => '[Tool: ' . $tool_name . '] ' . $summary,
+									]);
+								}
+
+								$callback_result = $exec_result['success']
+									? [ 'success' => true, 'data' => $exec_result['result'] ?? [] ]
+									: [ 'success' => false, 'error' => $exec_result['result']['error'] ?? 'Tool execution failed' ];
+
+								$controller->post_tool_callback( $call_id, $callback_result, $tc_backend, $license_key );
+							}
 							break;
 
 						case 'error':
@@ -926,9 +641,65 @@ class RestController {
 
 		return [
 			'text'        => $accumulated_text,
-			'tool_calls'  => $tool_calls,
 			'token_usage' => $token_usage,
 		];
+	}
+
+	/**
+	 * POST a tool execution result to the backend callback endpoint.
+	 *
+	 * Called from stream_backend_sse() (inline tool execution) and confirm_action()
+	 * (deferred confirmation flow).  This unblocks the Agent SDK's MCP tool handler
+	 * on the backend so it can continue the agentic loop.
+	 *
+	 * @param string $call_id     UUID that identifies the pending MCP tool call.
+	 * @param array  $result      { success: bool, data?: mixed, error?: string }
+	 * @param string $backend_url Backend base URL (no trailing slash).
+	 * @param string $license_key Decrypted license key.
+	 * @return bool True if backend accepted the callback (HTTP 2xx).
+	 */
+	public function post_tool_callback( string $call_id, array $result, string $backend_url, string $license_key ): bool {
+		$callback_url = rtrim( $backend_url, '/' ) . '/tool-callback';
+
+		$url_check = $this->validate_backend_url( $callback_url );
+		if ( is_wp_error( $url_check ) ) {
+			WallyLogger::error( 'post_tool_callback: invalid URL', [ 'url' => $callback_url ] );
+			return false;
+		}
+
+		$response = wp_remote_post( $callback_url, [
+			'timeout' => 30,
+			'headers' => [
+				'Content-Type'  => 'application/json',
+				'X-Site-ID'     => md5( get_site_url() ),
+				'X-License-Key' => $license_key,
+			],
+			'body' => wp_json_encode( [
+				'call_id' => $call_id,
+				'result'  => $result,
+			] ),
+		]);
+
+		if ( is_wp_error( $response ) ) {
+			WallyLogger::error( 'post_tool_callback failed', [
+				'call_id' => $call_id,
+				'error'   => $response->get_error_message(),
+			]);
+			return false;
+		}
+
+		$code = wp_remote_retrieve_response_code( $response );
+
+		if ( $code >= 400 ) {
+			WallyLogger::error( 'post_tool_callback HTTP error', [
+				'call_id'   => $call_id,
+				'http_code' => $code,
+				'body'      => mb_substr( wp_remote_retrieve_body( $response ), 0, 500 ),
+			]);
+			return false;
+		}
+
+		return true;
 	}
 
 	// ─── Non-Streaming (Buffered) Backend Request ────────────────────────
@@ -1211,6 +982,23 @@ class RestController {
 				'error'     => $result['result']['error'] ?? 'unknown',
 				'status'    => $result['status'] ?? 'unknown',
 			]);
+		}
+
+		// If this action was initiated via the Agent SDK loop, POST the callback so
+		// the backend's MCP tool handler unblocks and the loop continues streaming.
+		$call_id = get_transient( 'wally_call_id_' . $action_id );
+		if ( $call_id ) {
+			delete_transient( 'wally_call_id_' . $action_id );
+
+			$backend_url     = rtrim( WALLY_DEFAULT_BACKEND_URL, '/' );
+			$license_key_enc = get_option( 'wally_license_key', '' );
+			$license_key     = $license_key_enc ? Settings::decrypt( $license_key_enc ) : '';
+
+			$callback_result = $result['success']
+				? [ 'success' => true, 'data' => $result['result'] ?? [] ]
+				: [ 'success' => false, 'error' => $result['result']['error'] ?? 'Action failed' ];
+
+			$this->post_tool_callback( $call_id, $callback_result, $backend_url, $license_key );
 		}
 
 		return new \WP_REST_Response( $result, $status_code );

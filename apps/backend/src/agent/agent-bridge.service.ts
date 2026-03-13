@@ -140,6 +140,11 @@ export class AgentBridgeService {
           includePartialMessages: true,
           maxTurns: MAX_TURNS,
           model: modelId,
+          // Adaptive thinking lets Claude reason through complex WordPress tasks
+          // before acting. Default for supported models, explicit here for clarity.
+          // Prompt caching (cache_control on system prompt) is not yet exposed by
+          // the Agent SDK — revisit when SDK adds support.
+          thinking: { type: 'adaptive' as const },
           permissionMode: 'bypassPermissions',
           allowDangerouslySkipPermissions: true,
           abortController,
